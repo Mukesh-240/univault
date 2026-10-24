@@ -38,7 +38,8 @@ export async function POST(req: Request) {
       issuer: session.ref, holderOwner: holder.ref, docType: parsed.data.doc_type, answers: parsed.data.answers, supersedes: parsed.data.supersedes,
     }, serverKey("ISSUER_PRIVATE_KEY"));
     if (!r.ok) return NextResponse.json({ error: r.error, problems: r.problems }, { status: r.status });
-    return NextResponse.json({ ok: true, serial: r.serial, documentId: r.documentId }, { status: 201 });
+    // The extra facts feed the on-screen step trail (what ran, with its ledger line); no value from the document is sent back.
+    return NextResponse.json({ ok: true, serial: r.serial, documentId: r.documentId, trail: { serial: r.serial, fieldCount: r.fieldCount, salted: r.salted, ledgerSeq: r.ledgerSeq, sha256: r.sha256 } }, { status: 201 });
   } catch (e) {
     log("error", "issue failed", { message: e instanceof Error ? e.message : "unknown" });
     return serverError("issue this document");

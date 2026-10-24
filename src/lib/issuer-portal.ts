@@ -45,7 +45,8 @@ export async function typesFor(_db: Db, issuer: string): Promise<string[]> {
 }
 
 export interface IssueInput { issuer: string; holderOwner: string; docType: string; answers: Record<string, string>; supersedes?: string }
-export type IssueResult = { ok: true; serial: string; documentId: string; sha256: string } | { ok: false; status: number; error: string; problems?: Record<string, string> };
+/** `fieldCount`, `salted` and `ledgerSeq` only describe what ran, for the on-screen step trail; they decide nothing. */
+export type IssueResult = { ok: true; serial: string; documentId: string; sha256: string; fieldCount: number; salted: boolean; ledgerSeq: number } | { ok: false; status: number; error: string; problems?: Record<string, string> };
 
 export async function issueDocument(db: Db, a: IssueInput, issuerPrivB64: string): Promise<IssueResult> {
   if (!FORMS[a.docType]) return { ok: false, status: 422, error: "That kind of document cannot be issued here." };
@@ -75,7 +76,7 @@ export async function issueDocument(db: Db, a: IssueInput, issuerPrivB64: string
     owner: a.holderOwner, doc_type: a.docType, title, issuer: a.issuer, serial, capture: "digital", fields,
     language_scripts: ["latin"], synthetic: true, salts,
   });
-  await append(db, "issuer.issued", { serial, doc_type: a.docType, issuer_name: a.issuer, document_id: stored.id, supersedes: a.supersedes ?? null });
+  const line = await append(db, "issuer.issued", { serial, doc_type: a.docType, issuer_name: a.issuer, document_id: stored.id, supersedes: a.supersedes ?? null });
   // 3. A corrected copy replaces the old record: a new signed version marks it superseded by the new serial.
   if (old) {
     const next = resignEntry(old, { status: "superseded", superseded_by: serial }, issuerPrivB64);
@@ -83,7 +84,7 @@ export async function issueDocument(db: Db, a: IssueInput, issuerPrivB64: string
     if (up.error) throw new Error(`registry insert failed: ${up.error.message}`);
     await append(db, "issuer.superseded", { serial: old.serial, superseded_by: serial, issuer_name: a.issuer, version: next.version });
   }
-  return { ok: true, serial, documentId: stored.id, sha256: stored.sha256 };
+  return { ok: true, serial, documentId: stored.id, sha256: stored.sha256, fieldCount: Object.keys(fields).length, salted: Object.keys(salts).length > 0, ledgerSeq: line.seq };
 }
 
 /** The newest registry version of a serial (or null). */

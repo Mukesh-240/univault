@@ -18,10 +18,13 @@ import { useI18n } from "@/components/I18n";
 import { useStepMotion } from "@/components/useStepMotion";
 import { announce } from "@/components/Live";
 import { Logo } from "@/components/Logo";
+import { Stepper, StepTrail, UnderTheHood } from "@/components/Steps";
+import { issueTrail, type IssueFacts } from "@/lib/trail";
 import { checkForm, FORMS, type FieldProblem } from "@/lib/issue-forms";
 
 interface Holder { ref: string; name: string; masked: string }
 type Step = 1 | 2 | 3 | 4;
+const STEPS = ["stepper.issue.1", "stepper.issue.2", "stepper.issue.3", "stepper.issue.4"];
 
 export function IssueWizard({ issuerName, types, supersedes }: { issuerName: string; types: string[]; supersedes: { serial: string; docType: string } | null }) {
   const { t, fieldLabel, docTypeLabel } = useI18n();
@@ -34,7 +37,7 @@ export function IssueWizard({ issuerName, types, supersedes }: { issuerName: str
   const [problems, setProblems] = useState<Record<string, FieldProblem | string>>({});
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [done, setDone] = useState<{ serial: string } | null>(null);
+  const [done, setDone] = useState<{ serial: string; trail?: IssueFacts } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const first = useRef(true);
   const root = useRef<HTMLElement>(null);
@@ -75,7 +78,7 @@ export function IssueWizard({ issuerName, types, supersedes }: { issuerName: str
   const sign = async () => {
     if (!holder) return;
     setBusy(true); setMessage(null);
-    const r = await post<{ serial?: string; error?: string; problems?: Record<string, string> }>("/api/issuer-portal/issue", {
+    const r = await post<{ serial?: string; trail?: IssueFacts; error?: string; problems?: Record<string, string> }>("/api/issuer-portal/issue", {
       holder_ref: holder.ref, doc_type: docType, answers, supersedes: supersedes?.serial,
     });
     setBusy(false);
@@ -84,7 +87,7 @@ export function IssueWizard({ issuerName, types, supersedes }: { issuerName: str
       if (r.data.problems) { setProblems(r.data.problems); setStep(3); setMessage(t("issuer.err.fix")); announce(t("issuer.err.fix")); return; }
       setMessage(r.data.error ?? t("api.failed")); announce(t("api.failed")); return;
     }
-    setDone({ serial: r.data.serial });
+    setDone({ serial: r.data.serial, trail: r.data.trail });
     announce(t("issuer.done.title"));
   };
 
@@ -109,12 +112,13 @@ export function IssueWizard({ issuerName, types, supersedes }: { issuerName: str
   if (done) {
     return (
       <section aria-labelledby="done-h" className="stack">
-        <div className="progress"><span className="step-label" aria-hidden="true">{t("signin.stepOf", { n: 4, total: 4 })}</span><progress value={4} max={4} aria-label={t("signin.stepOf", { n: 4, total: 4 })} /></div>
         <h2 id="done-h" ref={heading} tabIndex={-1}>{t("issuer.done.title")}</h2>
         <div className="issue-split">
           <Paper serial={done.serial} />
           <div className="card stack">
             <p className="lead">{t("issuer.done.body", { type: typeLabel, serial: done.serial, name: holder?.name ?? "" })}</p>
+            {done.trail && <StepTrail steps={issueTrail(done.trail)} id="issue-trail-h" />}
+            <UnderTheHood items={["salted", "ed25519", "sha256", "ledger"]} />
             <div className="row">
               <Link className="btn" href="/issuer/issued">{t("issuer.done.list")}</Link>
               <Link className="btn secondary" href="/issuer/issue" onClick={() => window.location.assign("/issuer/issue")}>{t("issuer.done.again")}</Link>
@@ -128,10 +132,7 @@ export function IssueWizard({ issuerName, types, supersedes }: { issuerName: str
   const titleKey = `issuer.wiz.${step}.title`;
   return (
     <section aria-labelledby="wiz-h" className="stack" ref={root}>
-      <div className="progress">
-        <span className="step-label" aria-hidden="true">{t("signin.stepOf", { n: progress, total: 4 })}</span>
-        <progress value={progress} max={4} aria-label={t("signin.stepOf", { n: progress, total: 4 })} />
-      </div>
+      <Stepper steps={STEPS} current={progress} here={`stepper.issue.${progress}.here`} next={`stepper.issue.${progress}.next`} />
       <h2 id="wiz-h" ref={heading} tabIndex={-1}>{t(titleKey)}</h2>
       {supersedes && <p className="callout neutral" role="note">{t("issuer.wiz.correcting", { serial: supersedes.serial })}</p>}
 
