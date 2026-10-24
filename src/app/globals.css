@@ -504,3 +504,90 @@ html[data-contrast="high"] .topbar { background: #FFFFFF; border-bottom: 3px sol
   .shell.folded .side-search { display: none; }
   .topbar button, .topbar .btn, .mode-switch a, .brand { white-space: nowrap; }
 }
+
+/* ═════════ Sender home: hero, readiness rings, attention strip, document grid ═════════ */
+@property --n { syntax: "<integer>"; inherits: false; initial-value: 0; }
+.hero { background: var(--hero); border-radius: var(--radius); padding: var(--s3) var(--s4); margin-bottom: var(--s4); border: 1px solid var(--line); }
+.hero h1 { color: var(--navy-deep); margin-bottom: var(--s1); overflow-wrap: anywhere; }
+.hero .lead { margin: 0; color: var(--text); }
+.home-grid { display: grid; gap: var(--s4); grid-template-columns: minmax(0, 1fr); }
+.home-main { min-width: 0; }
+@media (min-width: 80rem) { .home-grid { grid-template-columns: minmax(0, 1fr) 18rem; align-items: start; } .home-aside { position: sticky; top: 6rem; } }
+.activity-list { list-style: none; margin: 0 0 var(--s2); padding: 0; display: grid; gap: var(--s2); }
+.activity-list li { border-left: 4px solid var(--brand); padding-left: var(--s2); overflow-wrap: anywhere; }
+
+.ready-card { display: grid; gap: var(--s2); justify-items: start; }
+.ring { position: relative; width: 6.5rem; height: 6.5rem; flex: none; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 9; }
+.ring-bg { stroke: var(--tint-100); }
+.ring-fg { stroke: var(--ok); stroke-linecap: round; stroke-dasharray: 264; stroke-dashoffset: calc(264 * (1 - var(--p))); animation: ring-fill 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
+.ring-warn .ring-fg { stroke: var(--action); }
+.ring-num { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; font-weight: 800; font-size: 1.6rem; line-height: 1; color: var(--navy-deep); font-variant-numeric: tabular-nums; }
+.ring-num small { font-size: 0.9rem; font-weight: 700; color: var(--muted); display: block; margin-top: 2px; }
+.count { --n: var(--to, 0); counter-reset: num var(--n); animation: count-up 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
+.count::after { content: counter(num); }
+@keyframes ring-fill { from { stroke-dashoffset: 264; } }
+@keyframes count-up { from { --n: 0; } }
+
+.attention-strip { background: var(--warn-bg); border: 1px solid var(--warn); border-radius: var(--radius); padding: var(--s3); }
+.attention-strip h2 { color: var(--warn); margin-bottom: var(--s2); }
+.attention-strip .meta { color: var(--warn); font-weight: 700; margin: 0; }
+.attention-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.attention-list li { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); align-items: center; background: var(--card); border-radius: 12px; padding: var(--s2) var(--s3); }
+.attention-list .icon-title { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+.doc-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); align-items: stretch; }
+.doc-grid > li.card { display: flex; flex-direction: column; }
+.doc-grid .card-actions { margin-top: auto; padding-top: var(--s2); }
+.add-card { border: 2px dashed var(--brand); background: var(--tint-50); display: flex; flex-direction: column; gap: var(--s1); justify-content: center; align-items: flex-start; color: var(--navy-deep); }
+.empty-state { display: grid; justify-items: center; gap: var(--s1); text-align: center; background: var(--tint-50); border: 2px dashed var(--brand); border-radius: var(--radius); padding: var(--s4); color: var(--navy-deep); }
+.empty-state h3 { margin: 0; }
+.empty-state p { margin: 0 0 var(--s2); color: var(--text); }
+
+/* ═════════ Loading skeletons, error card, document paper, history chain ═════════ */
+@keyframes sk-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.skeleton-page { display: grid; gap: var(--s3); }
+.skeleton-grid { display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+.sk { border-radius: 12px; background: linear-gradient(90deg, var(--tint-100) 25%, var(--tint-50) 50%, var(--tint-100) 75%); background-size: 200% 100%; animation: sk-shimmer 1.8s linear infinite; }
+.sk-title { height: 2.4rem; width: min(100%, 22rem); }
+.sk-line { height: 1.2rem; width: min(100%, 34rem); }
+.sk-card { height: 10rem; }
+.error-card { max-width: 40rem; margin-inline: auto; border-top: 6px solid var(--bad); }
+
+/* Document page: the left side looks like a sheet of paper; the history is a chain. */
+.doc-preview { background: var(--card); border: 1px solid var(--line); border-top: 0.45rem solid var(--sky); border-radius: var(--radius); padding: var(--s3) var(--s4); box-shadow: var(--shadow); }
+.timeline { list-style: none; margin: 0; padding: 0 0 0 1.4rem; position: relative; display: grid; gap: var(--s2); }
+.timeline::before { content: ""; position: absolute; left: 0.45rem; top: 0.4rem; bottom: 0.4rem; width: 3px; background: var(--tint-100); border-radius: 3px; }
+.timeline li { position: relative; }
+.timeline li::before { content: ""; position: absolute; left: -1.4rem; top: 0.45rem; width: 0.95rem; height: 0.95rem; border-radius: 50%; background: var(--card); border: 3px solid var(--brand); }
+.timeline li:first-child::before { background: var(--brand); box-shadow: 0 0 0 4px var(--tint-100); }
+.ready-card { grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s3); align-items: center; justify-items: stretch; }
+.ready-card .ring { grid-row: 1 / span 2; }
+.ready-card .big { margin: 0; }
+.ready-card .card-actions { margin-top: 0; }
+@media (max-width: 30rem) { .ready-card { grid-template-columns: minmax(0, 1fr); justify-items: start; } .ready-card .ring { grid-row: auto; } }
+
+/* ═════════ Issuer area: stats, paper preview, stamp ═════════ */
+.hero.role-issuer { border-top: 6px solid var(--role-issuer); }
+.hero .btn { margin-top: var(--s2); }
+.stat-grid { display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); margin-bottom: var(--s4); }
+.stat { margin: 0; border-top: 6px solid var(--unk); }
+.stat-ok { border-top-color: var(--ok); } .stat-warn { border-top-color: var(--warn); } .stat-bad { border-top-color: var(--bad); }
+.stat-n { margin: 0; font-size: 2.2rem; font-weight: 800; color: var(--navy-deep); line-height: 1.1; }
+.issue-split { display: grid; gap: var(--s3); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 64rem) { .issue-split { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); } .issue-split .paper { position: sticky; top: 6rem; } }
+.paper { background: #FFFFFF; color: var(--text); border: 1px solid var(--line); border-top: 0.5rem solid var(--role-issuer); border-radius: 6px 6px 14px 14px; padding: var(--s3) var(--s4); box-shadow: var(--shadow-lift); position: relative; min-width: 0; }
+.paper header { display: flex; align-items: center; gap: var(--s1); color: var(--navy-deep); margin-bottom: var(--s2); }
+.paper h3 { margin: 0 0 var(--s1); }
+.paper dl { margin: var(--s2) 0; display: grid; gap: var(--s1); }
+.paper dl div { display: grid; grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr); gap: var(--s2); border-bottom: 1px dashed var(--line); padding-bottom: 0.25rem; }
+.paper dt { color: var(--muted); font-weight: 700; }
+.paper dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.paper dd.faint { color: var(--muted); font-weight: 400; font-style: italic; }
+.paper footer { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); color: var(--muted); min-height: 3rem; }
+.seal { color: var(--role-issuer); display: inline-grid; place-items: center; }
+@keyframes stamp-press { 0% { transform: scale(3) rotate(-18deg); opacity: 0; } 55% { transform: scale(0.9) rotate(-8deg); opacity: 1; } 75% { transform: scale(1.08) rotate(-8deg); } 100% { transform: scale(1) rotate(-8deg); opacity: 1; } }
+@keyframes paper-thud { 0%, 52% { transform: none; } 58% { transform: translateY(3px); } 70% { transform: none; } }
+.paper.signed { animation: paper-thud 0.9s ease-out both; }
+.paper.signed .seal { animation: stamp-press 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.1s both; transform: rotate(-8deg); }
+.paper.signed .seal svg { width: 4rem; height: 4rem; }

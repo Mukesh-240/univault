@@ -71,6 +71,20 @@ export function issueEntry(
   return { ...base, signature: signText(signedPayload(base), issuerPrivB64) };
 }
 
+/**
+ * The issuer changing the STATUS of a record it already issued (revoke it, or mark it replaced): the same
+ * fingerprints, the NEXT version number, a fresh signature. The old version stays in the registry (append-only), so
+ * the history of what the issuer said, and when, is never lost. Verification (below) is untouched: it simply reads the
+ * newest signed version, as it always did.
+ */
+export function resignEntry(prev: RegistryEntry, change: { status: RegistryEntry["status"]; superseded_by?: string | null }, issuerPrivB64: string): RegistryEntry {
+  const base = {
+    serial: prev.serial, doc_type: prev.doc_type, issuer_name: prev.issuer_name, record_hash: prev.record_hash, field_hashes: prev.field_hashes,
+    status: change.status, superseded_by: change.superseded_by ?? null, version: prev.version + 1,
+  } as Omit<RegistryEntry, "signature">;
+  return { ...base, signature: signText(signedPayload(base), issuerPrivB64) };
+}
+
 /** The possible outcomes of a verification, and the full result shown (with reasons) to the person. */
 export type VerifyState ="verified" | "unverifiable" | "tamper_flagged" | "superseded" | "revoked";
 export interface VerifyResult {
