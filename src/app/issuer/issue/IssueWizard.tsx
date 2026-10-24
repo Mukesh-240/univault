@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { post } from "@/components/api";
 import { useI18n } from "@/components/I18n";
+import { useStepMotion } from "@/components/useStepMotion";
 import { announce } from "@/components/Live";
 import { Logo } from "@/components/Logo";
 import { checkForm, FORMS, type FieldProblem } from "@/lib/issue-forms";
@@ -36,6 +37,8 @@ export function IssueWizard({ issuerName, types, supersedes }: { issuerName: str
   const [done, setDone] = useState<{ serial: string } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const first = useRef(true);
+  const root = useRef<HTMLElement>(null);
+  useStepMotion(root, step);
 
   // Look for holders as the person types (and list everyone at first).
   useEffect(() => {
@@ -124,7 +127,7 @@ export function IssueWizard({ issuerName, types, supersedes }: { issuerName: str
 
   const titleKey = `issuer.wiz.${step}.title`;
   return (
-    <section aria-labelledby="wiz-h" className="stack">
+    <section aria-labelledby="wiz-h" className="stack" ref={root}>
       <div className="progress">
         <span className="step-label" aria-hidden="true">{t("signin.stepOf", { n: progress, total: 4 })}</span>
         <progress value={progress} max={4} aria-label={t("signin.stepOf", { n: progress, total: 4 })} />

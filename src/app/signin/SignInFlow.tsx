@@ -15,6 +15,7 @@ import { FilePlus2, FolderLock, Inbox, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { post } from "@/components/api";
 import { useI18n } from "@/components/I18n";
+import { useStepMotion } from "@/components/useStepMotion";
 import { announce } from "@/components/Live";
 import { format, validate, generate, NUMBER_LENGTH, digitsOnly, type Problem } from "@/lib/synthetic-aadhaar";
 
@@ -30,6 +31,7 @@ const ROLE_CARDS: { role: Role; Icon: LucideIcon }[] = [
 /** Which of the 3 progress steps a screen is (the role cards come before the steps). */
 const PROGRESS: Record<Step, number> = { role: 0, profile: 1, number: 1, code: 2, consent: 3 };
 const CODE_LENGTH = 6;
+const ORDER: Step[] = ["role", "profile", "number", "code", "consent"];
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
 
 export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfile[]; initialNumber: string }) {
@@ -45,6 +47,8 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
   const [busy, setBusy] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
+  const root = useRef<HTMLElement>(null);
+  useStepMotion(root, ORDER.indexOf(step));
 
   // When the step CHANGES (not on first load), move the screen reader to the new heading, and the
   // cursor into the first box on the code step.
@@ -138,7 +142,7 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
   const title = step === "role" ? t("signin.role.title") : step === "profile" ? t("signin.step.profile") : t(`signin.step${step === "number" ? 1 : step === "code" ? 2 : 3}.title`);
 
   return (
-    <section aria-labelledby="step-h" data-step={step}>
+    <section aria-labelledby="step-h" data-step={step} ref={root}>
       {progress > 0 && (
         <div className="progress">
           <span className="step-label" aria-hidden="true">{t("signin.stepOf", { n: progress, total: 3 })}</span>

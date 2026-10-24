@@ -16,7 +16,8 @@
     "db:check": "tsx --env-file=.env.local scripts/db-check.ts",
     "e2e": "playwright test",
     "ocr:fixtures": "tsx scripts/ocr-fixtures.ts",
-    "screenshots": "tsx scripts/screenshots.ts"
+    "screenshots": "tsx scripts/screenshots.ts",
+    "record-demo": "tsx scripts/record-demo.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

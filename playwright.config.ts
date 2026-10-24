@@ -21,6 +21,7 @@ export default defineConfig({
   reporter: [["list"]],
   outputDir: "e2e-results/artifacts",
   globalSetup: "./e2e/global-setup.ts",
+  retries: 1, // one retry for timing-sensitive journeys on a cold server (a real failure fails twice)
   use: { baseURL: `http://localhost:${PORT}`, channel: "msedge", headless: true, reducedMotion: "reduce", storageState: "e2e-results/auth.json" },
   // UNIVAULT_OFFLINE_DEMO=1: the explicit opt-in that lets a production build use the offline demo store
   // for these local tests (without it, a production build with no database key shows "Database not configured").

@@ -16,6 +16,7 @@ import { useMemo, useRef, useState } from "react";
 import { StateBadge } from "@/components/Badges";
 import { Explain } from "@/components/Explain";
 import { useI18n } from "@/components/I18n";
+import { useStepMotion } from "@/components/useStepMotion";
 import { announce } from "@/components/Live";
 import { Reason } from "@/components/Reason";
 import { post } from "@/components/api";
@@ -62,6 +63,8 @@ export function ShareBuilder({ recipients, items, packs, from, to, ask }: { reci
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+  useStepMotion(root, step);
 
   /** Any change discards the review (and its request key): you must review what you confirm. */
   const reset = () => { setPreview(null); setDraft(null); setIdemKey(null); setReceipt(null); setMessage(null); };
@@ -100,7 +103,7 @@ export function ShareBuilder({ recipients, items, packs, from, to, ask }: { reci
   if (receipt) return <ReceiptView r={receipt} />;
 
   return (
-    <div className="stack">
+    <div className="stack" ref={root}>
       <div className="progress">
         <span className="step-label" aria-hidden="true">{t("signin.stepOf", { n: step, total: 4 })}</span>
         <progress value={step} max={4} aria-label={t("signin.stepOf", { n: step, total: 4 })} />

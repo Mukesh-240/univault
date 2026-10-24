@@ -12,9 +12,9 @@ import { expect, test, type Page } from "@playwright/test";
 const MAX_TABS = 500;
 
 /** Press Tab until the focused element matches `selector` (and contains `text`, if given). */
-async function tabTo(page: Page, selector: string, text?: string) {
+async function tabTo(page: Page, selector: string, text?: string, key = "Tab") {
   for (let i = 0; i < MAX_TABS; i++) {
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(key);
     const hit = await page.evaluate(({ s, txt }) => {
       const a = document.activeElement;
       return Boolean(a && a.matches(s) && (!txt || (a.textContent ?? "").includes(txt)));
@@ -55,7 +55,8 @@ test("keyboard only: home -> am I ready? -> same person? yes -> scan and fix a f
   await expect(page.locator(".decision-current").first()).toHaveText("Your answer: same person");
 
   // -> Scan and fix; add the first scan if needed, then fix one field.
-  await tabTo(page, 'a[href="/ocr"]');
+  // The side menu comes BEFORE the page in the reading order, and the names list is long, so go back with Shift+Tab (as a keyboard user would).
+  await tabTo(page, 'a[href="/ocr"]', undefined, "Shift+Tab");
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/ocr$/);
   const scan = truth.scans[0];

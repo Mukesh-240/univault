@@ -20,6 +20,7 @@ import { StateBadge } from "./Badges";
 import { Explain } from "./Explain";
 import { useI18n } from "./I18n";
 import { announce } from "./Live";
+import { SealMoment } from "./SealMoment";
 
 interface Props { docId: string; title: string; initial?: VerifyOutcome }
 
@@ -29,6 +30,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
   const [outcome, setOutcome] = useState<VerifyOutcome | undefined>(initial);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [seal, setSeal] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -50,6 +52,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
     }
     const o = r.data;
     setOutcome(o);
+    if (o.state === "verified") setSeal(true); // the scan-and-stamp moment
     announce(t("verify.result", { title, state: t(`state.${o.state}`) }));
     router.refresh();
     // Unreachable: schedule the next automatic retry at the time the server gave.
@@ -64,6 +67,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
   const unreachable = o?.state === "unverifiable" && o.retry;
   return (
     <div className="verify-panel">
+      {seal && <SealMoment onDone={() => setSeal(false)} />}
       <p className="verify-state">
         {o ? <StateBadge state={o.state} t={t} /> : <StateBadge state="not_checked" t={t} />}
         {o?.freshness === "stale" && <span className="badge state-stale">{t("verify.staleBadge")}</span>}

@@ -16,6 +16,7 @@ import { showTime } from "@/lib/i18n-core";
 import { get } from "./api";
 import { useI18n } from "./I18n";
 import { announce } from "./Live";
+import { afterLoad } from "@/lib/after-load";
 import { Popover } from "./Popover";
 
 const POLL_MS = 5000;
@@ -31,6 +32,7 @@ export function NotificationBell() {
   const [items, setItems] = useState<Item[]>([]);
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState("");
+  const [ringing, setRinging] = useState(false); // the bell swings once when a NEW alert arrives
   useEffect(() => { try { setSeen(localStorage.getItem(SEEN_KEY) ?? ""); } catch { /* storage blocked */ } }, []);
   const known = useRef<Set<string> | null>(null);
 
@@ -40,7 +42,7 @@ export function NotificationBell() {
     const list = r.data.notifications;
     if (known.current) {
       const fresh = list.filter((n) => !known.current!.has(n.id));
-      if (fresh.length) announce(t("bell.new", { n: fresh.length, first: text(fresh[0]) }));
+      if (fresh.length) { announce(t("bell.new", { n: fresh.length, first: text(fresh[0]) })); setRinging(true); setTimeout(() => setRinging(false), 1500); }
     }
     known.current = new Set(list.map((n) => n.id));
     setItems(list);
@@ -48,17 +50,21 @@ export function NotificationBell() {
   }, [t]);
 
   useEffect(() => {
-    refresh();
-    const id = setInterval(refresh, POLL_MS);
+    let poll: ReturnType<typeof setInterval> | undefined;
     let cleanup: (() => void) | undefined;
-    if (LIVE) {
-      import("@supabase/supabase-js").then(({ createClient }) => {
-        const c = createClient(URL_!, KEY!);
-        const ch = c.channel("uv-access").on("postgres_changes", { event: "INSERT", schema: "public", table: "access_log" }, () => refresh()).subscribe();
-        cleanup = () => { c.removeChannel(ch); };
-      }).catch(() => { /* polling still runs */ });
-    }
-    return () => { clearInterval(id); cleanup?.(); };
+    // Wait until the page has loaded: the bell is not needed to read the page (see lib/after-load.ts).
+    const cancel = afterLoad(() => {
+      refresh();
+      poll = setInterval(refresh, POLL_MS);
+      if (LIVE) {
+        import("@supabase/supabase-js").then(({ createClient }) => {
+          const c = createClient(URL_!, KEY!);
+          const ch = c.channel("uv-access").on("postgres_changes", { event: "INSERT", schema: "public", table: "access_log" }, () => refresh()).subscribe();
+          cleanup = () => { c.removeChannel(ch); };
+        }).catch(() => { /* polling still runs */ });
+      }
+    });
+    return () => { cancel(); clearInterval(poll); cleanup?.(); };
   }, [refresh]);
 
   const text = (n: Item) => n.kind === "issuer_change"
@@ -75,7 +81,7 @@ export function NotificationBell() {
       panelId="bell-panel"
       panelLabel={t("bell.label")}
       onToggle={onToggle}
-      label={<><Bell size={22} aria-hidden="true" />{t("bell.label")}{unseen && !open ? <span className="bell-count">{t("bell.count", { n: unseen })}</span> : null}</>}
+      label={<><Bell size={22} aria-hidden="true" className={ringing ? "bell-ring" : undefined} />{t("bell.label")}{unseen && !open ? <span className="bell-count">{t("bell.count", { n: unseen })}</span> : null}</>}
     >
       {items.length === 0 ? <p>{t("bell.empty")}</p> : (
         <ul>{items.slice(0, 6).map((n) => <li key={n.id}><span className="meta">{showTime(n.at)}</span><br />{text(n)}</li>)}</ul>

@@ -68,3 +68,24 @@ they are). `npm test` will fail if a key or a placeholder goes missing.
 The threat model page, the policy page and the recipient page text (`threat.*`, `policy.*`, `gate.*`, `view.*`)
 were written earlier by the same model and have not been reviewed either. The long paragraphs on the threat
 model and policy pages are in English on purpose (marked `lang="en"`); only their headings are Telugu.
+
+## Phase 8: the three roles (all AI-written, not reviewed by a native speaker)
+
+| Idea | English in the app | Telugu in the app | Concern |
+|---|---|---|---|
+| Sender (document keeper) | Sender | పంపేవారు | Describes the act of sending; the person is really the document holder. |
+| Receiver | Receiver | స్వీకర్త | Formal; is "అందుకునేవారు" more natural? |
+| Document holder (in sentences) | the holder | యజమాని | "యజమాని" can sound like "boss/owner". Maybe "పత్రం ఉన్నవారు". |
+| Issue a document | Issue a document / Sign and issue | పత్రం జారీ చేయండి / సంతకం చేసి జారీ చేయండి | "జారీ" is the official word; check it is understood. |
+| Stop this document | Stop this document | ఈ పత్రాన్ని ఆపండి | Does "ఆపండి" (stop) read as "cancel the document" or "pause"? "రద్దు చేయండి" means cancel. |
+| Corrected copy | Issue corrected copy | సరిచేసిన కాపీ జారీ చేయండి | Fine? |
+| Replaced | Replaced | మార్చాము / మార్చినవి | Past-tense forms mixed; check consistency. |
+| Request / ask | Ask for a document, Your requests | పత్రం అడగండి, మీ అభ్యర్థనలు | "అభ్యర్థన" is formal. |
+| Inbox | Inbox | ఇన్‌బాక్స్ | Loanword. |
+| Paper preview | Paper preview | కాగితం ముందుచూపు | Literal. |
+| Report a problem | Report a problem | సమస్యను తెలియజేయండి | Fine? |
+| Demo chip | DEMO | డెమో | Loanword. |
+| This area is for ... | This area is for senders | ఈ భాగం పంపేవారి కోసం | Genitive forms of the three role words are used (`area.plural.*`). |
+
+Grammar to check: endings glued to serial numbers or names written in English letters, for example `{serial}ను`
+(serial + object marker), `{name}కు`, `{by}తో`, `{time}కు జారీదారుతో సరిచూశారు` (`recv.view.banner`).

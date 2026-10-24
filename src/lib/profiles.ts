@@ -27,8 +27,20 @@ export function demoNumberFor(key: string): string {
 
 type Db = Pick<SupabaseClient, "from">;
 
+// The sign-in screen and the sign-in routes both ask for the list; reading a whole vault for one name each time is
+// wasteful, so the list is kept for 30 seconds per server instance (names never change: documents are immutable).
+const TTL_MS = 30_000;
+let cached: { at: number; list: Profile[] } | null = null;
+
 /** All profiles, issuers first. If the database cannot be read the list is simply empty (the chooser says so). */
 export async function loadProfiles(db: Db): Promise<Profile[]> {
+  if (cached && Date.now() - cached.at < TTL_MS) return cached.list;
+  const list = await readProfiles(db);
+  if (list.length) cached = { at: Date.now(), list };
+  return list;
+}
+
+async function readProfiles(db: Db): Promise<Profile[]> {
   const out: Profile[] = [];
   try {
     const reg = await db.from("issuer_registry").select("issuer_name");

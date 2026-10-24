@@ -5,7 +5,7 @@
  * number (starts with 0000, so it can never be a real Aadhaar number); the code is shown on screen. One calm
  * line at the bottom says so. This page is open to everyone; the rest of the app needs a signed-in browser.
  */
-import { Logo } from "@/components/Logo";
+import { HeroArt } from "@/components/HeroArt";
 import { getI18n } from "@/lib/i18n-server";
 import { loadProfiles } from "@/lib/profiles";
 import { supabase } from "@/lib/supabase";
@@ -25,7 +25,7 @@ export default async function SignInPage() {
         <p className="lead">{t("signin.hero.sub")}</p>
         <SignInFlow profiles={profiles} initialNumber={generate()} />
       </div>
-      <div className="signin-art" aria-hidden="true"><div className="art-glow" /><Logo size={320} animated /></div>
+      <HeroArt />
       <p className="signin-foot" role="note">{t("signin.footer")}</p>
     </div>
   );

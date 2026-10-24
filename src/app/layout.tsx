@@ -15,6 +15,7 @@ import { Inter, Noto_Sans_Telugu } from "next/font/google";
 import { Chrome } from "@/components/Chrome";
 import { I18nProvider } from "@/components/I18n";
 import { dictFor } from "@/lib/i18n";
+import { InterLoader } from "@/components/InterLoader";
 import { LiveRegion } from "@/components/Live";
 import { currentSession } from "@/lib/auth-server";
 import { getI18n } from "@/lib/i18n-server";
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             )}
           </Chrome>
           <LiveRegion />
+          <InterLoader />
         </I18nProvider>
       </body>
     </html>

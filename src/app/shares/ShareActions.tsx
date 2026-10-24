@@ -15,19 +15,23 @@ import { StateBadge } from "@/components/Badges";
 import { useI18n } from "@/components/I18n";
 import { announce } from "@/components/Live";
 import { post } from "@/components/api";
+import { ChainBreak } from "@/components/ChainBreak";
+import { reducedMotion, wideScreen } from "@/lib/motion-effects";
 
 const RECHECK_EVERY_MS = 60_000;
 
 export function StopShare({ shareId, name, onDone }: { shareId: string; name: string; onDone?: (m: string) => void }) {
   const { t } = useI18n();
   const router = useRouter();
+  const [breaking, setBreaking] = useState(false);
   const kill = async () => {
     const r = await post<{ killed: string[] }>("/api/shares/kill", { share_id: shareId });
     const m = r.offline ? t("api.offline") : r.ok ? t("shares.killed") : t("api.failed");
     announce(m); onDone?.(m);
-    if (r.ok) router.refresh();
+    // Laptop: two chain links snap apart over the card, then the card shows it is stopped. Phone: it just updates.
+    if (r.ok) { if (wideScreen() && !reducedMotion()) setBreaking(true); else router.refresh(); }
   };
-  return <ConfirmButton label={t("shares.kill")} title={t("shares.confirm.title", { name })} body={t("shares.confirm.body")} yes={t("shares.confirm.yes")} no={t("shares.confirm.no")} onConfirm={kill} />;
+  return <>{breaking && <ChainBreak onDone={() => { setBreaking(false); router.refresh(); }} />}<ConfirmButton label={t("shares.kill")} title={t("shares.confirm.title", { name })} body={t("shares.confirm.body")} yes={t("shares.confirm.yes")} no={t("shares.confirm.no")} onConfirm={kill} /></>;
 }
 
 export function ShareActions({ shareId, active, name }: { shareId: string; active: boolean; name: string }) {
