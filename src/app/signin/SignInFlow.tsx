@@ -16,6 +16,8 @@ import { useEffect, useRef, useState } from "react";
 import { post } from "@/components/api";
 import { useI18n } from "@/components/I18n";
 import { useStepMotion } from "@/components/useStepMotion";
+import { Stepper, StepTrail } from "@/components/Steps";
+import { signInTrail } from "@/lib/trail";
 import { announce } from "@/components/Live";
 import { format, validate, generate, NUMBER_LENGTH, digitsOnly, type Problem } from "@/lib/synthetic-aadhaar";
 
@@ -143,12 +145,7 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
 
   return (
     <section aria-labelledby="step-h" data-step={step} ref={root}>
-      {progress > 0 && (
-        <div className="progress">
-          <span className="step-label" aria-hidden="true">{t("signin.stepOf", { n: progress, total: 3 })}</span>
-          <progress value={progress} max={3} aria-label={t("signin.stepOf", { n: progress, total: 3 })} />
-        </div>
-      )}
+      {progress > 0 && <Stepper steps={["stepper.signin.1", "stepper.signin.2", "stepper.signin.3"]} current={progress} here={`stepper.signin.${progress}.here`} next={`stepper.signin.${progress}.next`} />}
       <h2 id="step-h" ref={heading} tabIndex={-1}>{title}</h2>
 
       {step === "role" && (
@@ -235,6 +232,8 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
             <button type="button" className="text" onClick={() => { setStep("profile"); setMessage(null); }}>{t("ui.back")}</button>
             <button type="button" className="text" onClick={() => sendCode(numberDigits)} disabled={busy}>{t("signin.newCode")}</button>
           </div>
+          {/* Reaching this screen means the server accepted the demo number: the trail shows that. */}
+          <StepTrail steps={signInTrail("code")} id="signin-trail-h" />
         </form>
       )}
 
@@ -256,6 +255,8 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
           </div>
           {message && <p className="callout warn" role="alert">{message}</p>}
           <button type="button" onClick={allow} disabled={busy}>{busy ? t("share.working") : t("signin.allow")}</button>
+          {/* Reaching this screen means the server accepted the demo number and the code: the trail shows that. */}
+          <StepTrail steps={signInTrail("consent")} id="signin-trail-h" />
           <div className="row">
             <button type="button" className="text" onClick={() => { setStep("code"); setMessage(null); }}>{t("ui.back")}</button>
             <button type="button" className="text" onClick={() => { setStep("role"); setMessage(null); }}>{t("signin.cancel")}</button>
