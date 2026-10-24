@@ -1,0 +1,10 @@
+node_modules
+.next
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+# Large, regenerable synthetic sets (npm run synth:all). Showcase, coverage and scan ground truth are committed.
+synthetic/out/data/dataset-dev.json
+synthetic/out/data/dataset-heldout.json
+synthetic/out/labels/labels-dev.json
+synthetic/out/labels/labels-heldout.json

@@ -1,0 +1,83 @@
+{
+ "name": {
+  "exact": 12,
+  "spelling_variant": 12,
+  "initials": 12,
+  "expanded": 12,
+  "reordered": 12,
+  "honorific": 12,
+  "telugu": 12,
+  "typo": 12,
+  "different_person_similar": 12,
+  "different_person": 12
+ },
+ "expiry": {
+  "+30d": 12,
+  "+1d": 12,
+  "0d": 12,
+  "-1d": 12,
+  "-9d": 12,
+  "-400d": 12
+ },
+ "age": {
+  "17y_mid": 12,
+  "17y364d": 12,
+  "18y0d": 12,
+  "18y1d": 12,
+  "30y": 12
+ },
+ "tamper": {
+  "none": 12,
+  "one_digit": 12,
+  "two_fields": 12,
+  "swapped": 12,
+  "extra_field": 12,
+  "missing_field": 12,
+  "whitespace": 12,
+  "homoglyph": 12
+ },
+ "issuer": {
+  "active": 12,
+  "superseded": 12,
+  "revoked": 12,
+  "unreachable": 12,
+  "stale": 12,
+  "forged_signature": 12,
+  "unknown_serial": 12
+ },
+ "duplicate": {
+  "none": 12,
+  "exact": 12,
+  "near": 12,
+  "rescan": 12,
+  "same_serial_diff_content": 12
+ },
+ "injection": {
+  "none": 12,
+  "visible": 12,
+  "zero_width": 12,
+  "hidden_layer": 12,
+  "multilingual": 12,
+  "benign_assistant_word": 12
+ },
+ "overbroad": {
+  "none": 12,
+  "one_extra": 12,
+  "many_extra": 12,
+  "full_id_vs_last4": 12
+ },
+ "ocr": {
+  "clean": 12,
+  "mild": 12,
+  "heavy": 12
+ },
+ "dateformat": {
+  "iso": 12,
+  "dmy": 12,
+  "long": 12,
+  "te_numerals": 12
+ },
+ "showcase": {
+  "graduate_demo": 1
+ }
+}

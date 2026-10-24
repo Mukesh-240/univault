@@ -1,0 +1,22 @@
+{
+  "id": "scholarship",
+  "purpose": "scholarship",
+  "title": "Scholarship application",
+  "disclaimer": "Demo rules, not official requirements.",
+  "source": "UNIVAULT demo rule pack v1",
+  "lastReviewed": "2026-10-24",
+  "rules": [
+    { "id": "sch.income_present", "label": "Income certificate is in the vault", "predicate": "doc_exists", "args": { "doc_type": "income_certificate" } },
+    { "id": "sch.income_valid", "label": "Income certificate has not expired", "predicate": "not_expired", "args": { "doc_type": "income_certificate", "field": "valid_until", "issued_field": "issued_on" } },
+    { "id": "sch.income_verified", "label": "Income certificate is verified with the issuer", "predicate": "verified", "args": { "doc_type": "income_certificate" } },
+    { "id": "sch.marks_confirmed", "label": "Marksheet scan has been confirmed by you", "predicate": "scan_confirmed", "args": { "doc_type": "marksheet" } },
+    { "id": "sch.names_match", "label": "Names on ID, income certificate and marksheet belong to the same person", "predicate": "name_consistent", "args": { "doc_types": ["id_card", "income_certificate", "marksheet"] } },
+    { "id": "sch.adult", "label": "Applicant is at least 18", "predicate": "age_at_least", "args": { "years": 18, "doc_type": "id_card", "field": "dob" } }
+  ],
+  "allowed_fields": [
+    "id_card.name", "id_card.id_number_last4", "id_card.over_18",
+    "income_certificate.name", "income_certificate.annual_income", "income_certificate.valid_until",
+    "marksheet.result", "marksheet.passed"
+  ],
+  "alternatives": { "id_card.id_number": "id_card.id_number_last4", "id_card.dob": "id_card.over_18", "marksheet.total_marks": "marksheet.passed" }
+}

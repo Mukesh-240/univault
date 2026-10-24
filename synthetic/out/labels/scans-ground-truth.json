@@ -1,0 +1,58 @@
+{
+ "generator_seed": 4242,
+ "synthetic": true,
+ "scans": [
+  {
+   "file": "scans/scan-1-clean.png",
+   "damage": "clean",
+   "fields": {
+    "name": "Keerthi Ravi Bandaru",
+    "name_te": "కీర్తి రవి బండారు",
+    "reg_no": "18SSU91467",
+    "semester": "8",
+    "total_marks": "540",
+    "result": "PASS",
+    "serial": "SSU-MS-371966"
+   }
+  },
+  {
+   "file": "scans/scan-2-blur.png",
+   "damage": "blur",
+   "fields": {
+    "name": "Priya Venkata Tummala",
+    "name_te": "ప్రియ వెంకట తుమ్మల",
+    "reg_no": "21SSU07886",
+    "semester": "8",
+    "total_marks": "606",
+    "result": "PASS",
+    "serial": "SSU-MS-204487"
+   }
+  },
+  {
+   "file": "scans/scan-3-noise-skew.png",
+   "damage": "noise-skew",
+   "fields": {
+    "name": "Teja Mounika Nallamothu",
+    "name_te": "తేజ మౌనిక నల్లమోతు",
+    "reg_no": "18SSU42509",
+    "semester": "8",
+    "total_marks": "536",
+    "result": "PASS",
+    "serial": "SSU-MS-516907"
+   }
+  },
+  {
+   "file": "scans/scan-4-lowcontrast-skew.png",
+   "damage": "lowcontrast-skew",
+   "fields": {
+    "name": "Divya Kiran Veeramachaneni",
+    "name_te": "దివ్య కిరణ్ వీరమాచనేని",
+    "reg_no": "21SSU94034",
+    "semester": "8",
+    "total_marks": "711",
+    "result": "PASS",
+    "serial": "SSU-MS-737220"
+   }
+  }
+ ]
+}

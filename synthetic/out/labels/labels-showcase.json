@@ -1,0 +1,278 @@
+{
+ "meta": {
+  "generator": "univault-synthetic-lab",
+  "version": "1.0.0",
+  "seed": 2026,
+  "set": "showcase",
+  "reference_date": "2026-10-24",
+  "documents": 11
+ },
+ "cases": [
+  {
+   "case_id": "showcase.graduate_demo.0",
+   "dimension": "showcase",
+   "level": "graduate_demo",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:id",
+    "showcase:showcase.graduate_demo.0:degree",
+    "showcase:showcase.graduate_demo.0:degree_copy",
+    "showcase:showcase.graduate_demo.0:marksheet",
+    "showcase:showcase.graduate_demo.0:income",
+    "showcase:showcase.graduate_demo.0:provisional",
+    "showcase:showcase.graduate_demo.0:letter",
+    "showcase:showcase.graduate_demo.0:degree_rescan",
+    "showcase:showcase.graduate_demo.0:school",
+    "showcase:showcase.graduate_demo.0:transfer",
+    "showcase:showcase.graduate_demo.0:bonafide"
+   ],
+   "expected": {
+    "detector": "showcase",
+    "conflicts": 17,
+    "negatives": 3
+   }
+  }
+ ],
+ "conflicts": [
+  {
+   "id": 1,
+   "title": "Degree has the full name; ID card has a shorter form",
+   "detector": "name_match",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:id",
+    "showcase:showcase.graduate_demo.0:degree"
+   ],
+   "expected": {
+    "same_person": true,
+    "needs_user_link": true
+   }
+  },
+  {
+   "id": 2,
+   "title": "Marksheet uses an initial for the surname",
+   "detector": "name_match",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:marksheet",
+    "showcase:showcase.graduate_demo.0:degree"
+   ],
+   "expected": {
+    "same_person": true,
+    "explanation": "initial expansion"
+   }
+  },
+  {
+   "id": 3,
+   "title": "Marksheet also gives the name in Telugu script",
+   "detector": "name_match",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:marksheet",
+    "showcase:showcase.graduate_demo.0:degree"
+   ],
+   "expected": {
+    "same_person": true,
+    "explanation": "transliteration"
+   }
+  },
+  {
+   "id": 4,
+   "title": "Reference letter writes the name in a different word order",
+   "detector": "name_match",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:letter",
+    "showcase:showcase.graduate_demo.0:degree"
+   ],
+   "expected": {
+    "same_person": true,
+    "explanation": "same words, different order"
+   }
+  },
+  {
+   "id": 5,
+   "title": "Income certificate expired 9 days ago",
+   "detector": "not_expired",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:income"
+   ],
+   "expected": {
+    "result": "fail",
+    "days_expired": 9
+   }
+  },
+  {
+   "id": 6,
+   "title": "Marksheet scan has fields below the confidence threshold",
+   "detector": "ocr_confidence",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:marksheet"
+   ],
+   "expected": {
+    "scan_confirmed_rule": "unknown"
+   }
+  },
+  {
+   "id": 7,
+   "title": "Marksheet field misread by OCR (digit confusion)",
+   "detector": "ocr_correction",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:marksheet"
+   ],
+   "expected": {
+    "misread_fields": [
+     "result",
+     "serial"
+    ],
+    "correction_is_separate_assertion": true
+   }
+  },
+  {
+   "id": 8,
+   "title": "Degree copy has one altered digit vs the issuer record",
+   "detector": "issuer_verify",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:degree_copy"
+   ],
+   "expected": {
+    "state": "tamper_flagged",
+    "mismatched_fields": [
+     "cgpa"
+    ]
+   }
+  },
+  {
+   "id": 9,
+   "title": "Duplicate: re-scan of the degree certificate",
+   "detector": "duplicate",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:degree",
+    "showcase:showcase.graduate_demo.0:degree_rescan"
+   ],
+   "expected": {
+    "kind": "rescan"
+   }
+  },
+  {
+   "id": 10,
+   "title": "Provisional certificate superseded by the final degree",
+   "detector": "issuer_verify",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:provisional"
+   ],
+   "expected": {
+    "state": "superseded"
+   }
+  },
+  {
+   "id": 11,
+   "title": "Reference letter contains hidden instruction text",
+   "detector": "injection",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:letter"
+   ],
+   "expected": {
+    "flagged": true,
+    "share_created": false
+   }
+  },
+  {
+   "id": 12,
+   "title": "Scholarship recipient asks for the full ID number",
+   "detector": "over_broad",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:scholarship_request"
+   ],
+   "expected": {
+    "flagged": true,
+    "extra": [
+     "id_card.id_number"
+    ],
+    "minimal_alternative": "id_card.id_number_last4"
+   }
+  },
+  {
+   "id": 13,
+   "title": "Date of birth printed DD-MM-YYYY on the ID and YYYY-MM-DD on the school certificate",
+   "detector": "dob_consistent",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:id",
+    "showcase:showcase.graduate_demo.0:school"
+   ],
+   "expected": {
+    "result": "consistent",
+    "false_mismatch": false
+   }
+  },
+  {
+   "id": 14,
+   "title": "Issuer unreachable at submission time",
+   "detector": "issuer_verify",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:degree"
+   ],
+   "expected": {
+    "state": "unverifiable",
+    "reason": "issuer_unreachable",
+    "condition": {
+     "issuer_down": true
+    },
+    "retry_scheduled": true
+   }
+  },
+  {
+   "id": 15,
+   "title": "Share link opened from a second device",
+   "detector": "share_access",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:job_share"
+   ],
+   "expected": {
+    "step": 2,
+    "result": "allowed",
+    "notify": "new_device",
+    "leak_trace_resolves": true
+   }
+  },
+  {
+   "id": 16,
+   "title": "Wrong recipient ID, then an attempt on the killed link",
+   "detector": "share_access",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:job_share"
+   ],
+   "expected": {
+    "steps": {
+     "3": "denied:wrong_recipient",
+     "5": "denied:killed"
+    },
+    "notify": [
+     "wrong_recipient_attempt",
+     "killed_link_attempt"
+    ]
+   }
+  },
+  {
+   "id": 17,
+   "title": "Registry reply for the income certificate has an invalid signature",
+   "detector": "issuer_verify",
+   "refs": [
+    "showcase:showcase.graduate_demo.0:income"
+   ],
+   "expected": {
+    "state": "unverifiable",
+    "reason": "signature_invalid"
+   }
+  }
+ ],
+ "negatives": [
+  {
+   "ref": "showcase:showcase.graduate_demo.0:school",
+   "why": "Clean school certificate; DOB in a different format must not be called a mismatch"
+  },
+  {
+   "ref": "showcase:showcase.graduate_demo.0:transfer",
+   "why": "Clean transfer certificate; verifies against the issuer"
+  },
+  {
+   "ref": "showcase:showcase.graduate_demo.0:bonafide",
+   "why": "Letter that mentions an 'assistant' innocently; must not be flagged as injection"
+  }
+ ]
+}
