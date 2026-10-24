@@ -1,5 +1,5 @@
 # UNIVAULT HANDOFF
-Last updated: 2026-10-24 (Phase 6 committed) · Commit: see `git log -1` ("phase 6: …") · Phase: 6 done, waiting for Vercel URL
+Last updated: 2026-10-24 (Phase 6 committed) · Commit: 4b60328 (phase 6) + this handoff commit · Phase: 6 done, waiting for Vercel URL
 
 ## 1. What this is (3 lines max)
 UNIVAULT for IMPACTX 2026 Challenge 02. The promise: "Prove you're ready. Share only what's needed. Take it back."
