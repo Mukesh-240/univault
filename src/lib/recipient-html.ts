@@ -9,6 +9,7 @@
  *   Every value is escaped, so nothing from a document can turn into page code.
  */
 import { itemLabel, translate, type Lang } from "./i18n";
+import { openStage, openTrail } from "./trail";
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
@@ -26,7 +27,22 @@ label{display:block;font-weight:500;margin-top:12px}input{font:inherit;padding:8
 button{font:inherit;font-weight:600;background:#1565D8;color:#fff;border:1px solid #1565D8;border-radius:10px;padding:0 20px;min-height:44px;margin-top:16px;cursor:pointer}
 .brand{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-weight:700;letter-spacing:.04em;color:#0B3A8C}
 code,[data-otp]{font-family:ui-monospace,Consolas,monospace;font-weight:500}
+.st{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;color:#4A5B78}.st .now{color:#07245A;font-weight:600}.st .done{color:#0F7B4F}
+.tr{list-style:none;margin:0;padding:0}.tr li{padding:6px 0;border-top:1px solid #D5E1F2}.tr li:first-child{border-top:0}.tr .k{font-weight:600}.tr .done .k{color:#0F7B4F}.tr .failed .k{color:#B3261E}.tr .waiting .k{color:#8A5200}.tr .skipped .k{color:#475569}
+.tr details{font-size:14px;color:#4A5B78}
 a{color:#0B3A8C}:focus-visible{outline:3px solid #1565D8;outline-offset:2px;box-shadow:0 0 0 6px #fff}`;
+
+/** "Where am I" (four gate steps) and "what just happened" (the real steps of this attempt), as plain HTML. */
+export function stepsHtml(lang: Lang, outcome: string, attemptsLeft?: number): string {
+  const t = (k: string, vars?: Record<string, string | number>) => esc(translate(lang, k, vars));
+  const at = openStage(outcome);
+  const items = [1, 2, 3, 4].map((n) => `<li class="${n < at ? "done" : n === at ? "now" : ""}"${n === at ? ' aria-current="step"' : ""}>${n < at ? "✓" : `${n}.`} ${t(`stepper.open.${n}`)}</li>`).join("");
+  const trail = openTrail(outcome, attemptsLeft).map((s) => `<li class="${s.status}"><span class="k">${t(`trail.status.${s.status}`)}:</span> ${t(s.text, s.vars)}
+<details><summary>${t("trail.why")}</summary>${t(s.why)}</details></li>`).join("");
+  return `<nav class="c" aria-label="${t("stepper.here")}"><p><strong>${t("stepper.of", { n: at, total: 4 })}</strong> ${t(`stepper.open.${at}`)}</p><ol class="st">${items}</ol>
+<p class="n"><strong>${t("stepper.here")}:</strong> ${t(`stepper.open.${at}.here`)} <strong>${t("stepper.next")}:</strong> ${t(`stepper.open.${at}.next`)}</p></nav>
+<section class="c" aria-labelledby="tr-h"><h2 id="tr-h">${t("trail.title")}</h2><ol class="tr" data-trail-steps="${openTrail(outcome, attemptsLeft).length}">${trail}</ol></section>`;
+}
 
 /** The page frame: banner + main. `bg` is the watermark (a CSS background image), if any. */
 export function page(lang: Lang, title: string, body: string, bg?: string): string {
@@ -42,7 +58,7 @@ export function page(lang: Lang, title: string, body: string, bg?: string): stri
  *   step "open": the code is shown (SIMULATED delivery: no real SMS/email), type it, press "Open".
  * `error` explains a refused attempt without saying which detail was wrong.
  */
-export function gateHtml(lang: Lang, action: string, opts: { error?: string; recipientId?: string; sentCode?: string } = {}): string {
+export function gateHtml(lang: Lang, action: string, opts: { error?: string; recipientId?: string; sentCode?: string; outcome?: string; attemptsLeft?: number } = {}): string {
   const t = (k: string) => esc(translate(lang, k));
   const err = opts.error ? `<p class="e" role="alert">${esc(opts.error)}</p>` : "";
   const idField = `<label for="rid">${t("gate.recipientId")}</label><input id="rid" name="recipient_id" autocomplete="off" required placeholder="UV-R-0000" value="${esc(opts.recipientId ?? "")}">`;
@@ -53,12 +69,13 @@ export function gateHtml(lang: Lang, action: string, opts: { error?: string; rec
 <button type="submit">${t("gate.open")}</button></form>`
     : `<form method="post" action="${esc(action)}" class="c"><input type="hidden" name="step" value="send">${idField}
 <p class="n">${t("gate.simulated")}</p><button type="submit">${t("gate.send")}</button></form>`;
-  return page(lang, translate(lang, "gate.title"), `<h1>${t("gate.title")}</h1><p>${t("gate.intro")}</p>${err}${body}`);
+  const outcome = opts.outcome ?? (opts.sentCode ? "code_issued" : "gate");
+  return page(lang, translate(lang, "gate.title"), `<h1>${t("gate.title")}</h1><p>${t("gate.intro")}</p>${err}${body}${stepsHtml(lang, outcome, opts.attemptsLeft)}`);
 }
 
 export function deniedHtml(lang: Lang, outcome: string): string {
   const t = (k: string) => esc(translate(lang, k));
-  return page(lang, translate(lang, "gate.deniedTitle"), `<h1>${t("gate.deniedTitle")}</h1><p class="e" role="alert">${t(`outcome.${outcome}`)}</p><p class="n">${t("gate.deniedNote")}</p>`);
+  return page(lang, translate(lang, "gate.deniedTitle"), `<h1>${t("gate.deniedTitle")}</h1><p class="e" role="alert">${t(`outcome.${outcome}`)}</p><p class="n">${t("gate.deniedNote")}</p>${stepsHtml(lang, outcome)}`);
 }
 
 export interface ViewData {
@@ -83,5 +100,5 @@ export function viewHtml(v: ViewData, bg: string): string {
 <section class="c" aria-labelledby="f"><h2 id="f">${t("view.fields")}</h2><table><tbody>${rows || `<tr><td>${t("preview.none")}</td></tr>`}</tbody></table></section>
 <section class="c" aria-labelledby="a"><h2 id="a">${t("preview.attestations")}</h2><ul>${atts || `<li>${t("preview.none")}</li>`}</ul><p class="n">${esc(v.statement)}</p></section>
 <section class="c" aria-labelledby="v"><h2 id="v">${t("view.verified")}</h2><ul>${ver || `<li>${t("preview.none")}</li>`}</ul></section>
-${dl}<p class="n">${t("view.expires", { date: v.expiresAt.slice(0, 10) })} · ${t("preview.watermark")} ${t("preview.revocation")}</p>`, bg);
+${dl}<p class="n">${t("view.expires", { date: v.expiresAt.slice(0, 10) })} · ${t("preview.watermark")} ${t("preview.revocation")}</p>${stepsHtml(v.lang, "allowed")}`, bg);
 }

@@ -109,20 +109,27 @@ export function killTrail(k: KillFacts): TrailStep[] {
 }
 
 /* ───────── 2 Open a shared link (receiver) ───────── */
+const DEAD = ["denied:revoked", "denied:killed", "denied:expired", "denied:unknown_link", "denied:max_views"];
+/** A wrong recipient ID and a wrong code are reported as ONE step, on purpose: saying which one was wrong would
+ *  help someone guessing recipient IDs (the gate page itself never says which detail was wrong either). */
+const WRONG_DETAILS = ["denied:wrong_recipient", "denied:wrong_code", "denied:otp_reused", "denied:otp_expired"];
 /** `outcome`: "gate" (the page opened), "code_issued" (a code was shown), "locked", or a final access outcome. */
 export function openTrail(outcome: string, attemptsLeft?: number): TrailStep[] {
-  const dead = ["denied:revoked", "denied:killed", "denied:expired", "denied:unknown_link", "denied:max_views"];
-  const steps: TrailStep[] = [step("open", "link", dead.includes(outcome) ? "dead" : "ok", dead.includes(outcome) ? "failed" : "done")];
-  if (dead.includes(outcome)) return [...steps, step("open", "id", "skipped", "skipped"), step("open", "code", "skipped", "skipped"), step("open", "view", "no", "skipped")];
-  const idBad = outcome === "denied:wrong_recipient" || outcome === "denied:unintended_account";
-  steps.push(step("open", "id", outcome === "denied:unintended_account" ? "forwarded" : idBad ? "bad" : outcome === "gate" ? "ask" : "ok", idBad ? "failed" : outcome === "gate" ? "waiting" : "done"));
-  if (idBad || outcome === "gate") return [...steps, step("open", "code", "skipped", "skipped"), step("open", "view", "no", "skipped")];
-  if (outcome === "code_issued") return [...steps, step("open", "code", "sent", "waiting"), step("open", "view", "no", "waiting")];
-  if (outcome === "locked") return [...steps, step("open", "code", "locked", "failed"), step("open", "view", "no", "skipped")];
-  if (outcome === "denied:wrong_code" || outcome === "denied:otp_reused" || outcome === "denied:otp_expired")
-    return [...steps, step("open", "code", "wrong", "failed", { vars: { left: attemptsLeft ?? 0 } }), step("open", "view", "no", "skipped")];
-  return [...steps, step("open", "code", "ok", "done"), step("open", "view", "yes", outcome === "allowed" ? "done" : "skipped")];
+  const dead = DEAD.includes(outcome);
+  const link = step("open", "link", dead ? "dead" : "ok", dead ? "failed" : "done");
+  const noView = (status: StepStatus = "skipped") => step("open", "view", "no", status);
+  if (dead) return [link, step("open", "id", "skipped", "skipped"), step("open", "code", "skipped", "skipped"), noView()];
+  if (outcome === "denied:unintended_account") return [link, step("open", "id", "forwarded", "failed"), step("open", "code", "skipped", "skipped"), noView()];
+  if (outcome === "gate") return [link, step("open", "id", "ask", "waiting"), step("open", "code", "later", "waiting"), noView("waiting")];
+  if (outcome === "code_issued") return [link, step("open", "id", "ok", "done"), step("open", "code", "sent", "waiting"), noView("waiting")];
+  if (outcome === "locked" || outcome === "denied:locked") return [link, step("open", "code", "locked", "failed"), noView()];
+  if (WRONG_DETAILS.includes(outcome)) return [link, step("open", "details", "wrong", "failed", { vars: { left: Math.max(0, attemptsLeft ?? 0) } }), noView()];
+  if (outcome === "allowed") return [link, step("open", "id", "ok", "done"), step("open", "code", "ok", "done"), step("open", "view", "yes", "done")];
+  return [link, step("open", "other", "stopped", "failed"), noView()];
 }
+/** Which of the four gate steps the person is on, for the stepper (1 link, 2 recipient ID, 3 code, 4 view). */
+export const openStage = (outcome: string): number =>
+  DEAD.includes(outcome) ? 1 : outcome === "gate" || outcome === "denied:unintended_account" ? 2 : outcome === "allowed" ? 4 : 3;
 
 /* ───────── 6 Request and eligibility ───────── */
 export interface CriterionFacts { label: string; result: "met" | "not_met" | "unknown"; reason: string; evidence?: string | null }

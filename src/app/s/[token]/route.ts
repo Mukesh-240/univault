@@ -135,7 +135,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
     const refuse = async (outcome: string) => {
       if (outcome === "denied:expired" && !found.expiredLogged) await markExpired(supabase, found.shareId, found.tokenId);
       const wrongDetails = outcome === "denied:wrong_recipient" || outcome === "denied:wrong_code" || outcome === "denied:otp_reused";
-      return html(wrongDetails ? gateHtml(v.lang, action, { error: translate(v.lang, "gate.wrong") }) : deniedHtml(v.lang, outcome), 403, dev);
+      // The on-page step trail shows how many tries are left before the 15-minute pause (never which detail was wrong).
+      const attemptsLeft = MAX_WRONG_CODES - wrongCodesSinceReset([...found.past, { outcome, deviceHash }]);
+      return html(wrongDetails ? gateHtml(v.lang, action, { error: translate(v.lang, "gate.wrong"), outcome, attemptsLeft }) : deniedHtml(v.lang, outcome), 403, dev);
     };
 
     if (step === "send") {
