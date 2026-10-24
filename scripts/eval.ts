@@ -45,3 +45,29 @@ const s = generate({ seed: 2026, set: "showcase", today });
 console.log(`\n## SHOWCASE — 17 planted conflicts (graduate_demo, seed 2026)\n`);
 for (const c of checkShowcase(makeBench(s.dataset, s.labels, packs)))
   console.log(`${String(c.id).padStart(2)}. ${c.detected === null ? "NOT BUILT YET" : c.detected ? "DETECTED     " : "NOT DETECTED "} ${c.title}\n      ${c.evidence}`);
+
+// ── PHASE 9 SCRIPTED CASES (live): protections added in Phase 9, each run for real at eval time ──
+(async () => {
+  const { generateKeyPairSync } = await import("node:crypto");
+  const { sha256 } = await import("../src/lib/crypto");
+  const { issueEntry, newSalts } = await import("../src/lib/issuer");
+  const { checkUpload } = await import("../src/lib/upload-check");
+  const { isUnintendedAccount } = await import("../src/lib/shares");
+  const { evaluatePack } = await import("../src/lib/rules");
+  const { toCriterion } = await import("../src/lib/eligibility");
+  const { contextFor } = await import("../src/lib/vault");
+  const priv = generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "der" }).toString("base64");
+  const fields = { name: "Eval Person", cgpa: "8.5", serial: "E-1" };
+  const entry = issueEntry(fields, { serial: "E-1", doc_type: "degree_certificate", issuer_name: "Eval Issuer" }, priv, newSalts(Object.keys(fields)));
+  const guessed = Array.from({ length: 1001 }, (_, i) => sha256(`cgpa=${(i / 100).toFixed(2)}`)).some((h) => Object.values(entry.field_hashes).includes(h));
+  const none = evaluatePack(loadPacks()[0], contextFor([], today)).results.map((r) => toCriterion(r.status, r.predicate, r.documentIds));
+  const script = new TextEncoder().encode("%PDF-1.4\n<< /S /JavaScript /JS (x) >>");
+  const cases: [number, string, boolean][] = [
+    [18, "Registry fingerprints cannot be guessed: a CGPA brute-force finds nothing (random per-field salt)", !guessed],
+    [19, "Forwarded link: a different signed-in account is recognised as unintended", isUnintendedAccount("UV-R-2000", "UV-R-1000") && !isUnintendedAccount("UV-R-1000", "uv-r-1000")],
+    [20, "A PDF with an embedded script is refused and nothing is stored", checkUpload(script).ok === false],
+    [21, "Eligibility with no evidence is unknown for every criterion, never not met", none.every((x) => x === "unknown")],
+  ];
+  console.log(`\n## PHASE 9 — ${cases.length} more scripted cases (run live)\n`);
+  for (const [id, title, ok] of cases) console.log(`${String(id).padStart(2)}. ${ok ? "DETECTED     " : "NOT DETECTED "} ${title}`);
+})();

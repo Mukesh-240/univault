@@ -84,19 +84,29 @@ export async function sendRequest(db: Db, a: { from: string; fromPurpose: string
 }
 
 /** The requests this receiver sent, with whether each has been answered by a share to it. */
-export async function requestsFor(db: Db, code: string): Promise<(SentRequest & { answered: boolean })[]> {
+export async function requestsFor(db: Db, code: string): Promise<(SentRequest & { answered: boolean; declined: boolean })[]> {
   const sent = (await ledgerLines(db, "request.sent")).filter((l) => l.payload.from === code);
   const shares = await inboxFor(db, code);
+  const no = new Set((await ledgerLines(db, "request.declined")).map((l) => l.payload.request_id));
   return sent.map((l) => {
     const r = toRequest(l);
     const answered = shares.some((s) => s.createdAt >= r.at && s.fields.some((f) => r.items.includes(f)));
-    return { ...r, answered };
+    return { ...r, answered, declined: no.has(r.id) };
   });
 }
 
-/** The requests addressed to a holder (shown on the sender screens). */
-export async function requestsToHolder(db: Db, holder: string): Promise<(SentRequest & { from: string })[]> {
-  return (await ledgerLines(db, "request.sent")).filter((l) => l.payload.to === holder).map((l) => ({ ...toRequest(l), from: String(l.payload.from ?? "") }));
+/** The requests addressed to a holder (shown on the sender screens), each with whether it was declined. */
+export async function requestsToHolder(db: Db, holder: string): Promise<(SentRequest & { from: string; declined: boolean })[]> {
+  const no = new Set((await ledgerLines(db, "request.declined")).map((l) => l.payload.request_id));
+  return (await ledgerLines(db, "request.sent")).filter((l) => l.payload.to === holder).map((l) => ({ ...toRequest(l), from: String(l.payload.from ?? ""), declined: no.has(toRequest(l).id) }));
+}
+
+/** The holder declines a request: logged, nothing is shared, and the receiver sees "Declined" (no reason is given). */
+export async function declineRequest(db: Db, holder: string, requestId: string): Promise<boolean> {
+  const r = (await requestsToHolder(db, holder)).find((x) => x.id === requestId);
+  if (!r || r.declined) return false;
+  await append(db, "request.declined", { request_id: requestId, from: r.from, to: holder });
+  return true;
 }
 
 export async function reportProblem(db: Db, code: string, shareId: string, reason: ReportReason): Promise<boolean> {

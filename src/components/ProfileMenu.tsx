@@ -11,7 +11,7 @@ import { useI18n } from "./I18n";
 import type { Role } from "@/lib/session";
 import { Popover } from "./Popover";
 
-export function ProfileMenu({ name, last4, role }: { name: string | null; last4: string; role: Role }) {
+export function ProfileMenu({ name, last4, role, uvId }: { name: string | null; last4: string; role: Role; uvId: string }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const signOut = async () => {
@@ -23,6 +23,8 @@ export function ProfileMenu({ name, last4, role }: { name: string | null; last4:
     <Popover label={<><UserRound size={22} aria-hidden="true" /> {t("ui.profile")}</>} panelLabel={t("ui.profile")}>
       <h2>{name ?? t("ui.profile")}</h2>
       <p><span className={`chip role-chip role-${role}`}>{t(`signin.role.${role}.tag`)}</span></p>
+      <p className="meta tabular">{t("acct.uvid", { id: uvId })}</p>
+      <p className="meta">{t("acct.uvidNote")}</p>
       <p className="meta">{t("ui.signedInWith", { id: `XXXX XXXX ${last4}` })}</p>
       <p className="meta">{t("ui.simulatedSignIn")}</p>
       <button type="button" className="secondary" onClick={signOut} disabled={busy}><LogOut size={20} aria-hidden="true" /> {t("ui.signOut")}</button>

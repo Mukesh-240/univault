@@ -70,3 +70,8 @@ This step permanently deletes the demo history. Only run it on the demo project.
 ## Phase 7: no new secrets
 
 The simulated sign-in signs its cookies with the existing `VAULT_PRIVATE_KEY`. No new environment variable is needed. Sign-in is demo-only: any valid demo number (starts 0000) is accepted.
+
+## Phase 9: the optional server-only database key
+
+`SUPABASE_SERVICE_ROLE_KEY` (Supabase > Project Settings > API > service_role) is OPTIONAL and is a server secret: never prefix it with NEXT_PUBLIC. When it is set the server uses it instead of the public anon key. To stop the public key reading the tables: (1) add it to `.env.local` and to Vercel (Production and Preview), (2) redeploy, (3) run `docs/sql/004_lock_anon.sql` in the Supabase SQL editor, (4) run `npx tsx scripts/anon-probe.ts`: every table must say DENIED. Do step 3 only after steps 1 and 2.
+

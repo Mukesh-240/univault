@@ -1,0 +1,7 @@
+{
+  "_about": "Which kind of issuer may sign which kind of document (FINAL_FEATURES 1.2). Adding a document type is a line here; no code changes. Authority comes ONLY from the signed registry entry and this table, never from text inside a document.",
+  "government": ["id_card", "licence", "passport", "income_certificate", "caste_certificate", "community_certificate", "birth_certificate", "death_certificate"],
+  "college_university": ["degree_certificate", "provisional_certificate", "marksheet", "enrolment_certificate", "bonafide_certificate"],
+  "board_school": ["school_certificate", "transfer_certificate", "marksheet_10th", "marksheet_12th", "hall_ticket"],
+  "business": ["experience_letter", "internship_certificate", "offer_letter", "relieving_letter", "salary_slip"]
+}

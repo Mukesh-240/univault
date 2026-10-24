@@ -101,6 +101,19 @@ Sign-in is **simulated**: a synthetic Aadhaar-style number (always starts 0000, 
 
 Telugu and large text: ![](docs/screenshots/home-390-te-A+.png) All screens are in `docs/screenshots/` (1440 and 390 wide, English and Telugu, normal and A+). Telugu was written by an AI model and is not yet reviewed by a native speaker: see `docs/TELUGU_REVIEW.md`.
 
+## Phase 8 and 9: three roles, and what is still open
+
+**Three roles, one pipeline.** You sign in as one of the demo parties: an **Issuer** (a government office, a university or a board: it signs and issues documents, and can stop or replace them), a **Sender** (a person who keeps documents and shares only what is needed, and can stop sharing at three levels: one link, one recipient, or everything), or a **Receiver** (an organisation that asks for documents, opens what was shared with it, or asks an eligibility question). Sender and Receiver are the same kind of account shown in two modes. Every account has a permanent **UV-ID**; a UV-ID names an account, it does not prove who is at the keyboard. Account verification and the one-time codes are **simulated**.
+
+**Eligibility check.** A requester asks about the criteria of its purpose. The person allows criteria one by one. The answer is met, not met or unknown for each (missing, expired, conflicting or unverified evidence is always unknown), signed by UNIVAULT, says it is not proof, and gives no document.
+
+**What Phase 9 closed** (each has a regression test; list in `docs/GAP_AUDIT.md`): per-field random salts and canonical values in the issuer registry, a PDF-only upload check, forwarded links refused for a different account (the log names both IDs), the route and role matrix, confirmation tied to the preview, source scans for logging and wording, and issuer authority by document type.
+
+**What is not done, said plainly**
+- **The public database key can still read every table** until the owner adds a server-only key (`SUPABASE_SERVICE_ROLE_KEY`) and runs `docs/sql/004_lock_anon.sql`. Until then the vault is not private from someone who queries the database directly. `npx tsx scripts/anon-probe.ts` shows exactly what is readable.
+- Documents are structured details, not PDF files: there is no preview-pages mode, and a PDF is checked and refused or accepted at the door but not read into a document.
+- The Slow 3G target (169 KB, 7.2 s) is not met: about 200 KB and 8.7 s.
+
 ## 4. What it does, mapped to the brief
 
 | Brief requirement | How UNIVAULT meets it | Where |
@@ -316,6 +329,8 @@ and hash chain. A production build refuses to do that. `GET /api/health` returns
 | Zod | 4 | MIT | Input validation at every boundary |
 | Tesseract.js (+ `eng`, `tel` tessdata) | 6.0 | Apache-2.0 | OCR |
 | lucide-react | 1.51 | ISC | The one icon set |
+| motion | 13.5 | MIT | A few spring animations (loaded only on laptop-size screens) |
+| Inter (via next/font) | - | SIL OFL | English text on laptop-size screens |
 | Noto Sans Telugu (via `next/font`) | — | SIL OFL 1.1 | Telugu typeface |
 | sharp | 0.35 | Apache-2.0 | Rendering the synthetic scan images (dev only) |
 | Vitest | 5 | MIT | Unit tests |

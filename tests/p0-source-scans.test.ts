@@ -74,6 +74,8 @@ describe("P0.10 every kind of event writes a ledger line", () => {
     ["erasure", /"document\.erased"/],
     ["issuer issued / replaced / stopped", /"issuer\.issued"[\s\S]*"issuer\.superseded"[\s\S]*"issuer\.revoked"|"issuer\.revoked"/],
     ["receiver report", /"receiver\.reported"/],
+    ["declined request", /"request\.declined"/],
+    ["eligibility requested, answered, declined", /"eligibility\.requested"[\s\S]*"eligibility\.answered"[\s\S]*"eligibility\.declined"|"eligibility\.declined"[\s\S]*"eligibility\.answered"/],
   ];
   for (const [name, re] of EVENTS) it(`${name} writes a ledger line`, () => expect(re.test(code), name).toBe(true));
 });

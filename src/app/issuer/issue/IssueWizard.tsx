@@ -91,7 +91,7 @@ export function IssueWizard({ issuerName, types, supersedes }: { issuerName: str
   const progress = done ? 4 : step;
   const Paper = ({ serial }: { serial?: string }) => (
     <article className={`paper${serial ? " signed" : ""}`} aria-label={t("issuer.paper.title")}>
-      <header><Logo size={30} /><strong>{issuerName}</strong></header>
+      <header><Logo size={30} /><strong>{issuerName}</strong><span className="chip unk">{t("banner.simulatedIssuer")}</span></header>
       <h3>{typeLabel || t("issuer.paper.title")}</h3>
       {holder && <p className="meta">{t("issuer.paper.for", { name: holder.name })}</p>}
       <dl>

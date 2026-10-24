@@ -30,6 +30,18 @@ export function translate(lang: Lang, key: string, vars?: Record<string, string 
 /** The dictionary for one language (server side; the browser receives only this one). */
 export const dictFor = (lang: Lang) => DICTS[lang];
 
+/**
+ * The part of the word list the BROWSER needs: only the key groups (the part before the first dot) that interactive
+ * components use. The server-drawn pages (threat model, policy, home...) never send their text twice, which keeps the
+ * first download small on a slow connection. tests/i18n-parity.test.ts fails if a client component uses a group that
+ * is not in src/lib/client-prefixes.json, so a missing group cannot slip through.
+ */
+import clientPrefixes from "./client-prefixes.json";
+const CLIENT = new Set<string>(clientPrefixes);
+const clientCache: Partial<Record<Lang, Record<string, string>>> = {};
+export const dictForClient = (lang: Lang): Record<string, string> =>
+  (clientCache[lang] ??= Object.fromEntries(Object.entries(DICTS[lang]).filter(([k]) => CLIENT.has(k.split(".")[0]))));
+
 const tFor = (lang: Lang) => (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars);
 /** A field name / document type / shared item for people, in the chosen language. */
 export const fieldLabel = (lang: Lang, field: string) => labelers(tFor(lang)).fieldLabel(field);

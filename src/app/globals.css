@@ -397,7 +397,7 @@ p, li, dd, dt, label, td, th, span { overflow-wrap: anywhere; }
 .tabular { font-variant-numeric: tabular-nums; }
 
 /* Glass top bar (the only place blur is used). */
-.topbar { position: sticky; top: 0; z-index: 35; background: rgba(255, 255, 255, 0.84); color: var(--navy-deep); border-bottom: 1px solid var(--line);
+.topbar { background: rgba(255, 255, 255, 0.84); color: var(--navy-deep); border-bottom: 1px solid var(--line);
   -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); }
 html[data-contrast="high"] .topbar { background: #FFFFFF; border-bottom: 3px solid #000; -webkit-backdrop-filter: none; backdrop-filter: none; }
 .brand { color: var(--navy-deep); letter-spacing: 0.08em; }
@@ -647,3 +647,8 @@ html[data-contrast="high"] .topbar { background: #FFFFFF; border-bottom: 3px sol
 /* Bigger text sizes need more room: the top bar may use two rows instead of overflowing sideways. */
 html[data-size="125"] .topbar-inner, html[data-size="150"] .topbar-inner, html[data-size="125"] .tools, html[data-size="150"] .tools { flex-wrap: wrap; }
 html[data-size="125"] .tools, html[data-size="150"] .tools { justify-content: flex-end; }
+
+/* The persistent synthetic strip and the sticky top stack (strip + glass bar). */
+.top-stack { position: sticky; top: 0; z-index: 35; }
+.synthetic-strip { margin: 0; max-width: none; text-align: center; background: var(--tint-100); color: var(--navy-deep); font-size: 0.9rem; font-weight: 700; line-height: 1.5; padding: 0.1rem 1rem; border-bottom: 1px solid var(--line); }
+html[data-contrast="high"] .synthetic-strip { background: #FFFFFF; border-bottom: 2px solid #000; }

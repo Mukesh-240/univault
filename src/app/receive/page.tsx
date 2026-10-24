@@ -37,7 +37,7 @@ export default async function ReceiveHome() {
       <section className="hero role-receiver">
         <h1>{t("recv.title")}</h1>
         <p className="lead">{t("recv.sub")}</p>
-        <Link href="/receive/ask" className="btn"><Send size={22} aria-hidden="true" /> {t("recv.ask.btn")}</Link>
+        <div className="row"><Link href="/receive/ask" className="btn"><Send size={22} aria-hidden="true" /> {t("recv.ask.btn")}</Link><Link href="/receive/eligibility" className="btn secondary">{t("recv.eligibility.btn")}</Link></div>
       </section>
       <section aria-labelledby="sh-h" className="stack-s">
         <h2 id="sh-h">{t("recv.shared.title")}</h2>

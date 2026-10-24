@@ -12,7 +12,7 @@ import { itemLabel, showTime } from "@/lib/i18n";
 import { DEMO_OWNER } from "@/lib/server";
 import { loadShares } from "@/lib/share-store";
 import { supabase } from "@/lib/supabase";
-import { Recheck, ShareActions } from "./ShareActions";
+import { Recheck, ShareActions, StopUser } from "./ShareActions";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,6 +40,7 @@ export default async function SharesPage() {
                 <p>{t("shares.what", { items: s.fields.map((f) => itemLabel(lang, f)).join(", ") })}</p>
                 <p className="meta">{s.purpose} · {t("shares.until", { until: showTime(s.expiresAt) })} · {t("shares.opened", { n: opened })}</p>
                 <ShareActions shareId={s.id} active={s.state === "active"} name={s.recipientName} />
+                {s.state === "active" && <div className="card-actions"><StopUser code={s.recipientCode} name={s.recipientName} /></div>}
                 {s.accesses.length > 0 && (
                   <details className="expert">
                     <summary>{t("ui.experts")}: {t("shares.history")}</summary>

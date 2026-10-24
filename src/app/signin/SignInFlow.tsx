@@ -21,7 +21,7 @@ import { format, validate, generate, NUMBER_LENGTH, digitsOnly, type Problem } f
 
 type Step = "role" | "profile" | "number" | "code" | "consent";
 type Role = "issuer" | "sender" | "receiver";
-export interface ClientProfile { role: Role; ref: string; name: string; number: string; masked: string }
+export interface ClientProfile { role: Role; ref: string; name: string; number: string; masked: string; uvId: string; type: string; category: string | null }
 interface Record_ { name: string | null; dob: string | null; idMasked: string | null }
 interface Chosen { role: Role; ref?: string; name?: string }
 
@@ -177,7 +177,9 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
                     <span className="profile-text">
                       <strong>{p.name}</strong>
                       <span className="chip role-chip">{t(`signin.role.${p.role}.tag`)}</span>
-                      <span className="tabular meta">{p.masked}</span>
+                      <span className="meta">{t(`acct.type.${p.type}`)}{p.category ? ` · ${t(`acct.cat.${p.category}`)}` : ""}</span>
+                      <span className="tabular meta">{p.uvId} · {p.masked}</span>
+                      <span className="meta">{t("acct.simulated")}</span>
                       <span className="use">{busy ? t("share.working") : t("signin.profile.use")}</span>
                     </span>
                   </button>

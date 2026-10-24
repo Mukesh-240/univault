@@ -28,6 +28,7 @@ export default async function IssuerHome() {
     <>
       <section className="hero role-issuer">
         <h1>{t("issuer.welcome", { name: issuer })}</h1>
+        <p><span className="chip unk">{t("banner.simulatedIssuer")}</span></p>
         <p className="lead">{t("issuer.sub")}</p>
         <Link href="/issuer/issue" className="btn"><FilePlus2 size={22} aria-hidden="true" /> {t("issuer.btn.issue")}</Link>
       </section>

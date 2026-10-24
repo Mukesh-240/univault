@@ -18,7 +18,7 @@ const EXACT: Record<string, HelpScreen> = {
   "/names": "names", "/more": "more", "/verify": "check", "/ledger": "history", "/leak-trace": "trace", "/assistant": "assistant",
   "/faults": "faults", "/threat-model": "threat", "/policy": "policy",
   "/issuer": "issuer", "/issuer/issue": "issue", "/issuer/issued": "issued", "/issuer/activity": "issuer", "/issuer/more": "more",
-  "/receive": "inbox", "/receive/ask": "ask", "/receive/requests": "requests", "/receive/more": "more", "/area": "area",
+  "/receive": "inbox", "/receive/ask": "ask", "/receive/eligibility": "ask", "/receive/requests": "requests", "/receive/more": "more", "/area": "area",
 };
 
 export function helpScreenFor(pathname: string): HelpScreen {

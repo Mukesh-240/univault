@@ -51,6 +51,19 @@ export function ShareActions({ shareId, active, name }: { shareId: string; activ
   );
 }
 
+/** "Stop all sharing with <name>": kill USER, every active link to one recipient (other recipients are untouched). */
+export function StopUser({ code, name }: { code: string; name: string }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const kill = async () => {
+    const r = await post<{ killed: string[] }>("/api/shares/kill", { recipient_code: code });
+    const m = r.offline ? t("api.offline") : r.ok ? t("shares.killedUser", { n: r.data.killed.length, name }) : t("api.failed");
+    announce(m);
+    if (r.ok) router.refresh();
+  };
+  return <ConfirmButton className="secondary bad" label={t("shares.killUser", { name })} title={t("shares.confirmUser.title", { name })} body={t("shares.confirmUser.body", { name })} yes={t("shares.confirm.yes")} no={t("shares.confirm.no")} onConfirm={kill} />;
+}
+
 export function KillAll({ disabled }: { disabled: boolean }) {
   const { t } = useI18n();
   const router = useRouter();

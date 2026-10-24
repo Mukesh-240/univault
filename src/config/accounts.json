@@ -1,0 +1,11 @@
+{
+  "_about": "The parties the demo can act as, by account type (FINAL_FEATURES 1.1). Issuers are matched by the name in the signed registry; receivers by the purpose they are registered for; the holder is an Individual. The verification step for every type is SIMULATED and labelled so. Types: individual, government, institution (category college_university or board_school), business.",
+  "issuers": [
+    { "name": "Synthetic Identity Authority", "type": "government" },
+    { "name": "Synthetic Revenue Department", "type": "government" },
+    { "name": "Synthetic State University", "type": "institution", "category": "college_university" },
+    { "name": "Synthetic Board of Secondary Education", "type": "institution", "category": "board_school" }
+  ],
+  "receiverTypeByPurpose": { "job": "business", "scholarship": "institution", "overseas_credential_check": "business" },
+  "holderType": "individual"
+}

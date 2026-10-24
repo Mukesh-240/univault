@@ -2,7 +2,7 @@
 import { CheckCircle2, Hourglass } from "lucide-react";
 import { getI18n } from "@/lib/i18n-server";
 
-export interface RequestRow { id: string; when: string; holder: string; items: string[]; answered: boolean; flagged: boolean }
+export interface RequestRow { id: string; when: string; holder: string; items: string[]; answered: boolean; declined?: boolean; flagged: boolean }
 
 export async function RequestCards({ rows }: { rows: RequestRow[] }) {
   const { t } = await getI18n();
@@ -13,8 +13,8 @@ export async function RequestCards({ rows }: { rows: RequestRow[] }) {
         <li key={r.id} className="card">
           <div className="card-head">
             <p className="big">{t("recv.req.to", { name: r.holder, n: r.items.length })}</p>
-            <span className={`chip ${r.answered ? "ok" : "unk"}`}>
-              {r.answered ? <CheckCircle2 size={18} aria-hidden="true" /> : <Hourglass size={18} aria-hidden="true" />} {t(r.answered ? "recv.req.answered" : "recv.req.waiting")}
+            <span className={`chip ${r.declined ? "warn" : r.answered ? "ok" : "unk"}`}>
+              {r.answered ? <CheckCircle2 size={18} aria-hidden="true" /> : <Hourglass size={18} aria-hidden="true" />} {t(r.declined ? "recv.req.declined" : r.answered ? "recv.req.answered" : "recv.req.waiting")}
             </span>
           </div>
           <p className="meta">{r.when}</p>

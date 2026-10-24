@@ -18,7 +18,7 @@ import { Logo } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
 import { ProfileMenu } from "./ProfileMenu";
 
-export interface ChromeUser { name: string | null; last4: string; role: Role }
+export interface ChromeUser { name: string | null; last4: string; role: Role; uvId: string }
 
 interface Item { href: string; tab: string; side: string; Icon: LucideIcon; here: (p: string) => boolean }
 const MORE_PREFIXES = ["/more", "/ocr", "/names", "/verify", "/ledger", "/leak-trace", "/assistant", "/faults", "/threat-model", "/policy"];
@@ -70,9 +70,12 @@ export function Chrome({ user, size, contrast, offline, children }: {
   return (
     <>
       <a href="#main" className="skip-link">{t("a11y.skip")}</a>
+      <div className="top-stack">
+      {/* The persistent synthetic strip (FINAL_FEATURES 0.1): on every page, calm, never dismissible. */}
+      <p className="synthetic-strip" role="note">{t("strip.text")}{offline ? ` · ${t("banner.offlineStore")}` : ""}</p>
       <header className="topbar">
         <div className="topbar-inner">
-          <Link href={full ? HOMES[role] : "/signin"} className="brand"><Logo size={34} /> UNIVAULT</Link>
+          <Link prefetch={false} href={full ? HOMES[role] : "/signin"} className="brand"><Logo size={34} /> UNIVAULT</Link>
           {full && (
             <form className="top-search" role="search" action={SEARCH[role]} method="get">
               <label htmlFor="top-q" className="sr-only">{t("ui.search")}</label>
@@ -83,18 +86,19 @@ export function Chrome({ user, size, contrast, offline, children }: {
           <div className="tools">
             {full && role === "sender" && (
               <nav className="mode-switch" aria-label={t("mode.label")}>
-                <Link href="/" aria-current={receiving ? undefined : "page"}>{t("mode.sending")}</Link>
-                <Link href="/receive" aria-current={receiving ? "page" : undefined}>{t("mode.receiving")}</Link>
+                <Link prefetch={false} href="/" aria-current={receiving ? undefined : "page"}>{t("mode.sending")}</Link>
+                <Link prefetch={false} href="/receive" aria-current={receiving ? "page" : undefined}>{t("mode.receiving")}</Link>
               </nav>
             )}
             <LangSwitch />
             <DisplayMenu initialSize={size} initialContrast={contrast} />
             {full && user && role === "sender" && <NotificationBell />}
             <DemoChip offline={offline} />
-            {full && user && <ProfileMenu name={user.name} last4={user.last4} role={role} />}
+            {full && user && <ProfileMenu name={user.name} last4={user.last4} role={role} uvId={user.uvId} />}
           </div>
         </div>
       </header>
+      </div>
       <div className={`shell role-${role}${folded ? " folded" : ""}`}>
         {full && (
           <nav className="sidenav" aria-label={t("nav.label")}>
@@ -109,12 +113,12 @@ export function Chrome({ user, size, contrast, offline, children }: {
             </form>
             <ul>
               {menu.map(({ href, side, Icon, here }) => (
-                <li key={href}><Link href={href} aria-current={here(path) ? "page" : undefined} title={t(side)}><Icon size={24} aria-hidden="true" /> <span>{t(side)}</span></Link></li>
+                <li key={href}><Link prefetch={false} href={href} aria-current={here(path) ? "page" : undefined} title={t(side)}><Icon size={24} aria-hidden="true" /> <span>{t(side)}</span></Link></li>
               ))}
               {role === "sender" && (
                 <li className="sub"><ul>
                   {SENDER_SECONDARY.map(([href, key]) => (
-                    <li key={href}><Link href={href} aria-current={path === href ? "page" : undefined}>{t(key)}</Link></li>
+                    <li key={href}><Link prefetch={false} href={href} aria-current={path === href ? "page" : undefined}>{t(key)}</Link></li>
                   ))}
                 </ul></li>
               )}
@@ -126,15 +130,15 @@ export function Chrome({ user, size, contrast, offline, children }: {
       {full && (
         <nav className="tabbar" aria-label={t("nav.label")}>
           {menu.map(({ href, tab, Icon, here }) => (
-            <Link key={href} href={href} aria-current={here(path) ? "page" : undefined}><Icon aria-hidden="true" />{t(tab)}</Link>
+            <Link key={href} prefetch={false} href={href} aria-current={here(path) ? "page" : undefined}><Icon aria-hidden="true" />{t(tab)}</Link>
           ))}
         </nav>
       )}
       <footer className="site-footer">
         <nav aria-label={t("footer.links")} className="footer-links">
           <ul>
-            <li><Link href="/threat-model">{t("footer.threatModel")}</Link></li>
-            <li><Link href="/policy">{t("footer.policy")}</Link></li>
+            <li><Link prefetch={false} href="/threat-model">{t("footer.threatModel")}</Link></li>
+            <li><Link prefetch={false} href="/policy">{t("footer.policy")}</Link></li>
           </ul>
         </nav>
         <p>{t("footer.issuer")}</p>

@@ -79,3 +79,19 @@ describe("the first things people read are really in Telugu", () => {
     expect(stillEnglish).toEqual([]);
   });
 });
+
+describe("the client word list", () => {
+  it("covers every key group that an interactive component uses", async () => {
+    const { readdirSync, readFileSync, statSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const prefixes: string[] = JSON.parse(readFileSync(join(__dirname, "..", "src", "lib", "client-prefixes.json"), "utf8"));
+    const walk = (d: string): string[] => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
+    const missing = new Set<string>();
+    for (const f of walk(join(__dirname, "..", "src")).filter((x) => x.endsWith(".tsx"))) {
+      const text = readFileSync(f, "utf8");
+      if (!text.trimStart().startsWith('"use client"')) continue;
+      for (const m of text.matchAll(/t\(\s*["`']([a-zA-Z0-9_.]+)/g)) if (!prefixes.includes(m[1].split(".")[0])) missing.add(`${f}: ${m[1]}`);
+    }
+    expect([...missing]).toEqual([]);
+  });
+});

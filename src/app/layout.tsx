@@ -14,9 +14,10 @@ import { cookies } from "next/headers";
 import { Inter, Noto_Sans_Telugu } from "next/font/google";
 import { Chrome } from "@/components/Chrome";
 import { I18nProvider } from "@/components/I18n";
-import { dictFor } from "@/lib/i18n";
+import { dictForClient } from "@/lib/i18n";
 import { InterLoader } from "@/components/InterLoader";
 import { LiveRegion } from "@/components/Live";
+import { accountInfo } from "@/lib/accounts";
 import { currentSession } from "@/lib/auth-server";
 import { getI18n } from "@/lib/i18n-server";
 import { CONTRAST_COOKIE, parseContrast, parseSize, SIZE_COOKIE } from "@/lib/prefs";
@@ -39,8 +40,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={lang} className={lang === "te" ? `${inter.variable} ${telugu.variable}` : inter.variable} data-size={size} data-contrast={contrast === "high" ? "high" : undefined}>
       <body>
-        <I18nProvider lang={lang} dict={dictFor(lang)}>
-          <Chrome user={session ? { name: session.name, last4: session.last4, role: session.role ?? "sender" } : null} size={size} contrast={contrast} offline={OFFLINE}>
+        <I18nProvider lang={lang} dict={dictForClient(lang)}>
+          <Chrome user={session ? { name: session.name, last4: session.last4, role: session.role ?? "sender", uvId: accountInfo(session.role ?? "sender", session.ref ?? "demo").uvId } : null} size={size} contrast={contrast} offline={OFFLINE}>
             {DB_CONFIGURED ? children : (
               // Production without a database key: say so plainly instead of silently using demo memory.
               <section className="panel"><h1>{t("db.notConfigured")}</h1><p>{t("db.notConfiguredBody")}</p></section>

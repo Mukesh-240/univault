@@ -16,6 +16,7 @@
  */
 import { randomInt } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { issuerCategory, mayIssue, typesAllowedFor } from "./accounts";
 import { dictFor } from "./i18n";
 import { ingestDocument } from "./ingest";
 import { checkForm, FORMS, initialsOf } from "./issue-forms";
@@ -38,18 +39,18 @@ export async function newSerial(db: Db, issuer: string, docType: string): Promis
 
 /** The kinds of document this issuer can create: the kinds it has issued before (so a university does not issue income
  *  certificates), limited to the kinds this portal has a form for. An issuer with no history may create any of them. */
-export async function typesFor(db: Db, issuer: string): Promise<string[]> {
-  const r = await db.from("issuer_registry").select("doc_type").eq("issuer_name", issuer);
-  const seen = new Set(((r.data ?? []) as { doc_type: string }[]).map((x) => x.doc_type));
-  const mine = Object.keys(FORMS).filter((t) => seen.has(t));
-  return mine.length ? mine : Object.keys(FORMS);
+export async function typesFor(_db: Db, issuer: string): Promise<string[]> {
+  // The authority table decides (document type -> allowed issuer category); only kinds this portal has a form for are offered.
+  return Object.keys(FORMS).filter((t) => typesAllowedFor(issuer).includes(t));
 }
 
 export interface IssueInput { issuer: string; holderOwner: string; docType: string; answers: Record<string, string>; supersedes?: string }
 export type IssueResult = { ok: true; serial: string; documentId: string; sha256: string } | { ok: false; status: number; error: string; problems?: Record<string, string> };
 
 export async function issueDocument(db: Db, a: IssueInput, issuerPrivB64: string): Promise<IssueResult> {
-  if (!FORMS[a.docType] || !(await typesFor(db, a.issuer)).includes(a.docType)) return { ok: false, status: 422, error: "That kind of document cannot be issued here." };
+  if (!FORMS[a.docType]) return { ok: false, status: 422, error: "That kind of document cannot be issued here." };
+  // Authority: this issuer category may not sign this kind of document. Decided by the table and the issuer account, never by anything written in a document.
+  if (!mayIssue(issuerCategory(a.issuer), a.docType)) return { ok: false, status: 403, error: "This issuer is not authorised to sign that kind of document, so nothing was signed." };
   const form = checkForm(a.docType, a.answers);
   if (!form.ok) return { ok: false, status: 422, error: "Some details need fixing.", problems: form.problems };
 

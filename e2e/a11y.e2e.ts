@@ -15,7 +15,7 @@ const PAGES = ["/signin", "/", "/doc", "/readiness", "/share", "/shares", "/aler
   "/leak-trace", "/assistant", "/faults", "/threat-model", "/policy", "/s/preview?purpose=scholarship", "/s/not-a-real-link"];
 // The other two roles have their own pages; each is scanned signed in as that role.
 const ISSUER_PAGES = ["/issuer", "/issuer/issue", "/issuer/issued", "/issuer/activity", "/issuer/more"];
-const RECEIVER_PAGES = ["/receive", "/receive/ask", "/receive/requests", "/receive/more"];
+const RECEIVER_PAGES = ["/receive", "/receive/ask", "/receive/eligibility", "/receive/requests", "/receive/more"];
 const stateFor = (path: string) => (ISSUER_PAGES.includes(path) ? ISSUER_AUTH : RECEIVER_PAGES.includes(path) ? RECEIVER_AUTH : AUTH_FILE);
 const ALL_PAGES = [...PAGES, "/area?for=issuer", ...ISSUER_PAGES, ...RECEIVER_PAGES];
 const LANGS = ["en", "te"] as const;

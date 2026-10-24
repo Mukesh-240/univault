@@ -17,7 +17,7 @@ export const runtime = "nodejs";
 
 export default async function SignInPage() {
   const { t } = await getI18n();
-  const profiles = (await loadProfiles(supabase)).map((p) => ({ role: p.role, ref: p.ref, name: p.name, number: format(p.number), masked: mask(p.number) }));
+  const profiles = (await loadProfiles(supabase)).map((p) => ({ role: p.role, ref: p.ref, name: p.name, number: format(p.number), masked: mask(p.number), uvId: p.uvId, type: p.type, category: p.category ?? null }));
   return (
     <div className="signin-page">
       <div className="signin-main">

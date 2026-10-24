@@ -11,13 +11,14 @@
  *   recipient code. The server re-checks a ref against this list before it signs anyone in.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { accountInfo, type AccountType } from "./accounts";
 import { sha256 } from "./crypto";
 import { personRecord } from "./person";
 import type { Role } from "./session";
 import { generate } from "./synthetic-aadhaar";
 import { DEMO_OWNER, loadDemoVault } from "./server";
 
-export interface Profile { role: Role; ref: string; name: string; number: string }
+export interface Profile { role: Role; ref: string; name: string; number: string; uvId: string; type: AccountType; category?: string }
 
 /** A demo number worked out from a key: 0000 + 7 digits taken from the key's hash + the check digit. */
 export function demoNumberFor(key: string): string {
@@ -45,12 +46,14 @@ async function readProfiles(db: Db): Promise<Profile[]> {
   try {
     const reg = await db.from("issuer_registry").select("issuer_name");
     const names = [...new Set(((reg.data ?? []) as { issuer_name: string }[]).map((r) => r.issuer_name).filter(Boolean))].sort();
-    for (const n of names) out.push({ role: "issuer", ref: n, name: n, number: demoNumberFor(`issuer|${n}`) });
+    for (const n of names) { const a = accountInfo("issuer", n); out.push({ role: "issuer", ref: n, name: n, number: demoNumberFor(`issuer|${n}`), uvId: a.uvId, type: a.type, category: a.category }); }
     const person = personRecord((await loadDemoVault()).docs);
-    out.push({ role: "sender", ref: DEMO_OWNER, name: person.name ?? "Demo holder", number: demoNumberFor(`holder|${DEMO_OWNER}`) });
-    const rec = await db.from("recipients").select("recipient_code, name").order("recipient_code");
-    for (const r of (rec.data ?? []) as { recipient_code: string; name: string }[])
-      out.push({ role: "receiver", ref: r.recipient_code, name: r.name, number: demoNumberFor(`receiver|${r.recipient_code}`) });
+    { const a = accountInfo("sender", DEMO_OWNER); out.push({ role: "sender", ref: DEMO_OWNER, name: person.name ?? "Demo holder", number: demoNumberFor(`holder|${DEMO_OWNER}`), uvId: a.uvId, type: a.type }); }
+    const rec = await db.from("recipients").select("recipient_code, name, org").order("recipient_code");
+    for (const r of (rec.data ?? []) as { recipient_code: string; name: string; org: string }[]) {
+      const a = accountInfo("receiver", r.recipient_code, r.org);
+      out.push({ role: "receiver", ref: r.recipient_code, name: r.name, number: demoNumberFor(`receiver|${r.recipient_code}`), uvId: a.uvId, type: a.type });
+    }
   } catch { /* an empty list; the sign-in page explains */ }
   return out;
 }

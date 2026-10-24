@@ -15,7 +15,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
 import { checkForm, FORMS, isIsoDate } from "../src/lib/issue-forms";
 import { entrySignatureValid } from "../src/lib/issuer";
-import { issueDocument, latestEntry, listIssued, revokeSerial } from "../src/lib/issuer-portal";
+import { issueDocument, latestEntry, listIssued, revokeSerial, typesFor } from "../src/lib/issuer-portal";
 import { verify } from "../src/lib/ledger";
 import { newStore, offlineClient } from "../src/lib/offline-db";
 import { seedDataset } from "../src/lib/seed";
@@ -33,9 +33,11 @@ async function world() {
   await seedDataset(db, generate({ seed: 2026, set: "showcase", today: "2026-10-24" }).dataset, PRIV);
   return { store, db };
 }
+const UNI = "Synthetic State University"; // a seeded party: a college/university, which may sign degree certificates
+const BOARD = "Synthetic Board of Secondary Education";
 const GOOD = { name: "Test Holder", reg_no: "R-1001", degree: "Degree", branch: "Branch", cgpa: "8.5", year_of_passing: "2024" };
 const issue = (db: SupabaseClient, over: Partial<Parameters<typeof issueDocument>[1]> = {}) =>
-  issueDocument(db, { issuer: "Issuer One", holderOwner: "demo", docType: "degree_certificate", answers: GOOD, ...over }, PRIV);
+  issueDocument(db, { issuer: UNI, holderOwner: "demo", docType: "degree_certificate", answers: GOOD, ...over }, PRIV);
 
 describe("issue form checks", () => {
   it("accepts a complete form and trims it", () => {
@@ -82,10 +84,28 @@ describe("issuing", () => {
 
   it("an issuer sees and stops only its own records", async () => {
     const { db } = await world();
-    const mine = await issue(db), other = await issueDocument(db, { issuer: "Issuer Two", holderOwner: "demo", docType: "degree_certificate", answers: GOOD }, PRIV);
+    const mine = await issue(db), other = await issueDocument(db, { issuer: BOARD, holderOwner: "demo", docType: "school_certificate", answers: { name: "Test Holder", dob: "2001-03-04", roll_no: "R-77", year: "2017", result: "PASS" } }, PRIV);
     if (!mine.ok || !other.ok) throw new Error("issue failed");
-    expect((await listIssued(db, "Issuer One")).map((x) => x.serial)).toEqual([mine.serial]);
-    expect(await revokeSerial(db, "Issuer One", other.serial, PRIV)).toMatchObject({ ok: false, status: 404 });
+    const own = (await listIssued(db, UNI)).map((x) => x.serial);
+    expect(own).toContain(mine.serial);
+    expect(own).not.toContain(other.serial); // another issuer record never shows here
+    expect(await revokeSerial(db, UNI, other.serial, PRIV)).toMatchObject({ ok: false, status: 404 });
+  });
+});
+
+describe("issuer authority (FINAL_FEATURES 1.2)", () => {
+  it("a board cannot sign a degree, a university cannot sign a school certificate, an unknown issuer signs nothing", async () => {
+    const { store, db } = await world();
+    const before = store.tables.issuer_registry.length;
+    expect(await issueDocument(db, { issuer: BOARD, holderOwner: "demo", docType: "degree_certificate", answers: GOOD }, PRIV)).toMatchObject({ ok: false, status: 403 });
+    expect(await issueDocument(db, { issuer: UNI, holderOwner: "demo", docType: "school_certificate", answers: {} }, PRIV)).toMatchObject({ ok: false, status: 403 });
+    expect(await issueDocument(db, { issuer: "Nobody Registered", holderOwner: "demo", docType: "degree_certificate", answers: GOOD }, PRIV)).toMatchObject({ ok: false, status: 403 });
+    expect(store.tables.issuer_registry).toHaveLength(before);
+  });
+  it("the allowed kinds come from the table", async () => {
+    expect(await typesFor({} as never, UNI)).toEqual(["degree_certificate", "provisional_certificate"]);
+    expect(await typesFor({} as never, BOARD)).toEqual(["school_certificate", "transfer_certificate"]);
+    expect(await typesFor({} as never, "Nobody Registered")).toEqual([]);
   });
 });
 
@@ -95,11 +115,11 @@ describe("stopping and replacing", () => {
     const r = await issue(db);
     if (!r.ok) throw new Error(r.error);
     const rows = store.tables.issuer_registry.length;
-    expect(await revokeSerial(db, "Issuer One", r.serial, PRIV)).toEqual({ ok: true, version: 2 });
+    expect(await revokeSerial(db, UNI, r.serial, PRIV)).toEqual({ ok: true, version: 2 });
     expect(store.tables.issuer_registry).toHaveLength(rows + 1); // appended, nothing changed or removed
     const v = await runVerification(db, r.documentId, PUB);
     expect(v.ok && v.outcome.state).toBe("revoked");
-    expect(await revokeSerial(db, "Issuer One", r.serial, PRIV)).toMatchObject({ ok: false, status: 409 });
+    expect(await revokeSerial(db, UNI, r.serial, PRIV)).toMatchObject({ ok: false, status: 409 });
     expect((await verify(db)).ok).toBe(true);
   });
 

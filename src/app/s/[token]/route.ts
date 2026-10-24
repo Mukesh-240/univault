@@ -25,7 +25,7 @@ import { log } from "@/lib/scrub";
 import { loadDemoVault, serverKey } from "@/lib/server";
 import { linkByTokenHash, logAccess, markExpired } from "@/lib/share-store";
 import {
-  decideCodeRequest, decideOpen, downloadPass, hashCode, hashDevice, hashToken, linkStatus, LOCK_MS, lockedUntil, MAX_WRONG_CODES, newDeviceId, newOneTimeCode,
+  decideCodeRequest, decideOpen, isUnintendedAccount, downloadPass, hashCode, hashDevice, hashToken, linkStatus, LOCK_MS, lockedUntil, MAX_WRONG_CODES, newDeviceId, newOneTimeCode,
   newSessionCode, wrongCodesSinceReset,
 } from "@/lib/shares";
 import { supabase } from "@/lib/supabase";
@@ -94,7 +94,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     }
     // Forwarded link: a signed-in receiving account that is not the intended recipient is stopped at the door.
     const account = receiverCode(await currentSession());
-    if (account && account.toUpperCase() !== found!.link.recipientCode.toUpperCase()) {
+    if (isUnintendedAccount(account, found!.link.recipientCode)) {
       await logAccess(supabase, { tokenId: found!.tokenId, shareId: found!.shareId, outcome: "denied:unintended_account", deviceHash: hashDevice(v.device), notify: "unintended_account", attemptedBy: account });
       return html(deniedHtml(v.lang, "denied:unintended_account"), 403, dev);
     }
@@ -128,7 +128,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
     // A FORWARDED link: someone signed in as a DIFFERENT receiving account (a different UV-ID) opens a link meant for
     // another recipient. They are denied before any code is issued, and the log says exactly who tried what.
     const account = receiverCode(await currentSession());
-    if (account && account.toUpperCase() !== found.link.recipientCode.toUpperCase() && linkStatus(found.link, now) === "active") {
+    if (isUnintendedAccount(account, found.link.recipientCode) && linkStatus(found.link, now) === "active") {
       await logAccess(supabase, { ...base, outcome: "denied:unintended_account", notify: "unintended_account", attemptedBy: account });
       return html(deniedHtml(v.lang, "denied:unintended_account"), 403, dev);
     }

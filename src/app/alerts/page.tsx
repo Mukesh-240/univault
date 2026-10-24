@@ -12,6 +12,9 @@ import { requestsToHolder, reportsAboutHolder } from "@/lib/receiver-portal";
 import { listNotifications, loadShares } from "@/lib/share-store";
 import { supabase } from "@/lib/supabase";
 import { StopShare } from "../shares/ShareActions";
+import { eligibilityRequests, packFor } from "@/lib/eligibility";
+import { loadPacks } from "@/lib/rules";
+import { DeclineRequest, EligibilityAnswer } from "./AlertForms";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,6 +24,8 @@ export default async function AlertsPage() {
   const [alerts, shares] = await Promise.all([listNotifications(supabase, DEMO_OWNER, 50), loadShares(supabase, DEMO_OWNER)]);
   const byId = new Map(shares.map((s) => [s.id, s]));
   // What receivers have asked this person for, and problems they reported (fixed reasons, no free text).
+  const eligibility = (await eligibilityRequests(supabase, { to: DEMO_OWNER })).filter((e) => e.status === "waiting");
+  const packs = loadPacks();
   const [requests, reports, names] = await Promise.all([
     requestsToHolder(supabase, DEMO_OWNER), reportsAboutHolder(supabase, DEMO_OWNER), supabase.from("recipients").select("recipient_code, name"),
   ]);
@@ -38,9 +43,24 @@ export default async function AlertsPage() {
                 <p className="big">{t("sender.requests.from", { name: nameOf.get(r.from) ?? r.from, n: r.items.length })}</p>
                 <p className="meta">{showTime(r.at)}</p>
                 {r.flagged && <p className="callout warn">{t("sender.requests.flagged")}</p>}
-                <div className="card-actions"><Link className="btn secondary" href={`/share?to=${encodeURIComponent(r.from)}&ask=${encodeURIComponent(r.items.join(","))}`}>{t("sender.requests.share")}</Link></div>
+                <div className="card-actions">{r.declined ? <span className="chip warn">{t("sender.requests.declined")}</span> : <><Link className="btn secondary" href={`/share?to=${encodeURIComponent(r.from)}&ask=${encodeURIComponent(r.items.join(","))}`}>{t("sender.requests.share")}</Link><DeclineRequest id={r.id} /></>}</div>
               </li>
             ))}
+          </ul>
+        )}
+        <h2 id="elig-h" style={{ marginTop: "var(--s3)" }}>{t("elig.sender.title")}</h2>
+        {eligibility.length === 0 ? <p className="card">{t("elig.sender.none")}</p> : (
+          <ul className="cards">
+            {eligibility.map((e) => {
+              const pack = packs.find((p) => p.id === e.packId);
+              return (
+                <li key={e.id} className="card">
+                  <p className="big">{t("elig.sender.from", { name: nameOf.get(e.from) ?? e.from, n: pack?.rules.length ?? 0, pack: pack?.title ?? "" })}</p>
+                  <p className="meta">{showTime(e.at)}</p>
+                  <EligibilityAnswer id={e.id} criteria={(pack?.rules ?? []).map((r) => ({ id: r.id, label: r.label }))} />
+                </li>
+              );
+            })}
           </ul>
         )}
         {reports.length > 0 && (

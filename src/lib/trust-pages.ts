@@ -133,8 +133,11 @@ export const POLICY: PolicySection[] = [
       "Sign-in is simulated: any valid demo number (starting 0000) opens the one synthetic vault, which everyone who signs in shares.",
       "A recipient sees only the items you approved, after passing the ID and one-time-code gate. Values read by OCR that you have not confirmed are withheld. Recipients never see your other documents.",
       "Logs and web addresses carry no personal values: logs go through a scrubber, and links contain only a random token.",
+      "Every account has a UV-ID. A UV-ID names an account; it does not prove who is at the keyboard, so opening a shared item also needs the recipient ID and a one-time code. A link meant for one recipient is refused for a different signed-in account, and the owner log says which ID tried which link. Account verification and one-time codes are simulated in this prototype.",
+      "An eligibility check shows only met, not met or unknown for the criteria you allow, signed by UNIVAULT. It is not proof, and agreeing to it never gives anyone a document. Missing, expired, conflicting or unverified evidence is always shown as unknown.",
+      "Limit: until the owner adds a server-only database key, anyone who has the public database key can read the stored data directly. See the threat model.",
     ],
-    evidence: ["src/lib/disclosure.ts", "src/lib/scrub.ts", "tests/scrub.test.ts", "tests/shares.test.ts"],
+    evidence: ["src/lib/disclosure.ts", "src/lib/scrub.ts", "src/lib/eligibility.ts", "tests/scrub.test.ts", "tests/shares.test.ts", "tests/eligibility.test.ts", "tests/p0-loopholes.test.ts"],
   },
   {
     key: "kill",

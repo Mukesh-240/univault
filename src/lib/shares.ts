@@ -121,6 +121,9 @@ export function linkStatus(link: LinkFacts | null, now: Date): LinkStatus {
   return "active";
 }
 
+/** A signed-in account that is NOT the recipient this link was made for (a forwarded link). */
+export const isUnintendedAccount = (account: string | null | undefined, recipientCode: string): account is string => Boolean(account && account.toUpperCase() !== recipientCode.toUpperCase());
+
 export interface Decision { outcome: Outcome; notify: NotifyKind | null }
 
 /** Checks shared by both steps: the link is alive and the recipient ID is the approved one. */

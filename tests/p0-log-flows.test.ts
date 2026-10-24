@@ -29,7 +29,7 @@ describe("no sensitive value reaches the log in the main flows", () => {
     const db = offlineClient(newStore()) as unknown as SupabaseClient;
     await seedDataset(db, generate({ seed: 2026, set: "showcase", today: "2026-10-24" }).dataset, PRIV);
     const answers = { name: "Zorblat Quenby", reg_no: "ZQ-884213", degree: "Degree", branch: "Branch", cgpa: "7.91", year_of_passing: "2024" };
-    const r = await issueDocument(db, { issuer: "Leak Test Issuer", holderOwner: "demo", docType: "degree_certificate", answers }, PRIV);
+    const r = await issueDocument(db, { issuer: "Synthetic State University", holderOwner: "demo", docType: "degree_certificate", answers }, PRIV);
     if (!r.ok) throw new Error(r.error);
     await runVerification(db, r.documentId, PUB);
     const recipient = ((await db.from("recipients").select("recipient_code, name")).data ?? [])[0] as { recipient_code: string; name: string };

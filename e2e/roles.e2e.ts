@@ -157,7 +157,7 @@ test.describe("the whole story", () => {
     await sp.getByRole("dialog").getByRole("button", { name: "Stop sharing" }).click();
     await stopped;
     await rp.goto(viewUrl);
-    await expect(rp.getByRole("heading", { name: "The sender has stopped sharing this." })).toBeVisible();
+    await expect(rp.getByRole("heading", { name: "Access to this document was ended by the owner." })).toBeVisible();
     const ledger = await sender.ctx.request.get("/api/ledger");
     expect((await ledger.json()).ok).toBe(true);
     await issuer.ctx.close(); await sender.ctx.close(); await receiver.ctx.close();
