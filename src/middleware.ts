@@ -14,8 +14,8 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { DB_CONFIGURED } from "@/lib/db-config";
-import { gateFor } from "@/lib/gate";
-import { open, SESSION_COOKIE, type SessionPayload } from "@/lib/session";
+import { areaOf, gateFor, homeFor, roleOfArea } from "@/lib/gate";
+import { open, SESSION_COOKIE, type Role, type SessionPayload } from "@/lib/session";
 
 const NOT_CONFIGURED = "Database not configured: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, then redeploy.";
 
@@ -43,10 +43,16 @@ export async function middleware(req: NextRequest) {
   }
   const secret = process.env.VAULT_PRIVATE_KEY;
   const session = secret ? await open<SessionPayload>(req.cookies.get(SESSION_COOKIE)?.value, "session", secret) : null;
-  switch (gateFor(pathname, Boolean(session))) {
+  const role: Role | null = session ? session.role ?? "sender" : null; // a cookie from before roles existed was a sender's
+  switch (gateFor(pathname, role)) {
     case "signin": return NextResponse.redirect(new URL("/signin", req.url));
-    case "home": return NextResponse.redirect(new URL("/", req.url));
+    case "home": return NextResponse.redirect(new URL(homeFor(role!), req.url));
+    case "redirect": return NextResponse.redirect(new URL(homeFor(role!), req.url));
     case "unauthorized": return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+    case "forbidden": {
+      if (isApi) return NextResponse.json({ error: "This area is not for your kind of account." }, { status: 403 });
+      return NextResponse.redirect(new URL(`/area?for=${roleOfArea(areaOf(pathname))}`, req.url));
+    }
     default: return NextResponse.next();
   }
 }

@@ -1,5 +1,5 @@
 /**
- * THE APP SHELL — the frame around every page. The visible parts (banner, top bar, side menu, bottom
+ * THE APP SHELL — the frame around every page. The visible parts (top bar, side menu, bottom
  * tabs, "Need help?") live in components/Chrome.tsx; this file works out what the frame needs:
  *   - the language (cookie, or on a first visit the browser's own language: Telugu if it starts with "te");
  *   - the saved text size and High contrast choice (cookies), so the first paint is already right;
@@ -11,7 +11,7 @@
  */
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
-import { Noto_Sans_Telugu } from "next/font/google";
+import { Inter, Noto_Sans_Telugu } from "next/font/google";
 import { Chrome } from "@/components/Chrome";
 import { I18nProvider } from "@/components/I18n";
 import { dictFor } from "@/lib/i18n";
@@ -23,6 +23,8 @@ import { DB_CONFIGURED, OFFLINE } from "@/lib/supabase";
 import en from "@/locales/en.json";
 import "./globals.css";
 
+// Inter is used from 1024px up (see globals.css); phones keep the system font so Slow 3G stays light.
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap", preload: false });
 const telugu = Noto_Sans_Telugu({ subsets: ["telugu"], weight: ["400", "600", "700"], variable: "--font-telugu", display: "swap", preload: false });
 
 export const metadata = { title: en["app.title"], description: en["app.description"] };
@@ -34,10 +36,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const contrast = parseContrast(jar.get(CONTRAST_COOKIE)?.value);
   const session = await currentSession();
   return (
-    <html lang={lang} className={lang === "te" ? telugu.variable : undefined} data-size={size} data-contrast={contrast === "high" ? "high" : undefined}>
+    <html lang={lang} className={lang === "te" ? `${inter.variable} ${telugu.variable}` : inter.variable} data-size={size} data-contrast={contrast === "high" ? "high" : undefined}>
       <body>
         <I18nProvider lang={lang} dict={dictFor(lang)}>
-          <Chrome user={session ? { name: session.name, last4: session.last4 } : null} size={size} contrast={contrast} offline={OFFLINE}>
+          <Chrome user={session ? { name: session.name, last4: session.last4, role: session.role ?? "sender" } : null} size={size} contrast={contrast} offline={OFFLINE}>
             {DB_CONFIGURED ? children : (
               // Production without a database key: say so plainly instead of silently using demo memory.
               <section className="panel"><h1>{t("db.notConfigured")}</h1><p>{t("db.notConfiguredBody")}</p></section>

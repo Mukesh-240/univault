@@ -11,3 +11,4 @@ One line per commit: hash · what · evidence.
 - 4b60328 · Phase 6: threat model + policy pages, MIT licence, scheduled issuer re-check (cron + CRON_SECRET), rate limits + 15-min lock after 5 wrong codes, Slow 3G vault 12.0 s/405 KB → 7.2 s/169 KB · 183 unit, 37/37 e2e on live DB, axe 30 runs 0, eval held-out P 100% / R 96.6% / 0 FA, showcase 17/17, npm audit 0
 - 5979944 · deploy: live on Vercel (https://univault-zeta.vercel.app), 8 env vars Production+Preview, .vercelignore · live smoke test 16/16 pass
 - (this commit) · Phase 7: friendly UI, synthetic aadhaar sign-in, motion · 252 unit, 148 e2e, axe 0 (21 pages × en/te × normal/A+/high contrast), 360 px no overflow, Slow 3G English 7.0 s / 167.5 KB, eval unchanged, npm audit 0
+- (next commit) · Phase 8 part 1: tokens, SVG logo, role sign-in chooser + demo profiles, role sessions and guards · 255 unit, e2e sign-in 10/10, axe 0 on /signin and /

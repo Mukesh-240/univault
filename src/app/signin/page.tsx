@@ -1,11 +1,15 @@
 /**
- * /signin — the SIMULATED Aadhaar-style sign-in (3 big steps; see SignInFlow.tsx).
- * Plain English: nothing here talks to UIDAI, DigiLocker or any government service. The number must be a
- * demo number (starts with 0000, so it can never be a real Aadhaar number); the code is shown on screen.
- * A permanent banner says so. This page is open to everyone; every other page needs a signed-in browser.
+ * /signin — the SIMULATED Aadhaar-style sign-in: a hero with three role cards, demo profiles, a code shown on
+ * screen, and a consent card (see SignInFlow.tsx).
+ * Plain English: nothing here talks to UIDAI, DigiLocker or any government service. A number must be a demo
+ * number (starts with 0000, so it can never be a real Aadhaar number); the code is shown on screen. One calm
+ * line at the bottom says so. This page is open to everyone; the rest of the app needs a signed-in browser.
  */
+import { Logo } from "@/components/Logo";
 import { getI18n } from "@/lib/i18n-server";
-import { generate } from "@/lib/synthetic-aadhaar";
+import { loadProfiles } from "@/lib/profiles";
+import { supabase } from "@/lib/supabase";
+import { format, generate, mask } from "@/lib/synthetic-aadhaar";
 import { SignInFlow } from "./SignInFlow";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +17,16 @@ export const runtime = "nodejs";
 
 export default async function SignInPage() {
   const { t } = await getI18n();
+  const profiles = (await loadProfiles(supabase)).map((p) => ({ role: p.role, ref: p.ref, name: p.name, number: format(p.number), masked: mask(p.number) }));
   return (
-    <div className="signin-wrap">
-      <h1>{t("signin.title")}</h1>
-      <p className="signin-banner" role="note">{t("signin.banner")}</p>
-      <SignInFlow initialNumber={generate()} />
+    <div className="signin-page">
+      <div className="signin-main">
+        <h1>{t("signin.hero.title")}</h1>
+        <p className="lead">{t("signin.hero.sub")}</p>
+        <SignInFlow profiles={profiles} initialNumber={generate()} />
+      </div>
+      <div className="signin-art" aria-hidden="true"><div className="art-glow" /><Logo size={320} animated /></div>
+      <p className="signin-foot" role="note">{t("signin.footer")}</p>
     </div>
   );
 }

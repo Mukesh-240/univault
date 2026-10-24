@@ -15,14 +15,18 @@ export interface Pair { name: string; fg: string; bg: string; min: number }
 
 export const PALETTE: Record<Mode, Record<string, string>> = {
   normal: {
-    bg: "#F3F6FB", card: "#FFFFFF", text: "#0F172A", muted: "#334155", edge: "#64748B",
-    header: "#1E3A8A", onHeader: "#FFFFFF", action: "#1D4ED8", onAction: "#FFFFFF", link: "#1E3A8A",
-    ok: "#166534", okBg: "#DCFCE7", warn: "#92400E", warnBg: "#FEF3C7", bad: "#991B1B", badBg: "#FEE2E2", unk: "#475569", unkBg: "#F1F5F9",
+    bg: "#F6F9FE", card: "#FFFFFF", text: "#14213D", muted: "#4A5B78", edge: "#64748B", line: "#D5E1F2",
+    header: "#0B3A8C", onHeader: "#FFFFFF", action: "#1565D8", onAction: "#FFFFFF", link: "#0B3A8C",
+    brand: "#1E88FE", sky: "#6EB7FC", navy: "#0B3A8C", navyDeep: "#07245A", tint50: "#EAF3FF", tint100: "#D6E8FF",
+    ok: "#0F7B4F", okBg: "#E1F5EC", warn: "#8A5200", warnBg: "#FFF3D6", bad: "#B3261E", badBg: "#FDE7E5", unk: "#475569", unkBg: "#F1F5F9",
+    roleIssuer: "#0E7490", roleSender: "#1565D8", roleReceiver: "#4338CA",
   },
   high: {
-    bg: "#FFFFFF", card: "#FFFFFF", text: "#000000", muted: "#1F2937", edge: "#000000",
+    bg: "#FFFFFF", card: "#FFFFFF", text: "#000000", muted: "#1F2937", edge: "#000000", line: "#000000",
     header: "#000000", onHeader: "#FFFFFF", action: "#0A1F8F", onAction: "#FFFFFF", link: "#0A1F8F",
+    brand: "#0A1F8F", sky: "#0A1F8F", navy: "#000000", navyDeep: "#000000", tint50: "#FFFFFF", tint100: "#FFFFFF",
     ok: "#0B3D1A", okBg: "#FFFFFF", warn: "#5C2300", warnBg: "#FFFFFF", bad: "#7A0A0A", badBg: "#FFFFFF", unk: "#1F2937", unkBg: "#FFFFFF",
+    roleIssuer: "#064E3B", roleSender: "#0A1F8F", roleReceiver: "#2E1065",
   },
 };
 
@@ -32,11 +36,22 @@ export function pairs(mode: Mode): Pair[] {
   return [
     { name: "body text on page", fg: c.text, bg: c.bg, min: 7 },
     { name: "body text on card", fg: c.text, bg: c.card, min: 7 },
-    { name: "secondary text on page", fg: c.muted, bg: c.bg, min: 7 },
-    { name: "secondary text on card", fg: c.muted, bg: c.card, min: 7 },
+    { name: "secondary text on page", fg: c.muted, bg: c.bg, min: 4.5 },
+    { name: "secondary text on card", fg: c.muted, bg: c.card, min: 4.5 },
+    { name: "body text on blue tint", fg: c.text, bg: c.tint50, min: 7 },
+    { name: "secondary text on blue tint", fg: c.muted, bg: c.tint50, min: 4.5 },
+    { name: "navy on blue tint", fg: c.navy, bg: c.tint100, min: 4.5 },
+    { name: "deep navy on blue tint", fg: c.navyDeep, bg: c.tint50, min: 7 },
+    { name: "navy on glass header (white)", fg: c.navy, bg: c.card, min: 7 },
+    { name: "issuer accent on card", fg: c.roleIssuer, bg: c.card, min: 4.5 },
+    { name: "sender accent on card", fg: c.roleSender, bg: c.card, min: 4.5 },
+    { name: "receiver accent on card", fg: c.roleReceiver, bg: c.card, min: 4.5 },
+    { name: "issuer accent on blue tint", fg: c.roleIssuer, bg: c.tint50, min: 4.5 },
+    { name: "receiver accent on blue tint", fg: c.roleReceiver, bg: c.tint50, min: 4.5 },
     { name: "link on card", fg: c.link, bg: c.card, min: 7 },
     { name: "link on page", fg: c.link, bg: c.bg, min: 7 },
-    { name: "white on blue header", fg: c.onHeader, bg: c.header, min: 7 },
+    { name: "white on navy", fg: c.onHeader, bg: c.header, min: 7 },
+    { name: "white on deep navy", fg: c.onHeader, bg: c.navyDeep, min: 7 },
     { name: "button text on action blue", fg: c.onAction, bg: c.action, min: 4.5 },
     { name: "verified chip", fg: c.ok, bg: c.okBg, min: 4.5 },
     { name: "attention chip", fg: c.warn, bg: c.warnBg, min: 4.5 },

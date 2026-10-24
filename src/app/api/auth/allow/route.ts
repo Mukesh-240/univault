@@ -9,9 +9,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { sessionSecret } from "@/lib/auth-server";
-import { personRecord } from "@/lib/person";
+import { homeFor } from "@/lib/gate";
 import { log } from "@/lib/scrub";
-import { loadDemoVault } from "@/lib/server";
 import {
   CHALLENGE_COOKIE, cookieOptions, isSecure, open, seal, SESSION_COOKIE, SESSION_DAYS, type ChallengePayload, type SessionPayload,
 } from "@/lib/session";
@@ -27,9 +26,9 @@ export async function POST(req: Request) {
 
   const now = Math.floor(Date.now() / 1000);
   const session: SessionPayload = {
-    kind: "session", last4: chal.last4, name: personRecord((await loadDemoVault()).docs).name, iat: now, exp: now + SESSION_DAYS * 86_400,
+    kind: "session", last4: chal.last4, name: chal.name ?? null, role: chal.role ?? "sender", ref: chal.ref, iat: now, exp: now + SESSION_DAYS * 86_400,
   };
-  const res = NextResponse.json({ ok: true }, { headers: { "cache-control": "no-store" } });
+  const res = NextResponse.json({ ok: true, home: homeFor(session.role ?? "sender") }, { headers: { "cache-control": "no-store" } });
   res.cookies.set(SESSION_COOKIE, await seal(session, secret), cookieOptions(SESSION_DAYS * 86_400, isSecure(req)));
   res.cookies.set(CHALLENGE_COOKIE, "", { ...cookieOptions(0, isSecure(req)), maxAge: 0 });
   log("info", "signed in", {});

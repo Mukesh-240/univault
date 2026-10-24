@@ -10,16 +10,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sessionSecret } from "@/lib/auth-server";
+import { findProfile, loadProfiles } from "@/lib/profiles";
 import { clientIp, hit, lockState } from "@/lib/rate-limit";
 import { log } from "@/lib/scrub";
 import { CHALLENGE_COOKIE, CODE_TTL_SECONDS, cookieOptions, fingerprint, isSecure, seal, type ChallengePayload } from "@/lib/session";
 import { newOneTimeCode } from "@/lib/shares";
+import { supabase } from "@/lib/supabase";
 import { validate } from "@/lib/synthetic-aadhaar";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const Body = z.object({ number: z.string().max(40) });
+const Body = z.object({ number: z.string().max(40), role: z.enum(["issuer", "sender", "receiver"]).default("sender"), ref: z.string().max(200).optional() });
 const PER_IP = { max: 30, windowMs: 60_000 };
 
 export async function POST(req: Request) {
@@ -33,13 +35,18 @@ export async function POST(req: Request) {
   const v = validate(body.data.number);
   if (!v.ok) return NextResponse.json({ error: "That number cannot be used.", problem: v.problem }, { status: 422 });
 
+  // Which profile is this sign-in for? The server only accepts a profile it can find in the database.
+  const profiles = await loadProfiles(supabase);
+  const profile = body.data.ref ? findProfile(profiles, body.data.role, body.data.ref) : profiles.find((p) => p.role === body.data.role) ?? null;
+  if (!profile) return NextResponse.json({ error: "That profile does not exist in this demo.", problem: "unknown_profile" }, { status: 422 });
+
   const nm = await fingerprint(secret, "number", v.digits);
   const lock = lockState(`signin|${nm}`);
   if (lock.locked) return NextResponse.json({ error: "Locked for a while after too many wrong codes.", problem: "locked", retryAfterS: lock.retryAfterS }, { status: 429, headers: { "retry-after": String(lock.retryAfterS) } });
 
   const code = newOneTimeCode();
   const payload: ChallengePayload = {
-    kind: "challenge", stage: "code", nm, cm: await fingerprint(secret, "code", code), last4: v.digits.slice(-4),
+    kind: "challenge", stage: "code", nm, cm: await fingerprint(secret, "code", code), last4: v.digits.slice(-4), role: profile.role, ref: profile.ref, name: profile.name,
     exp: Math.floor(Date.now() / 1000) + CODE_TTL_SECONDS,
   };
   const res = NextResponse.json({ simulated: true, code, validForMinutes: CODE_TTL_SECONDS / 60 }, { headers: { "cache-control": "no-store" } });

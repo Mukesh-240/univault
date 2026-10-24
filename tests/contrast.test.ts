@@ -40,7 +40,7 @@ describe("colour contrast", () => {
   it("uses the colours the design brief names", () => {
     const n = PALETTE.normal;
     expect([n.header, n.bg, n.action, n.ok, n.warn, n.warnBg, n.bad, n.badBg, n.unk]).toEqual(
-      ["#1E3A8A", "#F3F6FB", "#1D4ED8", "#166534", "#92400E", "#FEF3C7", "#991B1B", "#FEE2E2", "#475569"]);
+      ["#0B3A8C", "#F6F9FE", "#1565D8", "#0F7B4F", "#8A5200", "#FFF3D6", "#B3261E", "#FDE7E5", "#475569"]);
   });
 });
 

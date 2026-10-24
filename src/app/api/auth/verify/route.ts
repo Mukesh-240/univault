@@ -52,9 +52,11 @@ export async function POST(req: Request) {
   }
 
   clearFailures(key);
-  const record = personRecord((await loadDemoVault()).docs);
+  // The record the simulated issuer would hand over: the holder's name and date of birth come from the vault;
+  // an organisation has just its name. The ID shown is always the MASKED demo number that was typed.
+  const person = chal.role === "sender" ? personRecord((await loadDemoVault()).docs) : null;
   const next: ChallengePayload = { ...chal, stage: "verified", exp: Math.floor(Date.now() / 1000) + CODE_TTL_SECONDS };
-  const res = NextResponse.json({ ok: true, record: { name: record.name, dob: record.dob, idMasked: record.idMasked ?? mask(v.digits) } }, { headers: { "cache-control": "no-store" } });
+  const res = NextResponse.json({ ok: true, record: { name: chal.name ?? person?.name ?? null, dob: person?.dob ?? null, idMasked: mask(v.digits), role: chal.role ?? "sender" } }, { headers: { "cache-control": "no-store" } });
   res.cookies.set(CHALLENGE_COOKIE, await seal(next, secret), cookieOptions(CODE_TTL_SECONDS, isSecure(req)));
   return res;
 }

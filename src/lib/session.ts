@@ -22,8 +22,14 @@ export const SESSION_DAYS = 7;
 /** A one-time sign-in code, and the sign-in step it belongs to, last this long. */
 export const CODE_TTL_SECONDS = 10 * 60;
 
-export interface SessionPayload { kind: "session"; last4: string; name: string | null; iat: number; exp: number }
-export interface ChallengePayload { kind: "challenge"; stage: "code" | "verified"; nm: string; cm: string; last4: string; exp: number }
+/** Who is signed in: an issuer (an organisation that issues documents), a sender (a person who keeps and shares documents), or a receiver (an organisation or person who is sent documents). */
+export type Role = "issuer" | "sender" | "receiver";
+export const ROLES: Role[] = ["issuer", "sender", "receiver"];
+export const isRole = (v: unknown): v is Role => v === "issuer" || v === "sender" || v === "receiver";
+
+/** `ref` says which one: the issuer's name, the holder's vault owner id, or the receiver's recipient code. */
+export interface SessionPayload { kind: "session"; last4: string; name: string | null; role?: Role; ref?: string; iat: number; exp: number }
+export interface ChallengePayload { kind: "challenge"; stage: "code" | "verified"; nm: string; cm: string; last4: string; role?: Role; ref?: string; name?: string; exp: number }
 
 const enc = new TextEncoder();
 

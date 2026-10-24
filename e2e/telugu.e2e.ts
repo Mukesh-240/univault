@@ -14,7 +14,8 @@ test("Telugu switch works on the main flow", async ({ page }) => {
   await page.getByRole("button", { name: "తెలుగు" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "te");
   await expect(page.locator("h1")).toContainText(te["home.greetingNoName"]);
-  await expect(page.locator(".banner")).toContainText(te["banner.synthetic"]);
+  await page.getByRole("button", { name: te["demo.chip"] }).click();
+  await expect(page.locator(".pop")).toContainText(te["demo.popBody"]);
   await expect(page.getByRole("button", { name: te["ui.help"] })).toBeVisible();
 
   for (const [path, key] of [["/readiness", "ready.title"], ["/names", "names.title"], ["/verify", "verify.title"], ["/shares", "shares.title"], ["/alerts", "alerts.title"]] as const) {

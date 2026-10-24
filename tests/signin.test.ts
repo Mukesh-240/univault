@@ -11,7 +11,7 @@
  *   - a browser whose first language is Telugu gets Telugu on a first visit.
  */
 import { describe, expect, it } from "vitest";
-import { gateFor, isPublicPath } from "../src/lib/gate";
+import { areaOf, gateFor, homeFor, isPublicPath } from "../src/lib/gate";
 import { preferredLang } from "../src/lib/i18n";
 import { personRecord } from "../src/lib/person";
 import { clearFailures, lockState, recordFailure, SIGNIN_LOCK } from "../src/lib/rate-limit";
@@ -65,22 +65,42 @@ describe("session cookie", () => {
 
 describe("which addresses need a session", () => {
   it("pages go to /signin, APIs get 401, without a session", () => {
-    for (const p of ["/", "/readiness", "/shares", "/share", "/ocr", "/doc/abc"]) expect(gateFor(p, false), p).toBe("signin");
-    for (const p of ["/api/upload", "/api/share/confirm", "/api/verify", "/api/shares/kill", "/api/notifications"]) expect(gateFor(p, false), p).toBe("unauthorized");
+    for (const p of ["/", "/readiness", "/shares", "/share", "/ocr", "/doc/abc"]) expect(gateFor(p, null), p).toBe("signin");
+    for (const p of ["/api/upload", "/api/share/confirm", "/api/verify", "/api/shares/kill", "/api/notifications"]) expect(gateFor(p, null), p).toBe("unauthorized");
   });
 
   it("recipient links, health, cron, sign-in and the trust pages stay open", () => {
     for (const p of ["/s/abc123", "/s/abc123/download", "/s/preview", "/api/health", "/api/cron/recheck", "/api/auth/code", "/api/auth/verify", "/signin", "/threat-model", "/policy"]) {
       expect(isPublicPath(p), p).toBe(true);
-      expect(gateFor(p, false), p).toBe("allow");
+      expect(gateFor(p, null), p).toBe("allow");
     }
     // Look-alikes are not open.
     for (const p of ["/s", "/api/healthz", "/api/cronjob", "/signin/x", "/policy/x"]) expect(isPublicPath(p), p).toBe(false);
   });
 
-  it("with a session everything opens, and /signin sends you home", () => {
-    for (const p of ["/", "/shares", "/api/upload"]) expect(gateFor(p, true), p).toBe("allow");
-    expect(gateFor("/signin", true)).toBe("home");
+  it("a sender opens the vault and the receiving area; /signin sends any role home", () => {
+    for (const p of ["/", "/shares", "/api/upload", "/receive", "/api/receive/shares"]) expect(gateFor(p, "sender"), p).toBe("allow");
+    for (const r of ["sender", "issuer", "receiver"] as const) expect(gateFor("/signin", r)).toBe("home");
+  });
+});
+
+describe("role guards", () => {
+  it("an issuer opens only the issuer area; / goes to /issuer; vault pages and APIs are refused", () => {
+    for (const p of ["/issuer", "/issuer/issue", "/api/issuer-portal/issue", "/area"]) expect(gateFor(p, "issuer"), p).toBe("allow");
+    expect(gateFor("/", "issuer")).toBe("redirect");
+    expect(homeFor("issuer")).toBe("/issuer");
+    for (const p of ["/shares", "/doc/abc", "/receive", "/api/verify", "/api/receive/x"]) expect(gateFor(p, "issuer"), p).toBe("forbidden");
+  });
+
+  it("a receiver opens only the receiving area and cannot reach a vault or the issuer area", () => {
+    for (const p of ["/receive", "/receive/abc", "/api/receive/ask", "/area"]) expect(gateFor(p, "receiver"), p).toBe("allow");
+    expect(gateFor("/", "receiver")).toBe("redirect");
+    for (const p of ["/shares", "/doc/abc", "/share", "/issuer", "/api/issuer-portal/issue", "/api/share/confirm"]) expect(gateFor(p, "receiver"), p).toBe("forbidden");
+  });
+
+  it("a sender cannot open the issuer area", () => {
+    for (const p of ["/issuer", "/issuer/issue", "/api/issuer-portal/revoke"]) expect(gateFor(p, "sender"), p).toBe("forbidden");
+    expect(areaOf("/api/issuer/lookup")).toBe("sender"); // the simulated issuer's public registry stays a vault-side call
   });
 });
 
