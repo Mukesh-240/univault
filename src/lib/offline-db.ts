@@ -93,7 +93,7 @@ class Query implements PromiseLike<Result> {
   private conflict: string[] = [];
   private patch: Row = {};
 
-  constructor(private store: Store, private table: string, private ready: Promise<unknown>) {}
+  constructor(private store: Store, private table: string, private ready: () => Promise<unknown>) {}
 
   select(cols = "*", opts?: { count?: string; head?: boolean }) {
     this.cols = cols;
@@ -116,7 +116,7 @@ class Query implements PromiseLike<Result> {
   single() { this.one = true; return this; }
 
   then<A = Result, B = never>(ok?: ((r: Result) => A | PromiseLike<A>) | null, ko?: ((e: unknown) => B | PromiseLike<B>) | null): PromiseLike<A | B> {
-    return this.ready.then(() => this.run()).then(ok, ko);
+    return this.ready().then(() => this.run()).then(ok, ko);
   }
 
   private rows() { return (this.store.tables[this.table] ??= []); }
@@ -204,12 +204,13 @@ export function newStore(): Store {
 
 /**
  * A client object with the two abilities the app uses: from(table) and rpc("verify_ledger").
- * `ready` lets the public client wait until seeding has finished before answering any query.
+ * `ready` is called before every query: the public client uses it to seed the store on FIRST use
+ * (not when the file is merely imported) and to wait until that seeding has finished.
  */
-export function offlineClient(store: Store, ready: Promise<unknown> = Promise.resolve()) {
+export function offlineClient(store: Store, ready: () => Promise<unknown> = () => Promise.resolve()) {
   return {
     from: (table: string) => new Query(store, table, ready),
-    rpc: async (fn: string) => { await ready; return fn === "verify_ledger" ? { data: verifyLedger(store), error: null } : fail(`unknown function ${fn}`); },
+    rpc: async (fn: string) => { await ready(); return fn === "verify_ledger" ? { data: verifyLedger(store), error: null } : fail(`unknown function ${fn}`); },
   };
 }
 

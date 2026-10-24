@@ -8,6 +8,7 @@ import { loadDemoVault } from "@/lib/server";
 import { FaultPanel } from "./FaultPanel";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function FaultsPage() {
   const { t } = await getI18n();

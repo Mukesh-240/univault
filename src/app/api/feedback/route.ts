@@ -18,6 +18,7 @@ import { badRequest, serverError } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const Body = z.object({
   target_kind: z.enum(["readiness_rule", "name_match", "ocr_field", "verification", "injection_flag", "over_broad", "duplicate"]),

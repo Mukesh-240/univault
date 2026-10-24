@@ -23,6 +23,7 @@ import { badRequest, serverError, serverKey } from "@/lib/server";
 import { OFFLINE, supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const count = async (table: string) => (await supabase.from(table).select("*", { count: "exact", head: true })).count ?? 0;
 

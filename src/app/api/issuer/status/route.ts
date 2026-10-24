@@ -7,6 +7,7 @@ import { log } from "@/lib/scrub";
 import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET() {
   const [cfg, count] = await Promise.all([

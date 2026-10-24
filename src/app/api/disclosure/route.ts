@@ -15,6 +15,7 @@ import { log } from "@/lib/scrub";
 import { badRequest, loadDemoVault, serverError, serverKey } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("preview"), approved: z.array(z.string().regex(/^[a-z_]+\.[a-z0-9_]+$/)).min(1).max(40) }),

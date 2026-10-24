@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 import { watermarkBackground } from "@/lib/watermark";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 const SESSION_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

@@ -12,6 +12,7 @@ import { log } from "@/lib/scrub";
 import { badRequest, loadDemoVault, serverError } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const Body = z.object({ purpose: z.string().min(1).max(60) });
 

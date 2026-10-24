@@ -14,6 +14,7 @@ import { log } from "@/lib/scrub";
 import { loadDemoVault, serverError } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET() {
   try {

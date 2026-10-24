@@ -72,5 +72,4 @@ describe("properties", () => {
   });
 
   it.todo("ledger always verifies after every write (live database: pending Supabase anon key)");
-  it.todo("raw share tokens are never stored, only their hash (share tokens are built in Phase 4)");
 });

@@ -15,52 +15,31 @@
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { fromRow } from "@/lib/registry";
+import { issuerLookup } from "@/lib/issuer-service";
 import { log } from "@/lib/scrub";
 import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic"; // always run fresh; never cache issuer answers
-
-/** How long a "down" issuer stalls before saying it is unavailable (longer than the app's 8 s limit). */
-const DOWN_STALL_MS = 9000;
+export const runtime = "nodejs";
 
 const Body = z.object({
   serial: z.string().min(1).max(80),
   delay_ms: z.number().int().min(0).max(15000).optional(),
 });
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 export async function POST(req: Request) {
   // 1. Check the request is well-formed.
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success)
     return NextResponse.json({ simulated: true, error: 'Send JSON like {"serial": "..."}' }, { status: 400 });
-  const { serial, delay_ms } = parsed.data;
-
-  // 2. Is the simulated issuer switched off?
-  const cfg = await supabase.from("issuer_config").select("is_down").eq("id", 1).single();
-  if (cfg.error) {
-    log("error", "issuer lookup: config read failed", { code: cfg.error.code });
-    return NextResponse.json({ simulated: true, error: "Simulated issuer configuration unavailable" }, { status: 502 });
-  }
-  if ((cfg.data as { is_down: boolean }).is_down) {
-    await sleep(delay_ms ?? DOWN_STALL_MS);
-    return NextResponse.json({ simulated: true, issuer: "SIMULATED ISSUER", reachable: false, error: "Simulated issuer is down" }, { status: 503 });
-  }
-
-  // 3. Optional artificial slowness (for timeout tests), then look the serial up.
-  if (delay_ms) await sleep(delay_ms);
-  const rows = await supabase.from("issuer_registry").select("*").eq("serial", serial).order("version", { ascending: false });
-  if (rows.error) {
-    log("error", "issuer lookup: registry read failed", { code: rows.error.code });
+  // 2. Ask the simulated issuer (the logic lives in src/lib/issuer-service.ts).
+  try {
+    const a = await issuerLookup(supabase, parsed.data.serial, { delayMs: parsed.data.delay_ms });
+    if (!a.reachable) return NextResponse.json({ simulated: true, issuer: "SIMULATED ISSUER", reachable: false, error: "Simulated issuer is down" }, { status: 503 });
+    // 3. Newest version as `entry`, plus the full version history (newest first).
+    return NextResponse.json({ simulated: true, issuer: "SIMULATED ISSUER", reachable: true, entry: a.history[0] ?? null, history: a.history, served_at: new Date().toISOString() });
+  } catch (e) {
+    log("error", "issuer lookup failed", { message: e instanceof Error ? e.message : "unknown" });
     return NextResponse.json({ simulated: true, error: "Simulated issuer registry unavailable" }, { status: 502 });
   }
-
-  // 4. Answer with the newest version as `entry`, plus the full version history (newest first).
-  const history = (rows.data ?? []).map((r) => fromRow(r as Record<string, unknown>));
-  return NextResponse.json({
-    simulated: true, issuer: "SIMULATED ISSUER", reachable: true,
-    entry: history[0] ?? null, history, served_at: new Date().toISOString(),
-  });
 }

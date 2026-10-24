@@ -7,7 +7,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const PAGES = ["/", "/readiness", "/names", "/ocr", "/verify", "/assistant", "/faults", "/s/preview?purpose=scholarship"];
+const PAGES = ["/", "/readiness", "/names", "/ocr", "/verify", "/assistant", "/faults", "/s/preview?purpose=scholarship",
+  "/share", "/shares", "/leak-trace", "/ledger", "/s/not-a-real-link"];
 const LANGS = ["en", "te"] as const;
 const results: { page: string; lang: string; critical: number; serious: number; moderate: number; minor: number; rules: string[] }[] = [];
 

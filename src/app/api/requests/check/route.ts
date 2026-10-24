@@ -16,6 +16,7 @@ import { badRequest, serverError } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const Body = z.object({
   recipient_code: z.string().regex(/^UV-R-\d{3,6}$/),

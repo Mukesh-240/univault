@@ -23,6 +23,7 @@ import { supabase } from "@/lib/supabase";
 import { OcrWorkbench, type ScanItem } from "./OcrWorkbench";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 interface Fixtures { engine: string; languages: string[]; created: string; scans: { file: string; lines: OcrLine[] }[] }
 

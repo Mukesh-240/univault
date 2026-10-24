@@ -20,5 +20,7 @@ export default defineConfig({
   reporter: [["list"]],
   outputDir: "e2e-results/artifacts",
   use: { baseURL: `http://localhost:${PORT}`, channel: "msedge", headless: true },
-  webServer: { command: `npm run start -- -p ${PORT}`, url: `http://localhost:${PORT}/api/ledger`, timeout: 120_000, reuseExistingServer: false },
+  // UNIVAULT_OFFLINE_DEMO=1: the explicit opt-in that lets a production build use the offline demo store
+  // for these local tests (without it, a production build with no database key shows "Database not configured").
+  webServer: { command: `npm run start -- -p ${PORT}`, url: `http://localhost:${PORT}/api/health`, timeout: 120_000, reuseExistingServer: false, env: { UNIVAULT_OFFLINE_DEMO: "1" } },
 });

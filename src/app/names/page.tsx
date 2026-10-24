@@ -15,6 +15,7 @@ import { loadDemoVault } from "@/lib/server";
 import type { VaultDoc } from "@/lib/vault";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function NamesPage() {
   const { t } = await getI18n();

@@ -11,6 +11,7 @@ import { log } from "@/lib/scrub";
 import { loadDemoVault, serverError } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const purpose = new URL(req.url).searchParams.get("purpose");

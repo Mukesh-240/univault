@@ -72,6 +72,51 @@
   "rules": []
  },
  {
+  "page": "/share",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/shares",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/leak-trace",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/ledger",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/s/not-a-real-link",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
   "page": "/",
   "lang": "te",
   "critical": 0,
@@ -136,6 +181,51 @@
  },
  {
   "page": "/s/preview?purpose=scholarship",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/share",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/shares",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/leak-trace",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/ledger",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/s/not-a-real-link",
   "lang": "te",
   "critical": 0,
   "serious": 0,

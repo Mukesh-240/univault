@@ -9,6 +9,7 @@ import { loadPacks } from "@/lib/rules";
 import { AssistantPanel } from "./AssistantPanel";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function AssistantPage() {
   const { lang, t } = await getI18n();

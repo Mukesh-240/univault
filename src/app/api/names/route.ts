@@ -15,6 +15,7 @@ import { badRequest, loadDemoVault, serverError } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET() {
   try {

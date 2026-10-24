@@ -10,6 +10,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { loadDemoVault } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function VerifyPage() {
   const { t } = await getI18n();

@@ -28,7 +28,9 @@ import { signEntries, type IssuerRecord } from "../src/lib/registry";
 import { candidatePairs } from "../src/lib/resolution";
 import { reviewHints } from "../src/lib/ocr";
 import { ageAtLeastFor, LOW_CONFIDENCE, notExpiredFor, type RulePack } from "../src/lib/rules";
+import { checkExpiry, decideCodeRequest, decideDownload, decideOpen, hashCode, hashDevice, matchLeak, newSessionCode, type LinkFacts, type NotifyKind, type PastAccess } from "../src/lib/shares";
 import { contextFor, type VaultDoc } from "../src/lib/vault";
+import { watermarkLabel } from "../src/lib/watermark";
 import { decideVerification, withFreshness, type IssuerReply, type VerifyOutcome } from "../src/lib/verify";
 import type { Dataset, DatasetDoc, LabelCase, Labels } from "../synthetic/generate";
 
@@ -186,8 +188,17 @@ export function evaluateCase(c: LabelCase, b: Bench): CaseResult {
       const alarms = alarmsFor((e.docs as string[]).map(doc), b);
       return done(false, alarms.length > 0, alarms.length === 0, alarms.join(", ") || "no alarm");
     }
+    case "share_access": {
+      // Every step's result (and notification, where the label names one) must match, in order.
+      const sc = b.data.scenarios.find((s) => s.ref === e.scenario)!;
+      const want = e.outcomes as { result: string; notify?: string }[];
+      const got = replayScenario(b, sc).steps;
+      const correct = got.length === want.length && want.every((w, i) => got[i].result === w.result && (w.notify === undefined || got[i].notify === w.notify));
+      const isAlarm = (r: string) => r.startsWith("denied") || r.startsWith("rejected");
+      return done(want.some((w) => isAlarm(w.result)), got.some((g) => isAlarm(g.result)), correct, got.map((g) => g.result + (g.notify ? `(${g.notify})` : "")).join(" "));
+    }
     default:
-      return { ...base, evaluated: false, expectedPositive: false, predictedPositive: false, correct: false, note: "not built yet (Phase 4: sharing)" };
+      return { ...base, evaluated: false, expectedPositive: false, predictedPositive: false, correct: false, note: `no detector for "${detector}"` };
   }
 }
 
@@ -232,6 +243,64 @@ export function ocrCalibration(results: CaseResult[]) {
 export interface ConflictCheck { id: number; title: string; detected: boolean | null; evidence: string }
 
 /** Run the detector for each planted conflict in the showcase set. null = detector not built yet. */
+/**
+ * Replay a generated share scenario through the SAME rules the recipient pages use (shares.ts:
+ * checkExpiry, decideCodeRequest, decideOpen, decideDownload, matchLeak). The only translation here is
+ * test-oracle wording: "correct"/"wrong" recipient IDs and "fresh"/"reused"/"wrong" codes become concrete
+ * values, and each step's result is written in the labels' vocabulary. The decisions themselves are the app's.
+ */
+export function replayScenario(b: Bench, sc: Dataset["scenarios"][number]) {
+  const rec = b.data.recipients.find((r) => r.purpose === sc.recipient_purpose)!;
+  type Step = { result: string; notify: NotifyKind | null; session?: string };
+  const steps: Step[] = [];
+  const created = checkExpiry(new Date(b.now.getTime() + sc.expiry_days * 86_400_000).toISOString(), b.now);
+  if (!created.ok) return { steps: [{ result: `rejected_at_creation:${created.reason}`, notify: null }], leakResolvesTo: null };
+  const newLink = (): { link: LinkFacts; past: PastAccess[]; lastCode: string | null; openedSession: string | null } => ({
+    link: { shareRevoked: false, tokenKilled: false, expiresAt: new Date(b.now.getTime() + sc.expiry_days * 86_400_000).toISOString(),
+      maxViews: sc.policy.max_views, recipientCode: rec.recipient_code, policy: sc.policy.mode },
+    past: [], lastCode: null, openedSession: null });
+  const main = newLink();
+  let other: ReturnType<typeof newLink> | null = null;
+  let codeCounter = 100000;
+  const open = (L: ReturnType<typeof newLink>, idOk: boolean, otp: "fresh" | "reused" | "wrong", device: string): Step => {
+    const a = { recipientId: idOk ? rec.recipient_code : `${rec.recipient_code}9`, deviceHash: hashDevice(device), now: b.now };
+    let code = otp === "reused" ? L.lastCode ?? "000000" : "000000";
+    if (otp === "fresh") {
+      const req = decideCodeRequest(L.link, a);
+      if (req.outcome !== "code_issued") { L.past.push({ outcome: req.outcome, deviceHash: a.deviceHash }); return { result: req.outcome, notify: req.notify }; }
+      code = String(codeCounter++);
+      L.past.push({ outcome: "code_issued", deviceHash: a.deviceHash, codeHash: hashCode(code), at: b.now.toISOString() });
+    }
+    const d = decideOpen(L.link, { ...a, code }, L.past);
+    L.past.push({ outcome: d.outcome, deviceHash: a.deviceHash, codeHash: d.outcome === "allowed" ? hashCode(code) : null });
+    if (d.outcome !== "allowed") return { result: d.outcome, notify: d.notify };
+    L.lastCode = code;
+    L.openedSession = newSessionCode();
+    return { result: "allowed", notify: d.notify, session: L.openedSession };
+  };
+  for (const a of sc.actions) {
+    if (a.step === "open") steps.push(open(main, a.recipient_id === "correct", a.otp, a.device));
+    else if (a.step === "download") {
+      const d = decideDownload(main.link, main.openedSession !== null, b.now);
+      steps.push({ result: d.outcome === "download" ? "allowed:watermarked_copy_fingerprint_logged" : d.outcome, notify: d.notify });
+    } else if (a.step === "kill") { main.link.tokenKilled = true; steps.push({ result: "killed", notify: null }); }
+    else if (a.step === "revoke") { main.link.shareRevoked = true; steps.push({ result: "revoked", notify: null }); }
+    else if (a.step === "reshare") { other = newLink(); steps.push({ result: "new_share_active", notify: null }); }
+    else if (a.step === "open_other_share") { other ??= newLink(); steps.push(open(other, true, "fresh", "A")); }
+  }
+  // Leak trace: the watermark of the SECOND opening, as text read off a screenshot.
+  const opened = steps.map((x, i) => ({ i, session: x.session ?? null, recipientCode: rec.recipient_code })).filter((x) => x.session);
+  const second = opened[1];
+  const leak = second ? matchLeak(watermarkLabel({ name: rec.name, recipientCode: rec.recipient_code, time: b.today, session: second.session! }), opened) : { matches: [] };
+  return { steps, leakResolvesTo: leak.matches.length === 1 ? leak.matches[0].i + 1 : null };
+}
+
+/** The showcase's share scenario by its role name. */
+export function replayShare(b: Bench, role: string) {
+  const prefix = [...b.docs.keys()][0].split(":").slice(0, 2).join(":");
+  return replayScenario(b, b.data.scenarios.find((x) => x.ref === `${prefix}:${role}`)!);
+}
+
 export function checkShowcase(b: Bench): ConflictCheck[] {
   const prefix = [...b.docs.keys()][0].split(":").slice(0, 2).join(":");
   const r = (role: string) => `${prefix}:${role}`;
@@ -262,8 +331,8 @@ export function checkShowcase(b: Bench): ConflictCheck[] {
     [12, () => [rq.flagged && rq.extra.includes("id_card.id_number") && rq.alternatives["id_card.id_number"] === "id_card.id_number_last4", rq.reasons.join(" ")]],
     [13, () => { const c = dobConsistency([d("id"), d("school")]); return [c.consistent === true, c.reason]; }],
     [14, () => { const o = v("degree", { issuer_down: true }); return [o.state === "unverifiable" && !!o.retry?.nextRetryAt, o.reason]; }],
-    [15, () => [null, "share access is built in Phase 4"]],
-    [16, () => [null, "share access is built in Phase 4"]],
+    [15, () => { const r = replayShare(b, "job_share"); const s2 = r.steps[1]; return [s2?.result === "allowed" && s2.notify === "new_device" && r.leakResolvesTo === 2, `step 2: ${s2?.result}, notify ${s2?.notify}; leak trace -> step ${r.leakResolvesTo}`]; }],
+    [16, () => { const r = replayShare(b, "job_share"); const n = r.steps.map((x) => x.notify); return [r.steps[2]?.result === "denied:wrong_recipient" && r.steps[4]?.result === "denied:killed" && n.includes("wrong_recipient_attempt") && n.includes("killed_link_attempt"), r.steps.map((x, i) => `${i + 1}:${x.result}${x.notify ? `(${x.notify})` : ""}`).join(" ")]; }],
     [17, () => { const o = v("income"); return [o.state === "unverifiable" && o.signatureValid === false, o.reason]; }],
   ];
   return checks.map(([id, f]) => { const [detected, evidence] = f(); return { id, title: b.labels.conflicts?.find((c) => c.id === id)?.title ?? "", detected, evidence }; });

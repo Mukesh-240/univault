@@ -13,6 +13,7 @@ import { evaluatePack, loadPacks } from "@/lib/rules";
 import { loadDemoVault } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const OVERALL_TRI = { ready: "pass", not_ready: "fail", needs_confirmation: "unknown" } as const;
 

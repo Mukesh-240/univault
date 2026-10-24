@@ -10,10 +10,11 @@
 import Link from "next/link";
 import { StateBadge, TierBadge } from "@/components/Badges";
 import { Explain } from "@/components/Explain";
+import { EraseDocument } from "@/components/EraseDocument";
 import { FieldReview } from "@/components/FieldReview";
 import { LedgerCheck } from "@/components/LedgerCheck";
 import { dobConsistency, dobExplanation, findDuplicates } from "@/lib/duplicates";
-import { fieldLabel, hasTelugu, type Lang } from "@/lib/i18n";
+import { fieldLabel, hasTelugu, showTime, type Lang } from "@/lib/i18n";
 import { getI18n } from "@/lib/i18n-server";
 import { injectionExplanation, scanDocument } from "@/lib/injection";
 import { verify } from "@/lib/ledger";
@@ -23,6 +24,7 @@ import { supabase } from "@/lib/supabase";
 import { tierOf, type EngineContext, type VaultDoc } from "@/lib/vault";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 type Origin = { recipe?: string; seed?: number; dataset?: string } | null;
 
@@ -36,6 +38,9 @@ export default async function VaultPage() {
   const titles = Object.fromEntries(ctx.docs.map((d) => [d.id, d.title]));
   const dups = findDuplicates(ctx.docs);
   const dob = dobConsistency(ctx.docs);
+  // Erased documents: the immutable cover record remains (fingerprint, type, times); the content is gone.
+  const all = await supabase.from("documents").select("id, doc_type, sha256, created_at").eq("owner", DEMO_OWNER).order("created_at");
+  const erased = ((all.data ?? []) as { id: string; doc_type: string; sha256: string; created_at: string }[]).filter((d) => !ctx.docs.some((x) => x.id === d.id));
 
   return (
     <>
@@ -65,6 +70,14 @@ export default async function VaultPage() {
           </ul>
         )}
       </section>
+
+      {erased.length > 0 && (
+        <section className="panel" aria-labelledby="erased-h">
+          <h2 id="erased-h" className="h3">{t("erase.listTitle")}</h2>
+          <p className="note">{t("erase.listNote")}</p>
+          <ul>{erased.map((d) => <li key={d.id}>{d.doc_type.replace(/_/g, " ")} · <code>{d.sha256.slice(0, 16)}…</code> · {showTime(d.created_at)}</li>)}</ul>
+        </section>
+      )}
 
       <h2>{t("vault.documents")}</h2>
       <ul className="cards">
@@ -126,6 +139,7 @@ function DocCard({ doc, ctx, lang, t, label }: { doc: VaultDoc; ctx: EngineConte
         </div>
       )}
 
+      <EraseDocument docId={doc.id} title={doc.title} />
       <h4 className="sr-only">{t("vault.verification")}</h4>
       {v ? (
         <Explain explanation={{ ...v.explanation, reason: v.reason }} kind="verification" targetId={doc.id} />

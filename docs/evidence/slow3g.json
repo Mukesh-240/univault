@@ -7,15 +7,15 @@
  },
  "preview": {
   "path": "/s/preview?purpose=scholarship",
-  "loadMs": 2135,
-  "bytes": 3042,
+  "loadMs": 2102,
+  "bytes": 2888,
   "scripts": 0
  },
  "vault": {
   "path": "/",
-  "loadMs": 10199,
-  "bytes": 309869,
+  "loadMs": 10388,
+  "bytes": 320740,
   "scripts": 8
  },
- "recordedAt": "2026-10-24T10:08:15.188Z"
+ "recordedAt": "2026-10-24T10:45:33.593Z"
 }
