@@ -70,6 +70,9 @@ export const DocumentInput = z.object({
   hidden_text: z.string().max(MAX_TEXT).optional(),         // text present in the file but invisible on the page
   ocr_confidence: z.record(fieldKey, z.number().min(0).max(1)).nullable().optional(), // for scans: how sure the text reader was, per field (0–1)
   language_scripts: z.array(z.enum(["latin", "telugu"])).default([]), // which writing systems appear
+  // The issuer per-field random salts, delivered with an issuer-made document (stored with the content, never in the hash,
+  // never shown to a recipient). Without them a salted registry record cannot be compared field by field.
+  salts: z.record(z.string().max(60), z.string().regex(/^[0-9a-f]{32}$/)).optional(),
   synthetic: z.boolean(),                                   // label only: is this demo data?
   synthetic_origin: SyntheticOrigin.nullable().optional(),  // label only: where the demo data came from
 });
@@ -118,7 +121,7 @@ export async function ingestDocument(db: Db, raw: unknown): Promise<IngestResult
   // ponytail: no cross-table transaction with the anon key; if this fails, an immutable cover record
   // remains without content, and the vault should show it as "upload incomplete". Upgrade path: a
   // single database function that does steps 3–5 in one transaction.
-  const pay = await db.from("document_payloads").insert({ document_id: id, content: payloadOf(d), ocr_confidence: d.ocr_confidence ?? null });
+  const pay = await db.from("document_payloads").insert({ document_id: id, content: { ...payloadOf(d), ...(d.salts ? { salts: d.salts } : {}) }, ocr_confidence: d.ocr_confidence ?? null });
   if (pay.error) {
     log("error", "ingest: payload insert failed", { id, code: pay.error.code });
     throw new Error(`payload insert failed: ${pay.error.message}`);

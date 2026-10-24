@@ -1,0 +1,13 @@
+{
+  "_why": "Every exception to the wording scan in tests/p0-source-scans.test.ts is listed here with a reason. A file not listed here may not use a banned or accusing word.",
+  "accusing": [
+    { "file": "src/locales/en.json", "key": "verify.forged", "reason": "Describes the ISSUER'S reply failing its signature check (an untrusted reply), never a holder or a document owner." },
+    { "file": "src/locales/en.json", "key": "threat.row.forged", "reason": "A row title in the threat model: the attack we defend against, not a message about any person's document." },
+    { "file": "src/locales/en.json", "key": "threat.row.tamperedLedger", "reason": "A row title in the threat model: the attack we defend against." }
+  ],
+  "text": [
+    { "file": "src/lib/trust-pages.ts", "word": "forged", "reason": "Threat-model row key and text about forged registry entries (an attack), not a mismatch message." },
+    { "file": "README.md", "word": "Forgery", "reason": "States that a forged registry entry fails verification (a defence), not a mismatch message about a person." },
+    { "file": "HANDOFF.md", "word": "tampered", "reason": "Engineering notes." }
+  ]
+}

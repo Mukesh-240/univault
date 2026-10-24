@@ -30,11 +30,11 @@ const throwawayKey = () =>
   generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "der" }).toString("base64");
 
 /** Sign every record. Genuine ones with the issuer's private key; "rogue" ones with a throw-away key. */
-export function signEntries(records: IssuerRecord[], issuerPrivB64: string): RegistryEntry[] {
+export function signEntries(records: IssuerRecord[], issuerPrivB64: string, salts?: Map<string, Record<string, string>>): RegistryEntry[] {
   const rogue = throwawayKey();
   return records.map((r) =>
     issueEntry(r.fields, { serial: r.serial, doc_type: r.doc_type, issuer_name: r.issuer_name, status: r.status, superseded_by: r.superseded_by, version: r.version },
-      r.signer === "rogue" ? rogue : issuerPrivB64));
+      r.signer === "rogue" ? rogue : issuerPrivB64, salts?.get(r.serial)));
 }
 
 /** Entry -> database row (column names match docs/sql/001 and 002). */

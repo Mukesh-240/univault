@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { canon, sha256, signText, verifyText } from "./crypto";
 
 /**
@@ -39,12 +40,37 @@ export interface RegistryEntry {
   signature: string;
 }
 
-/** One fingerprint per field, computed from "fieldname=value" (spaces at the ends ignored). */
-export const fieldHashes =(f: Fields): Record<string, string> =>
-  Object.fromEntries(Object.entries(f).map(([k, v]) => [k, sha256(`${k}=${String(v).trim()}`)]));
+/** The marker inside field_hashes that says "these fingerprints use per-field random salts" (it is signed with the rest). */
+export const SALTED = "__salted";
+/** Salts map key for the whole-record fingerprint. */
+export const RECORD_SALT = "__record";
 
-/** One fingerprint for the whole record, exactly as written (so even a stray space changes it). */
-export const recordHash =(f: Fields): string => sha256(canon(f));
+/**
+ * Canonical form of one value BEFORE hashing, so harmless differences never cause a false mismatch: Unicode normalised
+ * (NFC), spaces trimmed and collapsed, and a day/month/year date written as year-month-day.
+ */
+export function canonValue(v: string | number): string {
+  const s = String(v).normalize("NFC").trim().replace(/\s+/g, " ");
+  const m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
+  return m ? `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}` : s;
+}
+
+/** A fresh random salt for every field (and one for the whole record). The issuer hands the salts to the holder with the document; the registry never stores them. */
+export const newSalts = (keys: string[]): Record<string, string> =>
+  Object.fromEntries([...keys, RECORD_SALT].map((k) => [k, randomBytes(16).toString("hex")]));
+
+/**
+ * One fingerprint per field. With salts: sha256(salt | field=canonical value), so a small value like a CGPA cannot be
+ * guessed from the registry alone. Without salts (records made before salting existed): the old unsalted form.
+ */
+export const fieldHashes = (f: Fields, salts?: Record<string, string> | null): Record<string, string> =>
+  salts
+    ? { [SALTED]: "1", ...Object.fromEntries(Object.entries(f).map(([k, v]) => [k, sha256(`${salts[k] ?? ""}|${k}=${canonValue(v)}`)])) }
+    : Object.fromEntries(Object.entries(f).map(([k, v]) => [k, sha256(`${k}=${String(v).trim()}`)]));
+
+/** One fingerprint for the whole record (salted and canonical when salts are given; exactly as written otherwise). */
+export const recordHash = (f: Fields, salts?: Record<string, string> | null): string =>
+  salts ? sha256(`${salts[RECORD_SALT] ?? ""}|${canon(Object.fromEntries(Object.entries(f).map(([k, v]) => [k, canonValue(v)])))}`) : sha256(canon(f));
 
 // The exact text the issuer signs: every part of the entry except the signature itself, keys sorted.
 const signedPayload =(e: Omit<RegistryEntry, "signature">) =>
@@ -62,10 +88,11 @@ export function issueEntry(
   fields: Fields,
   meta: { serial: string; doc_type: string; issuer_name: string; status?: RegistryEntry["status"]; superseded_by?: string | null; version?: number },
   issuerPrivB64: string,
+  salts?: Record<string, string> | null,
 ): RegistryEntry {
   const base = {
     serial: meta.serial, doc_type: meta.doc_type, issuer_name: meta.issuer_name,
-    record_hash: recordHash(fields), field_hashes: fieldHashes(fields),
+    record_hash: recordHash(fields, salts), field_hashes: fieldHashes(fields, salts),
     status: meta.status ?? "active", superseded_by: meta.superseded_by ?? null, version: meta.version ?? 1,
   } as Omit<RegistryEntry, "signature">;
   return { ...base, signature: signText(signedPayload(base), issuerPrivB64) };
@@ -105,7 +132,7 @@ export interface LookupOutcome { reachable: boolean; entry?: RegistryEntry | nul
  * `kind`: "digital" (exact record -> whole-record hash) or "scan" (user-confirmed OCR fields -> per-field comparison).
  */
 export function verifyAgainstIssuer(
-  fields: Fields, kind: "digital" | "scan", lookup: LookupOutcome, issuerPubB64: string, now = new Date(),
+  fields: Fields, kind: "digital" | "scan", lookup: LookupOutcome, issuerPubB64: string, now = new Date(), salts?: Record<string, string> | null,
 ): VerifyResult {
   const checkedAt = now.toISOString();
   if (!lookup.reachable)
@@ -127,16 +154,21 @@ export function verifyAgainstIssuer(
     return { state: "superseded", method: "none", mismatchedFields: [], checkedAt, signatureValid: true, registryVersion: e.version,
       reason: `The issuer replaced this record${e.superseded_by ? ` with ${e.superseded_by}` : ""}.` };
 
-  const mine = fieldHashes(fields);
   const theirs = e.field_hashes ?? {};
-  const mismatched = Object.keys(theirs).filter((k) => mine[k] !== theirs[k]);
-  const extra = Object.keys(mine).filter((k) => !(k in theirs));
+  const salted = theirs[SALTED] === "1";
+  // A salted record can only be compared with the salts the issuer gave the holder; without them it cannot be checked.
+  if (salted && !salts)
+    return { state: "unverifiable", method: "none", mismatchedFields: [], checkedAt, signatureValid: true, registryVersion: e.version,
+      reason: "This copy came without the issuer's proof data, so it cannot be compared with the issuer's record field by field." };
+  const mine = fieldHashes(fields, salted ? salts : null);
+  const mismatched = Object.keys(theirs).filter((k) => k !== SALTED && mine[k] !== theirs[k]);
+  const extra = Object.keys(mine).filter((k) => k !== SALTED && !(k in theirs));
   const bad = [...new Set([...mismatched, ...extra])];
 
-  if (kind === "digital" && recordHash(fields) === e.record_hash)
+  if (kind === "digital" && recordHash(fields, salted ? salts : null) === e.record_hash)
     return { state: "verified", method: "hash", mismatchedFields: [], checkedAt, signatureValid: true, registryVersion: e.version,
       reason: "Byte-for-byte match with the issuer's record." };
-  const n = Object.keys(theirs).length;
+  const n = Object.keys(theirs).filter((k) => k !== SALTED).length;
   if (kind === "scan" && bad.length === 0)
     return { state: "verified", method: "fields", mismatchedFields: [], checkedAt, signatureValid: true, registryVersion: e.version,
       reason: `Content matches the issuer's record on ${n} of ${n} fields (checked from a scan; weaker evidence than a file match).` };

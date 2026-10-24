@@ -19,7 +19,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { dictFor } from "./i18n";
 import { ingestDocument } from "./ingest";
 import { checkForm, FORMS, initialsOf } from "./issue-forms";
-import { issueEntry, resignEntry, type RegistryEntry } from "./issuer";
+import { issueEntry, newSalts, resignEntry, type RegistryEntry } from "./issuer";
 import { append } from "./ledger";
 import { fromRow, toRow } from "./registry";
 
@@ -64,14 +64,15 @@ export async function issueDocument(db: Db, a: IssueInput, issuerPrivB64: string
   const serial = await newSerial(db, a.issuer, a.docType);
   const fields = { ...form.clean, serial };
   // 1. Sign and append to the registry (server only: the key never reaches a browser).
-  const entry = issueEntry(fields, { serial, doc_type: a.docType, issuer_name: a.issuer, version: 1 }, issuerPrivB64);
+  const salts = newSalts(Object.keys(fields)); // fresh random salts: given to the holder, never kept in the registry
+  const entry = issueEntry(fields, { serial, doc_type: a.docType, issuer_name: a.issuer, version: 1 }, issuerPrivB64, salts);
   const reg = await db.from("issuer_registry").insert(toRow(entry));
   if (reg.error) throw new Error(`registry insert failed: ${reg.error.message}`);
   // 2. Deliver to the holder through the one front door (it never marks anything verified; the holder check does).
   const title = dictFor("en")[`doctype.${a.docType}`] ?? a.docType.replace(/_/g, " ");
   const stored = await ingestDocument(db, {
     owner: a.holderOwner, doc_type: a.docType, title, issuer: a.issuer, serial, capture: "digital", fields,
-    language_scripts: ["latin"], synthetic: true,
+    language_scripts: ["latin"], synthetic: true, salts,
   });
   await append(db, "issuer.issued", { serial, doc_type: a.docType, issuer_name: a.issuer, document_id: stored.id, supersedes: a.supersedes ?? null });
   // 3. A corrected copy replaces the old record: a new signed version marks it superseded by the new serial.

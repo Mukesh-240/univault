@@ -112,16 +112,16 @@ const sameFieldHashes = (mine: Record<string, string>, theirs: Record<string, st
 export function decideVerification(
   fields: Record<string, string>, kind: "digital" | "scan", reply: IssuerReply, issuerPubB64: string, now: Date,
   failure?: { firstFailureAt: string; attemptsMade: number },
+  salts?: Record<string, string> | null,
 ): VerifyOutcome {
   const latest = reply.history[0] ?? null;
-  const base = verifyAgainstIssuer(fields, kind, { reachable: reply.reachable, entry: latest }, issuerPubB64, now);
+  const base = verifyAgainstIssuer(fields, kind, { reachable: reply.reachable, entry: latest }, issuerPubB64, now, salts);
   let result: VerifyResult = base;
   let issuerUpdate: VerifyOutcome["issuerUpdate"];
 
   // The issuer published a newer version: does this copy match an older, genuinely signed one?
   if (base.state === "tamper_flagged" && latest && reply.history.length > 1) {
-    const mine = fieldHashes(fields);
-    const older = reply.history.slice(1).find((e) => entrySignatureValid(e, issuerPubB64) && sameFieldHashes(mine, e.field_hashes ?? {}));
+    const older = reply.history.slice(1).find((e) => entrySignatureValid(e, issuerPubB64) && sameFieldHashes(fieldHashes(fields, e.field_hashes?.__salted === "1" ? salts : null), e.field_hashes ?? {}));
     if (older) {
       issuerUpdate = { matchesVersion: older.version, latestVersion: latest.version, changedFields: base.mismatchedFields };
       result = { ...base, state: "superseded", mismatchedFields: [],

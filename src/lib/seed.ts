@@ -14,6 +14,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dataset } from "../../synthetic/generate";
 import { ingestDocument } from "./ingest";
 import { append, verify, type LedgerCheck } from "./ledger";
+import { newSalts } from "./issuer";
 import { signEntries, toRow } from "./registry";
 
 type Db = Pick<SupabaseClient, "from" | "rpc">;
@@ -23,7 +24,10 @@ export interface SeedReport { registry: number; recipients: number; documents: n
 
 export async function seedDataset(db: Db, data: Dataset, issuerPrivB64: string, progress: (msg: string) => void = () => {}): Promise<SeedReport> {
   // 1. Simulated issuer registry — signed now; existing serial+version pairs are skipped.
-  const rows = signEntries(data.registry, issuerPrivB64).map(toRow);
+  // Every record gets fresh random per-field salts; the SAME salts go to the holder with the document (step 3).
+  const salts = new Map<string, Record<string, string>>();
+  for (const r of data.registry) if (!salts.has(r.serial)) salts.set(r.serial, newSalts(Object.keys(r.fields)));
+  const rows = signEntries(data.registry, issuerPrivB64, salts).map(toRow);
   const reg = await db.from("issuer_registry").upsert(rows, { onConflict: "serial,version", ignoreDuplicates: true });
   if (reg.error) throw new Error(`registry insert failed: ${reg.error.message}`);
   progress(`1. registry: ${rows.length} signed entries offered (existing ones skipped)`);
@@ -41,7 +45,7 @@ export async function seedDataset(db: Db, data: Dataset, issuerPrivB64: string, 
   let stored = 0;
   if ((existing.count ?? 0) > 0) progress(`3. documents: "${data.meta.set}" already loaded (${existing.count}); skipped`);
   else {
-    for (const doc of data.documents) { await ingestDocument(db, doc); stored++; if (stored % 100 === 0) progress(`   ${stored}/${data.documents.length}`); }
+    for (const doc of data.documents) { await ingestDocument(db, doc.serial && salts.has(doc.serial) ? { ...doc, salts: salts.get(doc.serial) } : doc); stored++; if (stored % 100 === 0) progress(`   ${stored}/${data.documents.length}`); }
     progress(`3. documents: ${stored} stored through ingestDocument()`);
   }
 
