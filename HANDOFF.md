@@ -1,5 +1,5 @@
 # UNIVAULT HANDOFF
-Last updated: 2026-10-24 18:29 IST · Commit: e3bfe2e (Phase 5 work not yet committed) · Phase: 5
+Last updated: 2026-10-24 18:41 IST · Commit: 793cc6a · Phase: 5 (done; waiting for the Vercel URL)
 
 ## 1. What this is (3 lines max)
 UNIVAULT for IMPACTX 2026 Challenge 02. The promise: "Prove you're ready. Share only what's needed. Take it back."
@@ -50,9 +50,7 @@ Env var names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ISS
   - With no key in production: pages show "Database not configured", APIs and `/s/*` return 503, and health returns 503 with `db:"down"`.
   - `DEPLOY.md` is written.
 ### In progress
-- `README.md`: rewrite as a pitch with the Phase 5 live numbers. "Live demo" must read `[VERCEL URL TO BE ADDED]`.
-  Screenshots are already regenerated (12 files in `docs/evidence/`, including the new `screen-shares.png` and `screen-faults.png`).
-- All Phase 5 code is uncommitted: middleware, db-config, offline-db shape fix, item labels, tests, `DEPLOY.md`, screenshots.
+- Nothing. Phase 5 is committed (793cc6a). README.md is rewritten with the live numbers; "Live demo" reads `[VERCEL URL TO BE ADDED]`.
 ### Not started
 - Vercel deploy (the user imports it) and the smoke test against the URL.
 - Threat-model page (F17) and policy pages (F21).
@@ -60,11 +58,11 @@ Env var names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ISS
 - A server-side cron for the issuer re-check.
 
 ## 4. Next 5 actions
-1. Finish `README.md`: Phase 5 numbers from section 3, a screenshot per feature (add faults + shares), the honest limits (simulated issuer; attestation, not zero-knowledge; screenshots can't be prevented; the anon key is stopped by RLS before the triggers run), and `[VERCEL URL TO BE ADDED]`.
-2. Run `npx tsc --noEmit && npm test`, then commit everything as "phase 5: live-verified, hardened, deploy-ready" and push to main. Update `CHANGELOG.md` and this file.
-3. Tell the user "Ready to import on Vercel" and wait for the URL.
-4. With the URL: smoke test `/api/health` (expect `db:"up"`), the vault page, one `POST /api/verify`, and one share flow (preview → confirm → `/s/<token>` gate → open → kill). Report any failures.
-5. Replace `[VERCEL URL TO BE ADDED]` in README.md with the URL, then commit and push.
+1. Wait for the user to import the repo on Vercel (`DEPLOY.md`) and send the URL.
+2. Smoke test the URL: `/api/health` (expect `db:"up"`), the vault page, one `POST /api/verify`, and one share flow (preview → confirm → `/s/<token>` gate → code → open → kill). Report any failures.
+3. Replace `[VERCEL URL TO BE ADDED]` in README.md with the URL. Commit "docs: live demo URL", push, and update CHANGELOG + this file.
+4. If the user agrees: reset the live demo data (`DEPLOY.md` §4, owner SQL), then `npm run seed` and `npm run db:check`. Do not run e2e against the live DB afterwards.
+5. Next feature work, if asked: the threat-model page (F17) and policy pages (F21), then a server-side issuer re-check.
 
 ## 5. Decisions made
 - 2026-10-24: The offline in-memory store is allowed in dev only, or with `UNIVAULT_OFFLINE_DEMO=1`. Production without a key shows "Database not configured". Reason: never silently fake a DB.
