@@ -79,8 +79,13 @@ export interface ShareView {
 interface ShareRow { id: string; recipient: string; purpose: string; fields: string[]; expires_at: string; policy: ShareView["policy"]; created_at: string; verification_snapshot: Snapshot }
 
 /** All of an owner's shares, newest first, with their current state and every access attempt. */
-export async function loadShares(db: Db, owner: string, now = new Date()): Promise<ShareView[]> {
-  const shares = must(await db.from("shares").select("*").eq("owner", owner).order("created_at", { ascending: false }), "shares") as ShareRow[];
+export async function loadShares(db: Db, owner: string | null, now = new Date(), recipient?: string): Promise<ShareView[]> {
+  // owner = the person who shared (the sender screens); recipient = the code a share is addressed to (the receiver
+  // screens). Either filter, or both; a receiver only ever asks with its own code.
+  let q = db.from("shares").select("*");
+  if (owner) q = q.eq("owner", owner);
+  if (recipient) q = q.eq("recipient", recipient);
+  const shares = must(await q.order("created_at", { ascending: false }), "shares") as ShareRow[];
   if (!shares.length) return [];
   const ids = shares.map((s) => s.id);
   const events = must(await db.from("share_events").select("share_id, state, created_at").in("share_id", ids).order("id"), "share events") as { share_id: string; state: ShareState }[];

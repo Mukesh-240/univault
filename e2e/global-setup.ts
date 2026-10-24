@@ -14,10 +14,10 @@ export const ISSUER_AUTH = "e2e-results/auth-issuer.json";
 export const RECEIVER_AUTH = "e2e-results/auth-receiver.json";
 
 /** Sign in as one role through the real API (the default profile of that role) and save the cookies. */
-async function signIn(baseURL: string | undefined, role: "issuer" | "sender" | "receiver", file: string) {
+async function signIn(baseURL: string | undefined, role: "issuer" | "sender" | "receiver", file: string, ref?: string) {
   const api = await request.newContext({ baseURL });
   const number = generate();
-  const asked = await api.post("/api/auth/code", { data: { number, role } });
+  const asked = await api.post("/api/auth/code", { data: { number, role, ref } });
   if (!asked.ok()) throw new Error(`sign-in (${role}): code request failed (${asked.status()})`);
   const { code } = (await asked.json()) as { code: string };
   const checked = await api.post("/api/auth/verify", { data: { number, code } });
@@ -31,6 +31,7 @@ async function signIn(baseURL: string | undefined, role: "issuer" | "sender" | "
 export default async function globalSetup(config: FullConfig) {
   const baseURL = config.projects[0].use.baseURL;
   await signIn(baseURL, "sender", AUTH_FILE);
-  await signIn(baseURL, "issuer", ISSUER_AUTH);
+  // The university issues degree certificates (the kind the purpose packs ask about), so the journeys can share what it issues.
+  await signIn(baseURL, "issuer", ISSUER_AUTH, "Synthetic State University");
   await signIn(baseURL, "receiver", RECEIVER_AUTH);
 }

@@ -13,9 +13,12 @@ import { ShareBuilder } from "./ShareBuilder";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export default async function SharePage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
+export default async function SharePage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string; ask?: string }> }) {
   const { lang, t } = await getI18n();
-  const from = (await searchParams).from;
+  const sp = await searchParams;
+  const from = sp.from;
+  const to = sp.to && /^UV-R-\d{3,6}$/.test(sp.to) ? sp.to : undefined;
+  const ask = (sp.ask ?? "").split(",").filter((i) => /^[a-z0-9_]+(\.[a-z0-9_]+)?$/.test(i)).slice(0, 40);
   const ctx = await loadDemoVault();
   const packs = loadPacks();
   const rec = await supabase.from("recipients").select("recipient_code, name, org").order("recipient_code");
@@ -28,7 +31,7 @@ export default async function SharePage({ searchParams }: { searchParams: Promis
     <>
       <h1>{t("share.title")}</h1>
       <p className="lead">{t("share.intro")}</p>
-      <ShareBuilder recipients={recipients} items={items} from={from && /^[a-z_]+$/.test(from) ? from : undefined}
+      <ShareBuilder recipients={recipients} items={items} to={to} ask={ask} from={from && /^[a-z_]+$/.test(from) ? from : undefined}
         packs={packs.map((p) => ({ purpose: p.purpose, title: lang === "te" && p.title_te ? p.title_te : p.title, allowed: p.allowed_fields }))} />
     </>
   );

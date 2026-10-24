@@ -14,3 +14,6 @@ export async function currentSession(): Promise<SessionPayload | null> {
   if (!secret) return null;
   return open<SessionPayload>((await cookies()).get(SESSION_COOKIE)?.value, "session", secret);
 }
+
+/** The recipient code of a signed-in RECEIVER (null for anyone else, who therefore has no inbox). */
+export const receiverCode = (s: SessionPayload | null): string | null => (s?.role === "receiver" && s.ref ? s.ref : null);

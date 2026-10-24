@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getI18n } from "@/lib/i18n-server";
 import { showTime } from "@/lib/i18n";
 import { DEMO_OWNER } from "@/lib/server";
+import { requestsToHolder, reportsAboutHolder } from "@/lib/receiver-portal";
 import { listNotifications, loadShares } from "@/lib/share-store";
 import { supabase } from "@/lib/supabase";
 import { StopShare } from "../shares/ShareActions";
@@ -19,10 +20,36 @@ export default async function AlertsPage() {
   const { t } = await getI18n();
   const [alerts, shares] = await Promise.all([listNotifications(supabase, DEMO_OWNER, 50), loadShares(supabase, DEMO_OWNER)]);
   const byId = new Map(shares.map((s) => [s.id, s]));
+  // What receivers have asked this person for, and problems they reported (fixed reasons, no free text).
+  const [requests, reports, names] = await Promise.all([
+    requestsToHolder(supabase, DEMO_OWNER), reportsAboutHolder(supabase, DEMO_OWNER), supabase.from("recipients").select("recipient_code, name"),
+  ]);
+  const nameOf = new Map(((names.data ?? []) as { recipient_code: string; name: string }[]).map((r) => [r.recipient_code, r.name]));
   return (
     <>
       <h1>{t("alerts.title")}</h1>
       <p className="lead">{t("alerts.intro")}</p>
+      <section aria-labelledby="req-h" className="stack-s" style={{ marginBottom: "var(--s4)" }}>
+        <h2 id="req-h">{t("sender.requests.title")}</h2>
+        {requests.length === 0 ? <p className="card">{t("sender.requests.none")}</p> : (
+          <ul className="cards">
+            {requests.slice(0, 8).map((r) => (
+              <li key={r.id} className="card">
+                <p className="big">{t("sender.requests.from", { name: nameOf.get(r.from) ?? r.from, n: r.items.length })}</p>
+                <p className="meta">{showTime(r.at)}</p>
+                {r.flagged && <p className="callout warn">{t("sender.requests.flagged")}</p>}
+                <div className="card-actions"><Link className="btn secondary" href={`/share?to=${encodeURIComponent(r.from)}&ask=${encodeURIComponent(r.items.join(","))}`}>{t("sender.requests.share")}</Link></div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {reports.length > 0 && (
+          <>
+            <h3>{t("sender.reports.title")}</h3>
+            <ul className="cardlist">{reports.slice(0, 5).map((r, i) => <li key={i} className="card">{t("sender.reports.item", { name: nameOf.get(r.code) ?? r.code, reason: t(`recv.report.${r.reason}`) })} <span className="meta">{showTime(r.at)}</span></li>)}</ul>
+          </>
+        )}
+      </section>
       {alerts.length === 0 ? <p className="card">{t("alerts.none")}</p> : (
         <ul className="cards">
           {alerts.map((a) => {

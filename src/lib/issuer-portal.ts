@@ -139,12 +139,13 @@ export interface Activity { seq: number; kind: string; at: string; serial: strin
 
 /** The issuer own recent ledger lines (issued, replaced, stopped), newest first. */
 export async function issuerActivity(db: Db, issuer: string, limit = 20): Promise<Activity[]> {
-  // ponytail: reads the newest 300 ledger lines and filters here (the offline store has no LIKE); a SQL filter on
-  // payload->>issuer_name is the upgrade if the ledger grows large.
-  const r = await db.from("ledger").select("seq, kind, payload, created_at").order("seq", { ascending: false }).limit(300);
-  if (r.error) throw new Error(`ledger unavailable: ${r.error.message}`);
-  return ((r.data ?? []) as { seq: number; kind: string; payload: Record<string, unknown>; created_at: string }[])
-    .filter((l) => l.kind.startsWith("issuer.") && l.payload.issuer_name === issuer)
-    .slice(0, limit)
+  // One query per kind (the database filters by kind), then this issuer lines are picked and merged newest first.
+  const rows: { seq: number; kind: string; payload: Record<string, unknown>; created_at: string }[] = [];
+  for (const kind of ["issuer.issued", "issuer.superseded", "issuer.revoked"]) {
+    const r = await db.from("ledger").select("seq, kind, payload, created_at").eq("kind", kind).order("seq", { ascending: false }).limit(300);
+    if (r.error) throw new Error(`ledger unavailable: ${r.error.message}`);
+    rows.push(...((r.data ?? []) as typeof rows));
+  }
+  return rows.filter((l) => l.payload.issuer_name === issuer).sort((a, b) => b.seq - a.seq).slice(0, limit)
     .map((l) => ({ seq: l.seq, kind: l.kind, at: l.created_at, serial: String(l.payload.serial ?? ""), docType: (l.payload.doc_type as string | undefined) ?? null, by: (l.payload.superseded_by as string | undefined) ?? null }));
 }

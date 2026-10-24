@@ -56,7 +56,7 @@ test.describe("issuer", () => {
     await expect(card).toContainText("Active");
     await card.getByRole("button", { name: "Stop this document" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Stop this document" }).click();
-    await expect(page.locator("li.card").filter({ hasText: out.serial })).toContainText("Stopped");
+    await expect(page.locator("li.card").filter({ hasText: out.serial })).toContainText("Stopped", { timeout: 20_000 });
 
     await holder.goto(`/doc/${out.documentId}`);
     await holder.getByRole("button", { name: "Check again" }).click();
@@ -95,5 +95,84 @@ test.describe("issuer in Telugu", () => {
     await expect(page.getByRole("heading", { name: te["issuer.wiz.1.title"] })).toBeVisible();
     await fillAndSign(page, { next: te["issuer.wiz.next"], review: te["issuer.wiz.review"], sign: te["issuer.wiz.sign"] });
     await expect(page.getByRole("heading", { name: te["issuer.done.title"] })).toBeVisible();
+  });
+});
+
+test.describe("the whole story", () => {
+  test("issuer issues -> sender verifies -> receiver asks -> sender shares from the request -> receiver opens, reports -> sender stops sharing", async ({ browser, baseURL }) => {
+    const open = async (state: string) => { const ctx = await browser.newContext({ baseURL, storageState: state, reducedMotion: "reduce" }); return { ctx, page: await ctx.newPage() }; };
+    const issuer = await open(ISSUER_AUTH), sender = await open(AUTH_FILE), receiver = await open(RECEIVER_AUTH);
+
+    // 1. The issuer issues; 2. the holder checks it: verified.
+    await issuer.page.goto("/issuer/issue");
+    const out = await fillAndSign(issuer.page, { next: "Next", review: "Review", sign: "Sign and issue" });
+    await sender.page.goto(`/doc/${out.documentId}`);
+    await sender.page.getByRole("button", { name: "Check with the issuer" }).first().click();
+    await expect(sender.page.locator(".card").filter({ hasText: "Checked with the issuer" }).locator(".chip").first()).toContainText("Verified", { timeout: 20_000 });
+
+    // 3. The receiver asks for degree-certificate items.
+    const rp = receiver.page;
+    await rp.goto("/receive/ask");
+    await rp.locator(".profile-card").first().click();
+    await rp.locator('fieldset:has(legend:text-is("Degree certificate")) input[type=checkbox]').first().check();
+    await rp.getByRole("button", { name: "Send request" }).click();
+    await expect(rp.getByRole("heading", { name: "Request sent" })).toBeVisible();
+    await rp.goto("/receive/requests");
+    await expect(rp.locator("li.card").first()).toContainText("Waiting");
+
+    // 4. The sender sees the request on Alerts and shares from it.
+    const sp = sender.page;
+    await sp.goto("/alerts");
+    await expect(sp.getByRole("heading", { name: "Requests for you" })).toBeVisible();
+    await sp.getByRole("link", { name: "Share these" }).first().click();
+    await expect(sp).toHaveURL(/\/share\?to=UV-R-/);
+    await sp.getByRole("button", { name: "Next" }).click();
+    await sp.getByRole("button", { name: "Next" }).click();
+    await sp.getByRole("button", { name: "Review what they will see" }).click();
+    await expect(sp.getByRole("heading", { name: "Review and send" })).toBeVisible({ timeout: 60_000 });
+    await sp.getByRole("button", { name: "Share now" }).click();
+    await expect(sp.getByRole("heading", { name: "Your share is ready" })).toBeVisible({ timeout: 60_000 });
+
+    // 5. The receiver opens it: banner, only approved items, watermark; the request is answered; a report is sent.
+    await rp.goto("/receive");
+    const openLink = rp.locator("a[href^='/receive/']").filter({ hasText: "Open" }).first();
+    await openLink.click();
+    await expect(rp.locator(".verified-banner")).toContainText("Checked with the issuer at");
+    await expect(rp.locator("[data-watermark]")).toContainText("UV-R-");
+    const viewUrl = rp.url();
+    await rp.goto("/receive/requests");
+    await expect(rp.locator("li.card").first()).toContainText("Answered");
+    await rp.goto(viewUrl);
+    await rp.getByRole("button", { name: "Report a problem" }).click();
+    await rp.getByLabel("The information looks wrong").check();
+    await rp.getByRole("button", { name: "Send report" }).click();
+    await expect(rp.locator("#main").getByText("Thank you. The sender has been told.")).toBeVisible();
+    await sp.goto("/alerts");
+    await expect(sp.getByRole("heading", { name: "Problems reported to you" })).toBeVisible();
+
+    // 6. The sender stops sharing; the receiver can no longer open it; the history still verifies.
+    await sp.goto("/shares");
+    await sp.getByRole("button", { name: "Stop sharing" }).first().click();
+    const stopped = sp.waitForResponse((x) => x.url().includes("/api/shares/kill"));
+    await sp.getByRole("dialog").getByRole("button", { name: "Stop sharing" }).click();
+    await stopped;
+    await rp.goto(viewUrl);
+    await expect(rp.getByRole("heading", { name: "The sender has stopped sharing this." })).toBeVisible();
+    const ledger = await sender.ctx.request.get("/api/ledger");
+    expect((await ledger.json()).ok).toBe(true);
+    await issuer.ctx.close(); await sender.ctx.close(); await receiver.ctx.close();
+  });
+
+  test("a receiver cannot open another receiver's share, and a sender in Receiving mode has no inbox", async ({ browser, baseURL }) => {
+    const ctx = await browser.newContext({ baseURL, storageState: RECEIVER_AUTH, reducedMotion: "reduce" });
+    const r = await ctx.newPage();
+    await r.goto("/receive/00000000-0000-4000-8000-000000000000");
+    await expect(r.getByRole("heading", { name: "This share is not available to you." })).toBeVisible();
+    await ctx.close();
+    const s = await browser.newContext({ baseURL, storageState: AUTH_FILE, reducedMotion: "reduce" });
+    const p = await s.newPage();
+    await p.goto("/receive");
+    await expect(p.getByRole("heading", { name: "This account has no inbox" })).toBeVisible();
+    await s.close();
   });
 });

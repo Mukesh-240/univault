@@ -8,10 +8,16 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { AUTH_FILE, ISSUER_AUTH, RECEIVER_AUTH } from "./global-setup";
 
 // "/doc" stands for one real document page (its id is looked up on Home).
 const PAGES = ["/signin", "/", "/doc", "/readiness", "/share", "/shares", "/alerts", "/more", "/add", "/add/file", "/ocr", "/names", "/verify", "/ledger",
   "/leak-trace", "/assistant", "/faults", "/threat-model", "/policy", "/s/preview?purpose=scholarship", "/s/not-a-real-link"];
+// The other two roles have their own pages; each is scanned signed in as that role.
+const ISSUER_PAGES = ["/issuer", "/issuer/issue", "/issuer/issued", "/issuer/activity", "/issuer/more"];
+const RECEIVER_PAGES = ["/receive", "/receive/ask", "/receive/requests", "/receive/more"];
+const stateFor = (path: string) => (ISSUER_PAGES.includes(path) ? ISSUER_AUTH : RECEIVER_PAGES.includes(path) ? RECEIVER_AUTH : AUTH_FILE);
+const ALL_PAGES = [...PAGES, "/area?for=issuer", ...ISSUER_PAGES, ...RECEIVER_PAGES];
 const LANGS = ["en", "te"] as const;
 const MODES = [
   { name: "normal", cookies: [] as { name: string; value: string }[] },
@@ -30,11 +36,12 @@ async function firstDocPath(page: Page): Promise<string> {
 
 for (const lang of LANGS)
   for (const mode of MODES)
-    for (const path of PAGES)
+    for (const path of ALL_PAGES)
       test(`axe: ${path} (${lang}, ${mode.name})`, async ({ page, browser, baseURL }) => {
         const cookies = [{ name: "uv_lang", value: lang, url: baseURL! }, ...mode.cookies.map((c) => ({ ...c, url: baseURL! }))];
-        const anon = path === "/signin"; // the sign-in page is only for signed-out visitors
-        const ctx = anon ? await browser.newContext({ baseURL, reducedMotion: "reduce", storageState: { cookies: [], origins: [] } }) : page.context();
+        const state = stateFor(path);
+        const anon = path === "/signin" || state !== AUTH_FILE; // sign-in is for signed-out visitors; the other roles need their own cookies
+        const ctx = anon ? await browser.newContext({ baseURL, reducedMotion: "reduce", storageState: path === "/signin" ? { cookies: [], origins: [] } : state }) : page.context();
         await ctx.addCookies(cookies);
         const p = anon ? await ctx.newPage() : page;
         await p.goto(path === "/doc" ? await firstDocPath(p) : path);
@@ -57,14 +64,18 @@ for (const lang of LANGS)
       await signedIn.addCookies(cookies); await signedOut.addCookies(cookies);
       const wide: string[] = [];
       const page = await signedIn.newPage();
-      for (const path of PAGES) {
-        const p = path === "/signin" ? await signedOut.newPage() : page;
+      const issuerCtx = await browser.newContext({ baseURL, viewport: { width: 360, height: 740 }, reducedMotion: "reduce", storageState: ISSUER_AUTH });
+      const receiverCtx = await browser.newContext({ baseURL, viewport: { width: 360, height: 740 }, reducedMotion: "reduce", storageState: RECEIVER_AUTH });
+      await issuerCtx.addCookies(cookies); await receiverCtx.addCookies(cookies);
+      for (const path of ALL_PAGES) {
+        const own = ISSUER_PAGES.includes(path) ? issuerCtx : RECEIVER_PAGES.includes(path) ? receiverCtx : null;
+        const p = path === "/signin" ? await signedOut.newPage() : own ? await own.newPage() : page;
         await p.goto(path === "/doc" ? await firstDocPath(p) : path);
         await p.waitForLoadState("networkidle"); const over = await p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         if (over > 1) wide.push(`${path} (+${over}px) ${await p.evaluate(() => [...document.querySelectorAll("body *")].filter((e) => (e.getBoundingClientRect().right > innerWidth + 1 || e.scrollWidth > e.clientWidth + 1)).slice(0, 9).map((e) => e.tagName + "." + e.className + ":" + Math.round(e.getBoundingClientRect().left) + "-" + Math.round(e.getBoundingClientRect().right) + ":" + getComputedStyle(e.closest(".filter-form") ?? e).gridTemplateColumns + ":" + innerWidth + ":" + document.documentElement.clientWidth).join(" "))}`);
         if (p !== page) await p.close();
       }
-      await signedIn.close(); await signedOut.close();
+      await signedIn.close(); await signedOut.close(); await issuerCtx.close(); await receiverCtx.close();
       expect(wide).toEqual([]);
     });
 

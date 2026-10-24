@@ -43,15 +43,16 @@ const DAY_MS = 86_400_000;
 const DAY_CHOICES = [1, 7, 30] as const;
 type Step = 1 | 2 | 3 | 4;
 
-export function ShareBuilder({ recipients, items, packs, from }: { recipients: Recipient[]; items: string[]; packs: Pack[]; from?: string }) {
+export function ShareBuilder({ recipients, items, packs, from, to, ask }: { recipients: Recipient[]; items: string[]; packs: Pack[]; from?: string; to?: string; ask?: string[] }) {
   const { lang, t, fieldLabel, docTypeLabel, itemLabel } = useI18n();
   const [step, setStep] = useState<Step>(1);
-  const [code, setCode] = useState(recipients[0]?.code ?? "");
+  // "Share these" on a request (Alerts page): the asking receiver is chosen and the asked items are ticked first.
+  const [code, setCode] = useState(recipients.find((r) => r.code === to)?.code ?? recipients[0]?.code ?? "");
   const recipient = recipients.find((r) => r.code === code);
   const purposeOf = (r?: Recipient) => (packs.some((p) => p.purpose === r?.purpose) ? r!.purpose : packs[0]?.purpose ?? "");
   const purpose = purposeOf(recipient);
   const allowedFor = (p: string) => (packs.find((x) => x.purpose === p)?.allowed ?? []).filter((i) => items.includes(i));
-  const [fields, setFields] = useState<string[]>(allowedFor(purpose));
+  const [fields, setFields] = useState<string[]>(ask?.length ? ask.filter((i) => items.includes(i)) : allowedFor(purpose));
   const [days, setDays] = useState<(typeof DAY_CHOICES)[number]>(7);
   const [mode, setMode] = useState<"view_only" | "download">("view_only");
   const [draft, setDraft] = useState<ShareDraft | null>(null);
