@@ -56,13 +56,22 @@ test("keyboard only: home -> am I ready? -> same person? yes -> scan and fix a f
   await expect(page.locator(".decision-current").first()).toHaveText("Your answer: same person");
 
   // -> Scan and fix; add the first scan if needed, then fix one field.
-  // The side menu comes BEFORE the page in the reading order, and the names list is long, so go back with Shift+Tab (as a keyboard user would).
-  await tabTo(page, 'a[href="/ocr"]', undefined, "Shift+Tab");
+  // "Scan and fix" lives under More. The side menu comes BEFORE the page in the reading order, so go back with
+  // Shift+Tab to "More" (as a keyboard user would), then Tab to "Scan and fix" on the More page.
+  await tabTo(page, 'a[href="/more"]', undefined, "Shift+Tab");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/more$/);
+  await ready(page);
+  await tabTo(page, 'main a[href="/ocr"]');
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/ocr$/);
   const scan = truth.scans[0];
   const name = scan.file.replace("scans/", "");
   const input = `[id="ocr-${name}-reg_no"]`;
+  // A link pressed with Enter changes the address before the new page is drawn: wait for the scan cards before
+  // deciding whether the scan is already stored (counting too early made this test look for an "Add" button that
+  // is not there when the shared demo vault already holds the scan).
+  await page.locator("main li.card").first().waitFor();
   if (!(await page.locator(input).count())) {
     await tabTo(page, "button", "Add to my documents");
     await page.keyboard.press("Enter");

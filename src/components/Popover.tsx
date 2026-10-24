@@ -20,10 +20,12 @@ interface Props {
   panelId?: string;
   /** Called when it opens or closes. */
   onToggle?: (open: boolean) => void;
+  /** Extra class on the wrapper (the header hides some tools on phones and shows them in one menu instead). */
+  className?: string;
   children: ReactNode;
 }
 
-export function Popover({ label, panelLabel, panelId, onToggle, children }: Props) {
+export function Popover({ label, panelLabel, panelId, onToggle, className, children }: Props) {
   const [open, setOpen] = useState(false);
   const auto = useId();
   const id = panelId ?? auto;
@@ -58,7 +60,7 @@ export function Popover({ label, panelLabel, panelId, onToggle, children }: Prop
   }, [open]);
 
   return (
-    <div className="popwrap" ref={wrap}>
+    <div className={className ? `popwrap ${className}` : "popwrap"} ref={wrap}>
       <button type="button" ref={button} aria-expanded={open} aria-controls={open ? id : undefined} className="bell-btn" onClick={() => set(!open)}>{label}</button>
       {open && <div id={id} className="pop bell-panel" role="region" aria-label={panelLabel} style={pos}>{children}</div>}
     </div>

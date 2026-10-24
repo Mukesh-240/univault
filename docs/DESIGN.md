@@ -30,3 +30,8 @@ The generate-and-critique loop was run by ONE agent (the author) scoring screens
 | | 2 | 4 | 5 | 5 | 5 | Only document kinds the issuer is authorised for are offered; SIMULATED ISSUER chip on the paper |
 | | 3 | 5 | 5 | 5 | 5 | Seal stamps on signing; wizard steps slide; reduced motion shows the final state |
 The best version of each page is the one in the repository.
+
+## Phase 10 direction (written before the redo)
+Calm and official, like DigiLocker: white cards on a light grey-blue page, one blue action colour taken from the logo, thin 1px borders, a soft shadow, 16px text with weights no heavier than 600, and spacing only from 4 / 8 / 12 / 16 / 24 / 32 px. Every screen has one obvious next action, and every automated result says what the system did, step by step, in plain words.
+
+Changes from Phase 8 that this direction overrides: 20px base text becomes 16px (A+ 18, A++ 20); 48px buttons become 44px; the 12-link side menu becomes at most six entries; the floating "Need help?" moves into the top bar (so it can never cover a field); the hero banner on Home becomes one line.

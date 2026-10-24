@@ -3,7 +3,7 @@
  * "Stop all sharing" has its own area at the bottom, far from the normal "Stop sharing" button, and asks
  * first. "For demonstration" (the fault panel) is labelled as such: it only pretends things go wrong.
  */
-import { BadgeCheck, BookOpen, FlaskConical, History, Lightbulb, ScanLine, ScrollText, ShieldAlert, Users, type LucideIcon } from "lucide-react";
+import { BadgeCheck, BookOpen, FlaskConical, History, Inbox, Lightbulb, ScanLine, ScrollText, ShieldAlert, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { getI18n } from "@/lib/i18n-server";
 import { DEMO_OWNER } from "@/lib/server";
@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const ITEMS: [string, string, string, LucideIcon][] = [
+  ["/receive", "mode.receiving", "more.receiving", Inbox],
   ["/ocr", "nav.ocr", "more.ocr", ScanLine],
   ["/names", "nav.names", "more.names", Users],
   ["/verify", "nav.verify", "more.verify", BadgeCheck],

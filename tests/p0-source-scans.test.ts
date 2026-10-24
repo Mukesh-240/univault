@@ -27,7 +27,8 @@ describe("P0.7 logging goes through log()", () => {
 });
 
 describe("P0.9 wording", () => {
-  const DOCS = [...SRC, ...walk(join(ROOT, "docs")).filter((f) => f.endsWith(".md") && !/GAP_AUDIT|FINAL_FEATURES/.test(f)), ...walk(join(ROOT, "public")).filter((f) => /\.(md|txt|html|json|svg)$/.test(f)), join(ROOT, "README.md"), join(ROOT, "DEPLOY.md")];
+  // GAP_AUDIT, FINAL_FEATURES and UNIVAULT_SPEC are the owner's rule documents: they quote the banned sentences in order to ban them.
+  const DOCS = [...SRC, ...walk(join(ROOT, "docs")).filter((f) => f.endsWith(".md") && !/GAP_AUDIT|FINAL_FEATURES|UNIVAULT_SPEC/.test(f)), ...walk(join(ROOT, "public")).filter((f) => /\.(md|txt|html|json|svg)$/.test(f)), join(ROOT, "README.md"), join(ROOT, "DEPLOY.md")];
   const BANNED: [RegExp, string][] = [
     [/secure cloud storage/i, "secure cloud storage"], [/100% true/i, "100% true"], [/no fake accounts/i, "no fake accounts"],
     [/connected to (RTO|DigiLocker|Aadhaar)/i, "connected to RTO/DigiLocker/Aadhaar"], [/(^|[^a-z])prevents screenshots?/i, "prevents screenshots"],

@@ -3,6 +3,7 @@
  * opens pages (GET); it never issues, shares, stops or changes anything, so it is safe to point at the live site.
  *   BASE=https://univault-zeta.vercel.app TAG=before npx tsx scripts/phase10-shots.ts
  *   BASE=http://localhost:3400            TAG=after  npx tsx scripts/phase10-shots.ts
+ * Optional: WIDTHS=1440 LANGS=en ONLY=home,share for a quick look.
  * Writes docs/screenshots/phase10/<TAG>/<page>-<width>-<lang>.jpg at 1440, 768 and 390 px wide, English and Telugu.
  */
 import { mkdirSync } from "node:fs";
@@ -12,7 +13,9 @@ import { generate } from "../src/lib/synthetic-aadhaar";
 const BASE = process.env.BASE ?? "http://localhost:3400";
 const TAG = process.env.TAG ?? "after";
 const OUT = `docs/screenshots/phase10/${TAG}`;
-const WIDTHS = [1440, 768, 390];
+const WIDTHS = (process.env.WIDTHS ?? "1440,768,390").split(",").map(Number);
+const LANGS = (process.env.LANGS ?? "en,te").split(",") as ("en" | "te")[];
+const ONLY = process.env.ONLY?.split(","); // e.g. ONLY=home,share to photograph a few pages
 const PAGES: { role: "sender" | "issuer" | "receiver" | null; path: string; name: string }[] = [
   { role: null, path: "/signin", name: "signin" },
   { role: "sender", path: "/", name: "home" },
@@ -41,8 +44,8 @@ async function main() {
   mkdirSync(OUT, { recursive: true });
   const jars = { sender: await cookiesFor("sender"), issuer: await cookiesFor("issuer"), receiver: await cookiesFor("receiver") };
   const browser = await chromium.launch({ channel: "msedge" });
-  for (const w of WIDTHS) for (const lang of ["en", "te"] as const) {
-    for (const p of PAGES) {
+  for (const w of WIDTHS) for (const lang of LANGS) {
+    for (const p of PAGES.filter((x) => !ONLY || ONLY.includes(x.name))) {
       const ctx = await browser.newContext({ viewport: { width: w, height: w > 800 ? 900 : 844 }, reducedMotion: "reduce" });
       await ctx.addCookies([...(p.role ? jars[p.role] : []), { name: "uv_lang", value: lang, url: BASE }]);
       const page = await ctx.newPage();

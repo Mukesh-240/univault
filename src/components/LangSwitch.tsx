@@ -1,6 +1,6 @@
 "use client";
 /**
- * LANGUAGE SWITCH — a big "తెలుగు | English" toggle in the top bar of every page, including sign-in.
+ * LANGUAGE SWITCH — a compact "తెలుగు | EN" toggle in the top bar of every page, including sign-in.
  * Saves the choice in a small cookie (no personal data) and re-renders the page in that language.
  * Two real buttons with aria-pressed, so keyboard and screen reader users know which one is on.
  * On a first visit, before any choice, the server picks Telugu if the browser's language is Telugu.
@@ -17,9 +17,9 @@ export function LangSwitch() {
     router.refresh();
   };
   return (
-    <div role="group" aria-label={t("lang.label")} className="seg">
+    <div role="group" aria-label={t("lang.label")} className="seg tool-lang">
       <button type="button" aria-pressed={lang === "te"} onClick={() => choose("te")} lang="te">తెలుగు</button>
-      <button type="button" aria-pressed={lang === "en"} onClick={() => choose("en")} lang="en">English</button>
+      <button type="button" aria-pressed={lang === "en"} onClick={() => choose("en")} lang="en" aria-label="English">EN</button>
     </div>
   );
 }

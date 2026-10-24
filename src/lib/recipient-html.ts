@@ -12,18 +12,21 @@ import { itemLabel, translate, type Lang } from "./i18n";
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
-// Big, calm and plain: 20px text, 56px buttons and boxes, the same colours as the owner's app. No sidebar, no scripts.
-const CSS = `body{margin:0;font:20px/1.6 system-ui,"Nirmala UI","Noto Sans Telugu",sans-serif;color:#0F172A;background-color:#F3F6FB}
-.b{background:#FEF3C7;color:#92400E;text-align:center;padding:6px 12px;font-size:18px;font-weight:700;border-bottom:1px solid #92400E}.w{max-width:680px;margin:0 auto;padding:16px}
-h1{font-size:32px;line-height:1.3;margin:12px 0}h2{font-size:28px;line-height:1.3}
-.c{background:rgba(255,255,255,.95);border:1px solid #CBD5E1;border-radius:12px;padding:20px;margin:16px 0}
-.s{background:#1E3A8A;color:#fff;border-radius:12px;padding:16px 20px;margin:16px 0;font-weight:700}
-table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:10px;border-bottom:1px solid #CBD5E1;vertical-align:top}
-.n{color:#334155;font-size:18px}.e{background:#FEE2E2;color:#991B1B;border:2px solid #991B1B;border-radius:10px;padding:12px 16px;font-weight:700}
-label{display:block;font-weight:700;margin-top:12px}input{font:inherit;padding:8px 12px;border:2px solid #64748B;border-radius:8px;min-height:56px;width:100%;box-sizing:border-box;background:#fff;color:#0F172A}
-button{font:inherit;font-weight:700;background:#1D4ED8;color:#fff;border:2px solid #1D4ED8;border-radius:10px;padding:8px 24px;min-height:56px;margin-top:16px;cursor:pointer}
+// Calm and plain, the same look as the owner's app: 16px text (Telugu line height 1.7), 44px buttons and boxes,
+// weights no heavier than 600, thin borders. System fonts only (no download) because recipients may be on a slow phone.
+const CSS = `body{margin:0;font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,"Nirmala UI","Noto Sans Telugu",sans-serif;font-feature-settings:"tnum";color:#14213D;background-color:#F6F9FE}
+:lang(te){line-height:1.7}
+.b{background:#EAF3FF;color:#07245A;text-align:center;padding:4px 16px;font-size:13px;font-weight:500;border-bottom:1px solid #D5E1F2}.w{max-width:680px;margin:0 auto;padding:16px}
+h1{font-size:28px;line-height:1.3;margin:12px 0;font-weight:600}h2{font-size:22px;line-height:1.3;font-weight:600}
+.c{background:rgba(255,255,255,.96);border:1px solid #D5E1F2;border-radius:12px;padding:16px 20px;margin:16px 0;box-shadow:0 1px 2px rgba(11,58,140,.06)}
+.s{background:#0B3A8C;color:#fff;border-radius:12px;padding:12px 16px;margin:16px 0;font-weight:600}
+table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:8px;border-bottom:1px solid #D5E1F2;vertical-align:top}
+.n{color:#4A5B78;font-size:14px}.e{background:#FDE7E5;color:#B3261E;border:1px solid #B3261E;border-radius:10px;padding:12px 16px;font-weight:600}
+label{display:block;font-weight:500;margin-top:12px}input{font:inherit;padding:8px 12px;border:1px solid #64748B;border-radius:8px;min-height:44px;width:100%;box-sizing:border-box;background:#fff;color:#14213D}
+button{font:inherit;font-weight:600;background:#1565D8;color:#fff;border:1px solid #1565D8;border-radius:10px;padding:0 20px;min-height:44px;margin-top:16px;cursor:pointer}
 .brand{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-weight:700;letter-spacing:.04em;color:#0B3A8C}
-a{color:#1E3A8A}:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px;box-shadow:0 0 0 6px #fff}`;
+code,[data-otp]{font-family:ui-monospace,Consolas,monospace;font-weight:500}
+a{color:#0B3A8C}:focus-visible{outline:3px solid #1565D8;outline-offset:2px;box-shadow:0 0 0 6px #fff}`;
 
 /** The page frame: banner + main. `bg` is the watermark (a CSS background image), if any. */
 export function page(lang: Lang, title: string, body: string, bg?: string): string {

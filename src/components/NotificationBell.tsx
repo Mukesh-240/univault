@@ -81,7 +81,7 @@ export function NotificationBell() {
       panelId="bell-panel"
       panelLabel={t("bell.label")}
       onToggle={onToggle}
-      label={<><Bell size={22} aria-hidden="true" className={ringing ? "bell-ring" : undefined} />{t("bell.label")}{unseen && !open ? <span className="bell-count">{t("bell.count", { n: unseen })}</span> : null}</>}
+      label={<><span className="sr-only">{t("bell.label")}</span><Bell size={20} aria-hidden="true" className={ringing ? "bell-ring" : undefined} />{unseen && !open ? <span className="bell-count">{t("bell.count", { n: unseen })}</span> : null}</>}
     >
       {items.length === 0 ? <p>{t("bell.empty")}</p> : (
         <ul>{items.slice(0, 6).map((n) => <li key={n.id}><span className="meta">{showTime(n.at)}</span><br />{text(n)}</li>)}</ul>
