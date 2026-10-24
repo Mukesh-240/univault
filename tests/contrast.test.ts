@@ -45,40 +45,35 @@ describe("colour contrast", () => {
 });
 
 describe("text size", () => {
-  it("the base text is 20px; A is 25px and A+ is 30px (percentages of the browser's 16px)", () => {
-    expect(css).toMatch(/html \{ font-size: 125%;/);
-    expect(css).toMatch(/html\[data-size="125"\] \{ font-size: 156\.25%; \}/);
-    expect(css).toMatch(/html\[data-size="150"\] \{ font-size: 187\.5%; \}/);
-    expect(16 * 1.25).toBe(20);
-    expect(16 * 1.5625).toBe(25);
-    expect(16 * 1.875).toBe(30);
+  it("the base text is 16px (A); A+ is 18px and A++ is 20px (percentages of the browser's 16px)", () => {
+    expect(css).toMatch(/html \{ font-size: 100%;/);
+    expect(css).toMatch(/html\[data-size="18"\] \{ font-size: 112\.5%; \}/);
+    expect(css).toMatch(/html\[data-size="20"\] \{ font-size: 125%; \}/);
+    expect([16 * 1, 16 * 1.125, 16 * 1.25]).toEqual([16, 18, 20]);
   });
 
-  it("no text rule is smaller than 18px (the legal footer is 16px)", () => {
+  it("no text rule is smaller than 13px at the base size (chips and the legal footer are the smallest)", () => {
     const small: string[] = [];
     for (const rule of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
       const selector = rule[1].trim();
       for (const m of rule[2].matchAll(/font-size:\s*([\d.]+)(rem|px|em)/g)) {
-        const px = m[2] === "px" ? Number(m[1]) : Number(m[1]) * 20; // rem/em are measured against the 20px base
-        if (px < 18 && !selector.includes("site-footer")) small.push(`${selector} { font-size: ${m[1]}${m[2]} }`);
+        const px = m[2] === "px" ? Number(m[1]) : Number(m[1]) * 16; // rem/em are measured against the 16px base
+        if (px < 13) small.push(`${selector} { font-size: ${m[1]}${m[2]} }`);
       }
     }
     expect(small).toEqual([]);
   });
 
-  it("the legal footer is exactly 16px at the base size", () => {
-    expect(css).toMatch(/\.site-footer \{[^}]*font-size: 0\.8rem/);
-    expect(0.8 * 20).toBe(16);
+  it("headings are 28, 22 and 18px at the base size, and almost nothing is bolder than 600", () => {
+    expect(css).toMatch(/h1 \{ font-size: 1\.75rem; \} h2 \{ font-size: 1\.375rem; \} h3, \.h3 \{ font-size: 1\.125rem; \}/);
+    expect([1.75, 1.375, 1.125].map((r) => r * 16)).toEqual([28, 22, 18]);
+    const heavy = [...css.matchAll(/([^{}]+)\{[^{}]*font-weight:\s*(700|800|900)/g)].map((m) => m[1].replace(/\/\*[^]*?\*\//g, "").trim());
+    expect(heavy).toEqual([".wordmark"]);
   });
 
-  it("headings are 28 to 36px at the base size", () => {
-    expect(css).toMatch(/h1 \{ font-size: 1\.8rem; \} h2 \{ font-size: 1\.6rem; \} h3, \.h3 \{ font-size: 1\.4rem; \}/);
-    expect([1.8, 1.6, 1.4].map((r) => r * 20)).toEqual([36, 32, 28]);
-  });
-
-  it("buttons are at least 2.4rem (48px) tall and the focus ring is 3px", () => {
-    expect(css).toContain("--target: 2.4rem");
-    expect(2.4 * 20).toBe(48);
+  it("buttons are at least 2.75rem (44px) tall and the focus ring is 3px", () => {
+    expect(css).toContain("--target: 2.75rem");
+    expect(2.75 * 16).toBe(44);
     expect(css).toMatch(/:focus-visible \{ outline: 3px solid/);
   });
 });

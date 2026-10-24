@@ -156,25 +156,25 @@ test.describe("signed out", () => {
 });
 
 test.describe("signed in", () => {
-  test("Text size A+ and High contrast change the page and are remembered", async ({ page }) => {
+  test("Text size A++ and High contrast change the page and are remembered", async ({ page }) => {
     await page.goto("/");
+    expect(await page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize))).toBe(16);
+    await page.getByRole("button", { name: /Text size/ }).click();
+    await page.getByRole("button", { name: "Largest text (20)" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-size", "20");
     expect(await page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize))).toBe(20);
-    await page.getByRole("button", { name: "Text size" }).click();
-    await page.getByRole("button", { name: "Larger text" }).click();
-    await expect(page.locator("html")).toHaveAttribute("data-size", "150");
-    expect(await page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize))).toBe(30);
     await page.getByLabel("High contrast").check();
     await expect(page.locator("html")).toHaveAttribute("data-contrast", "high");
     await page.reload();
-    await expect(page.locator("html")).toHaveAttribute("data-size", "150");
+    await expect(page.locator("html")).toHaveAttribute("data-size", "20");
     await expect(page.locator("html")).toHaveAttribute("data-contrast", "high");
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe("rgb(255, 255, 255)");
   });
 
-  test("A+ journey: Home -> a document -> Share a part of this -> the wizard", async ({ page }) => {
-    await page.context().addCookies([{ name: "uv_size", value: "150", url: page.url() === "about:blank" ? "http://localhost:3100" : page.url() }]);
+  test("A++ journey: Home -> a document -> Share a part of this -> the wizard", async ({ page }) => {
+    await page.context().addCookies([{ name: "uv_size", value: "20", url: page.url() === "about:blank" ? "http://localhost:3100" : page.url() }]);
     await page.goto("/");
-    await expect(page.locator("html")).toHaveAttribute("data-size", "150");
+    await expect(page.locator("html")).toHaveAttribute("data-size", "20");
     await page.getByRole("link", { name: /^Open: / }).first().click();
     await expect(page).toHaveURL(/\/doc\//);
     await expect(page.getByRole("heading", { name: "What this document says" })).toBeVisible();

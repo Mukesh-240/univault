@@ -1,6 +1,6 @@
 "use client";
 /**
- * DISPLAY MENU — "Text size" in the top bar: A-, A, A+ (100%, 125%, 150% of the 20px base text) and a
+ * DISPLAY MENU — "Text size" in the top bar: A, A+, A++ (16px, 18px, 20px text) and a
  * "High contrast" switch. The choice is saved in two small cookies, so it is remembered in this browser
  * and the server draws the next page at that size from the first paint. Changes apply at once.
  */
@@ -12,6 +12,7 @@ import { announce } from "./Live";
 import { Popover } from "./Popover";
 
 const YEAR = 31_536_000;
+const LABEL: Record<TextSize, string> = { "16": "A", "18": "A+", "20": "A++" };
 const save = (name: string, value: string) => { document.cookie = `${name}=${value}; path=/; max-age=${YEAR}; samesite=lax`; };
 
 export function DisplayMenu({ initialSize, initialContrast }: { initialSize: TextSize; initialContrast: "high" | "normal" }) {
@@ -33,12 +34,12 @@ export function DisplayMenu({ initialSize, initialContrast }: { initialSize: Tex
   };
 
   return (
-    <Popover label={<><Type size={22} aria-hidden="true" /> {t("ui.textSize")}</>} panelLabel={t("ui.textSize")}>
+    <Popover label={<><Type size={18} aria-hidden="true" /> <span className="tool-label">{t("ui.textSize")}</span> <span className="size-now">{LABEL[size]}</span></>} panelLabel={t("ui.textSize")}>
       <h2>{t("ui.textSize")}</h2>
       <div role="group" aria-label={t("ui.textSize")} className="size-btns">
         {SIZES.map((s) => (
           <button key={s} type="button" aria-pressed={size === s} className={size === s ? undefined : "secondary"} aria-label={t(`ui.size.${s}`)} onClick={() => chooseSize(s)}>
-            {s === "100" ? "A−" : s === "125" ? "A" : "A+"}
+            {LABEL[s]}
           </button>
         ))}
       </div>

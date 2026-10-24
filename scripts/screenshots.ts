@@ -2,7 +2,7 @@
  * SCREENSHOTS for the README — drives the real app in Microsoft Edge and saves JPEGs to docs/screenshots/.
  *   Run (app must be running, e.g. `npm run build && UNIVAULT_OFFLINE_DEMO=1 npm start -- -p 3400`):
  *     npm run screenshots              (or BASE=http://host:port npm run screenshots)
- * For each of 1440px and 390px wide, English and Telugu, normal text and A+ (150%), it tells the whole story through
+ * For each of 1440px and 390px wide, English and Telugu, normal text (16px) and A++ (20px), it tells the whole story through
  * the real screens: the sender signs in (the 4 sign-in screens), the issuer issues a document (the 5 wizard screens),
  * a receiver asks for something, the sender shares from the request (4 wizard screens), the receiver opens it, and
  * the recipient gate. Nothing is staged or faked; the same journey the browser tests walk.
@@ -28,13 +28,13 @@ async function cookiesFor(role: "issuer" | "receiver", ref?: string) {
   return state.cookies;
 }
 
-async function combo(browser: Browser, vp: (typeof VIEWS)[number], lang: "en" | "te", size: "100" | "150") {
+async function combo(browser: Browser, vp: (typeof VIEWS)[number], lang: "en" | "te", size: "16" | "20") {
   const mk = async (cookies: Awaited<ReturnType<typeof cookiesFor>> = []): Promise<[BrowserContext, Page]> => {
     const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, baseURL: BASE, reducedMotion: "reduce" });
     await ctx.addCookies([...cookies, { name: "uv_lang", value: lang, url: BASE }, { name: "uv_size", value: size, url: BASE }]);
     return [ctx, await ctx.newPage()];
   };
-  const tag = `${vp.tag}-${lang}-${size === "150" ? "A+" : "normal"}`;
+  const tag = `${vp.tag}-${lang}-${size === "20" ? "A++" : "normal"}`;
   const shot = (p: Page) => (n: string) => p.screenshot({ path: `${OUT}/${n}-${tag}.jpg`, type: "jpeg", quality: 82 }).then(() => undefined);
 
   // 1. The sender signs in through the real screens (4 shots) and keeps that session.
@@ -112,7 +112,7 @@ async function combo(browser: Browser, vp: (typeof VIEWS)[number], lang: "en" | 
 async function main() {
   mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch({ channel: "msedge" });
-  for (const vp of VIEWS) for (const lang of ["en", "te"] as const) for (const size of ["100", "150"] as const) {
+  for (const vp of VIEWS) for (const lang of ["en", "te"] as const) for (const size of ["16", "20"] as const) {
     await combo(browser, vp, lang, size);
     console.log("done", vp.tag, lang, size);
   }

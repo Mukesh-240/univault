@@ -6,16 +6,17 @@
  *   - who is signed in, from the signed session cookie (null on the sign-in page and the public pages);
  *   - whether the offline demo store is in use (no database key on this machine).
  * In production without a database key, every page shows "Database not configured" instead.
- * Telugu text uses the installed Telugu font when there is one, else Noto Sans Telugu (downloaded at build
- * time, served from this app, and only on Telugu pages, never preloaded).
+ * Fonts (one system, all served from this app; next/font downloads them at BUILD time, so a visitor's browser
+ * never contacts Google): Inter for the interface, Noto Sans Telugu only on Telugu pages (never preloaded), and
+ * JetBrains Mono only for codes and IDs (the browser fetches it only when such text is on screen). next/font also
+ * size-matches the fallback font, so the swap does not move the text.
  */
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
-import { Inter, Noto_Sans_Telugu } from "next/font/google";
+import { Inter, JetBrains_Mono, Noto_Sans_Telugu } from "next/font/google";
 import { Chrome } from "@/components/Chrome";
 import { I18nProvider } from "@/components/I18n";
 import { dictForClient } from "@/lib/i18n";
-import { InterLoader } from "@/components/InterLoader";
 import { LiveRegion } from "@/components/Live";
 import { accountInfo } from "@/lib/accounts";
 import { currentSession } from "@/lib/auth-server";
@@ -25,9 +26,9 @@ import { DB_CONFIGURED, OFFLINE } from "@/lib/supabase";
 import en from "@/locales/en.json";
 import "./globals.css";
 
-// Inter is used from 1024px up (see globals.css); phones keep the system font so Slow 3G stays light.
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap", preload: false });
-const telugu = Noto_Sans_Telugu({ subsets: ["telugu"], weight: ["400", "600", "700"], variable: "--font-telugu", display: "swap", preload: false });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap", adjustFontFallback: true });
+const telugu = Noto_Sans_Telugu({ subsets: ["telugu"], weight: ["400", "500", "600"], variable: "--font-telugu", display: "swap", preload: false, adjustFontFallback: true });
+const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["500"], variable: "--font-jbmono", display: "swap", preload: false, adjustFontFallback: true });
 
 export const metadata = {
   title: en["app.title"], description: en["app.description"],
@@ -43,7 +44,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const contrast = parseContrast(jar.get(CONTRAST_COOKIE)?.value);
   const session = await currentSession();
   return (
-    <html lang={lang} className={lang === "te" ? `${inter.variable} ${telugu.variable}` : inter.variable} data-size={size} data-contrast={contrast === "high" ? "high" : undefined}>
+    <html lang={lang} className={lang === "te" ? `${inter.variable} ${mono.variable} ${telugu.variable}` : `${inter.variable} ${mono.variable}`} data-size={size} data-contrast={contrast === "high" ? "high" : undefined}>
       <body>
         <I18nProvider lang={lang} dict={dictForClient(lang)}>
           <Chrome user={session ? { name: session.name, last4: session.last4, role: session.role ?? "sender", uvId: accountInfo(session.role ?? "sender", session.ref ?? "demo").uvId } : null} size={size} contrast={contrast} offline={OFFLINE}>
@@ -53,7 +54,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             )}
           </Chrome>
           <LiveRegion />
-          <InterLoader />
         </I18nProvider>
       </body>
     </html>

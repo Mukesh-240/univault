@@ -21,7 +21,8 @@ const ALL_PAGES = [...PAGES, "/area?for=issuer", ...ISSUER_PAGES, ...RECEIVER_PA
 const LANGS = ["en", "te"] as const;
 const MODES = [
   { name: "normal", cookies: [] as { name: string; value: string }[] },
-  { name: "A+", cookies: [{ name: "uv_size", value: "150" }] },
+  { name: "A+", cookies: [{ name: "uv_size", value: "18" }] },
+  { name: "A++", cookies: [{ name: "uv_size", value: "20" }] },
   { name: "high-contrast", cookies: [{ name: "uv_contrast", value: "high" }] },
 ];
 const results: { page: string; lang: string; mode: string; critical: number; serious: number; moderate: number; minor: number; rules: string[] }[] = [];
@@ -55,8 +56,8 @@ for (const lang of LANGS)
       });
 
 for (const lang of LANGS)
-  for (const size of ["100", "150"])
-    test(`360px: no sideways scrolling on any page (${lang}, text ${size}%)`, async ({ browser, baseURL }) => {
+  for (const size of ["16", "18", "20"])
+    test(`360px: no sideways scrolling on any page (${lang}, text ${size}px)`, async ({ browser, baseURL }) => {
       test.setTimeout(240_000);
       const signedIn = await browser.newContext({ baseURL, viewport: { width: 360, height: 740 }, reducedMotion: "reduce", storageState: "e2e-results/auth.json" });
       const signedOut = await browser.newContext({ baseURL, viewport: { width: 360, height: 740 }, reducedMotion: "reduce", storageState: { cookies: [], origins: [] } });
