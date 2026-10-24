@@ -75,7 +75,7 @@ export function Chrome({ user, size, contrast, offline, children }: {
       <p className="synthetic-strip" role="note">{t("strip.text")}{offline ? ` · ${t("banner.offlineStore")}` : ""}</p>
       <header className="topbar">
         <div className="topbar-inner">
-          <Link prefetch={false} href={full ? HOMES[role] : "/signin"} className="brand"><Logo size={34} /> UNIVAULT</Link>
+          <Link prefetch={false} href={full ? HOMES[role] : "/signin"} className="brand"><Logo size={36} priority /> <span className="wordmark">UNIVAULT</span></Link>
           {full && (
             <form className="top-search" role="search" action={SEARCH[role]} method="get">
               <label htmlFor="top-q" className="sr-only">{t("ui.search")}</label>

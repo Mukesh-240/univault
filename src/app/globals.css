@@ -479,14 +479,7 @@ html[data-contrast="high"] .topbar { background: #FFFFFF; border-bottom: 3px sol
 .area-card { max-width: 40rem; margin-inline: auto; }
 
 /* Logo animation: papers slide up, the padlock snaps shut once, a soft glow pulses once. Transform and opacity only. */
-@keyframes lg-slide { from { transform: translateY(46px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes lg-snap { 0% { transform: translateY(-16px); } 60% { transform: translateY(2px); } 100% { transform: none; } }
 @keyframes lg-glow { 0% { transform: scale(0.8); opacity: 0.2; } 50% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
-.logo-anim { animation: uv-float 4.5s ease-in-out 2.6s infinite; }
-.logo-anim .lg-paper1, .logo-anim .lg-paper2, .logo-anim .lg-shackle { transform-box: fill-box; transform-origin: 50% 100%; }
-.logo-anim .lg-paper1 { animation: lg-slide 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
-.logo-anim .lg-paper2 { animation: lg-slide 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both; }
-.logo-anim .lg-shackle { animation: lg-snap 0.6s ease-out 1.2s both; }
 .art-glow { animation: lg-glow 1.2s ease-out 1.6s 1 both; }
 /* A page without the side menu (sign-in, public pages) uses the full width. */
 .shell:not(:has(.sidenav)) { grid-template-columns: minmax(0, 1fr); }

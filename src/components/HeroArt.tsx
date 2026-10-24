@@ -27,7 +27,7 @@ export function HeroArt() {
   return (
     <div className="signin-art" aria-hidden="true" ref={box}>
       <div className="art-glow" />
-      <div className="art-logo"><Logo size={320} animated /></div>
+      <div className="art-logo"><Logo size={192} /></div>
     </div>
   );
 }

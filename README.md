@@ -1,3 +1,5 @@
+<p><img src="public/brand/logo-192.png" width="96" height="96" alt="UNIVAULT logo"></p>
+
 # UNIVAULT
 
 ### Prove you're ready. Share only what's needed. Take it back.

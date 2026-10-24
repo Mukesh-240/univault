@@ -22,6 +22,7 @@ table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:10px;bor
 .n{color:#334155;font-size:18px}.e{background:#FEE2E2;color:#991B1B;border:2px solid #991B1B;border-radius:10px;padding:12px 16px;font-weight:700}
 label{display:block;font-weight:700;margin-top:12px}input{font:inherit;padding:8px 12px;border:2px solid #64748B;border-radius:8px;min-height:56px;width:100%;box-sizing:border-box;background:#fff;color:#0F172A}
 button{font:inherit;font-weight:700;background:#1D4ED8;color:#fff;border:2px solid #1D4ED8;border-radius:10px;padding:8px 24px;min-height:56px;margin-top:16px;cursor:pointer}
+.brand{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-weight:700;letter-spacing:.04em;color:#0B3A8C}
 a{color:#1E3A8A}:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px;box-shadow:0 0 0 6px #fff}`;
 
 /** The page frame: banner + main. `bg` is the watermark (a CSS background image), if any. */
@@ -29,7 +30,7 @@ export function page(lang: Lang, title: string, body: string, bg?: string): stri
   const t = (k: string) => esc(translate(lang, k));
   return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><title>${esc(title)}</title><style>${CSS}${bg ? `body{background-image:${bg};background-repeat:repeat}` : ""}</style></head>
-<body><div class="b" role="note"><strong>${t("banner.synthetic")}</strong> · <strong>${t("banner.simulatedIssuer")}</strong></div><main class="w">${body}</main></body></html>`;
+<body><div class="b" role="note"><strong>${t("banner.synthetic")}</strong> · <strong>${t("banner.simulatedIssuer")}</strong></div><main class="w"><p class="brand"><img src="/brand/logo-64.png" width="28" height="28" alt=""> UNIVAULT</p>${body}</main></body></html>`;
 }
 
 /**

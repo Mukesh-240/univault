@@ -29,7 +29,12 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap", preload: false });
 const telugu = Noto_Sans_Telugu({ subsets: ["telugu"], weight: ["400", "600", "700"], variable: "--font-telugu", display: "swap", preload: false });
 
-export const metadata = { title: en["app.title"], description: en["app.description"] };
+export const metadata = {
+  title: en["app.title"], description: en["app.description"],
+  metadataBase: new URL(process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000"),
+  // The social card and icons are made from the owner's logo by scripts/brand.ts (src/app/icon.png and apple-icon.png are picked up by Next).
+  openGraph: { title: "UNIVAULT", description: "Don't ask for the document. Ask for the answer.", images: [{ url: "/brand/og.png", width: 1200, height: 630 }] },
+};
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { lang, t } = await getI18n();
