@@ -1213,9 +1213,9 @@
  "stepper.elig.3.here": "Each answer below says which rule it checked and why.",
  "trail.elig.consent.done": "The owner agreed to answer these questions",
  "trail.elig.consent.why": "Nothing is checked without the owner's yes.",
- "trail.elig.criterion.met": "{label}: met. {reason} (document: {doc})",
- "trail.elig.criterion.not_met": "{label}: not met. {reason} (document: {doc})",
- "trail.elig.criterion.unknown": "{label}: unknown. {reason}",
+ "trail.elig.criterion.met": "{label}: met, worked out from {doc}",
+ "trail.elig.criterion.not_met": "{label}: not met, worked out from {doc}",
+ "trail.elig.criterion.unknown": "{label}: unknown. No checked document answers this yet",
  "trail.elig.criterion.why": "Only the yes/no answer leaves the vault, never the value it was worked out from.",
  "trail.elig.noaccess.done": "No document was shared. Agreeing to answer does not give access to any document",
  "trail.elig.noaccess.why": "Answering a question and sharing a document are two different things.",
@@ -1309,5 +1309,6 @@
  "stepper.open.1.next": "If the link is not active, nothing is shown.",
  "stepper.open.2.next": "A one-time code is made for you (shown on screen).",
  "stepper.open.3.next": "If the code is right, the shared items open.",
- "stepper.open.4.next": "The owner can stop this link at any time."
+ "stepper.open.4.next": "The owner can stop this link at any time.",
+ "elig.trailDone": "Sent. The receiver sees only these answers."
 }

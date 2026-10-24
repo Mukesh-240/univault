@@ -21,7 +21,8 @@ export async function POST(req: Request) {
   try {
     const r = await answerEligibility(supabase, { holder: DEMO_OWNER, requestId: parsed.data.request_id, authorised: parsed.data.authorised, ctx: await loadDemoVault(), privB64: serverKey("VAULT_PRIVATE_KEY") });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
-    return NextResponse.json({ ok: true, overall: r.attestation.overall, criteria: r.attestation.results.length });
+    const trail = { criteria: r.attestation.results.map((x) => ({ label: x.label, result: x.result, docs: r.docsUsed[x.rule_id] ?? [] })), ledgerSeq: r.ledgerSeq };
+    return NextResponse.json({ ok: true, overall: r.attestation.overall, criteria: r.attestation.results.length, trail });
   } catch (e) {
     log("error", "eligibility answer failed", { message: e instanceof Error ? e.message : "unknown" });
     return serverError("answer this request");

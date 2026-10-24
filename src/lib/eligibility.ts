@@ -73,7 +73,7 @@ export async function declineEligibility(db: Db, holder: string, requestId: stri
 
 /** Evaluate ONLY the criteria the holder authorised, sign the result, record it. */
 export async function answerEligibility(db: Db, a: { holder: string; requestId: string; authorised: string[]; ctx: EngineContext; privB64: string; now?: Date }):
-  Promise<{ ok: true; attestation: Attestation; signature: string } | { ok: false; error: string }> {
+  Promise<{ ok: true; attestation: Attestation; signature: string; ledgerSeq: number; docsUsed: Record<string, string[]> } | { ok: false; error: string }> {
   const req = (await eligibilityRequests(db, { to: a.holder })).find((x) => x.id === a.requestId);
   if (!req || req.status !== "waiting") return { ok: false, error: "This request is not waiting for an answer." };
   const pack = loadPacks().find((p) => p.id === req.packId);
@@ -85,8 +85,10 @@ export async function answerEligibility(db: Db, a: { holder: string; requestId: 
   const overall = results.some((r) => r.result === "not_met") ? "not_ready" : results.every((r) => r.result === "met") ? "ready" : "needs_confirmation";
   const attestation: Attestation = { request_id: req.id, pack_id: pack.id, purpose: pack.purpose, issued_at: (a.now ?? new Date()).toISOString(), statement: NOT_PROOF, overall, results };
   const signature = signText(canon(attestation), a.privB64);
-  await append(db, "eligibility.answered", { request_id: req.id, from: req.from, to: a.holder, authorised: chosen.length, attestation, signature });
-  return { ok: true, attestation, signature };
+  const line = await append(db, "eligibility.answered", { request_id: req.id, from: req.from, to: a.holder, authorised: chosen.length, attestation, signature });
+  // For the owner's on-screen step trail only: which documents (by title) each answer came from, and the ledger line.
+  const docsUsed = Object.fromEntries(evaluated.results.map((r) => [r.ruleId, r.documentIds.map((id) => a.ctx.docs.find((d) => d.id === id)?.title ?? "").filter(Boolean)]));
+  return { ok: true, attestation, signature, ledgerSeq: line.seq, docsUsed };
 }
 
 /** The answer a receiver may read: only its own request, only the signed attestation (no document anything). */

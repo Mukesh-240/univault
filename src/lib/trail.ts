@@ -132,12 +132,13 @@ export const openStage = (outcome: string): number =>
   DEAD.includes(outcome) ? 1 : outcome === "gate" || outcome === "denied:unintended_account" ? 2 : outcome === "allowed" ? 4 : 3;
 
 /* ───────── 6 Request and eligibility ───────── */
-export interface CriterionFacts { label: string; result: "met" | "not_met" | "unknown"; reason: string; evidence?: string | null }
+/** One answered criterion: its label, the result, and the TITLES of the documents it was worked out from (never values). */
+export interface CriterionFacts { label: string; result: "met" | "not_met" | "unknown"; docs: string[] }
 export function eligibilityTrail(criteria: CriterionFacts[], ledgerSeq?: number): TrailStep[] {
   return [
     step("elig", "consent", "done", "done"),
     ...criteria.map((c) => step("elig", "criterion", c.result, c.result === "met" ? "done" : c.result === "not_met" ? "failed" : "waiting",
-      { vars: { label: c.label, reason: c.reason, doc: c.evidence ?? "-" } })),
+      { vars: { label: c.label, doc: c.docs.join(", ") || "-" } })),
     step("elig", "noaccess", "done", "done"),
     ledgerSeq ? step("elig", "ledger", "line", "done", { vars: { seq: ledgerSeq }, evidence: ledgerEvidence(ledgerSeq) }) : step("elig", "ledger", "earlier", "done"),
   ];

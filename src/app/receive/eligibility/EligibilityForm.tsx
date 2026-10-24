@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { post } from "@/components/api";
 import { useI18n } from "@/components/I18n";
 import { announce } from "@/components/Live";
+import { Stepper } from "@/components/Steps";
 
 interface Holder { ref: string; name: string; masked: string }
 
@@ -29,6 +30,7 @@ export function EligibilityForm({ criteria }: { criteria: string[] }) {
   };
   return (
     <div className="card stack">
+      <Stepper steps={["stepper.elig.1", "stepper.elig.2", "stepper.elig.3"]} current={1} here="stepper.elig.1.here" next="stepper.elig.1.next" />
       <h2>{t("elig.who")}</h2>
       <div className="field"><label htmlFor="el-q">{t("recv.ask.search")}</label><input id="el-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" /></div>
       <ul className="profile-cards">
