@@ -10,6 +10,7 @@
  *    blocks the share until the person looks at it.
  * 4. The share, its states and its link are written (fingerprints only), and the RECEIPT is returned:
  *    the link is shown this once and never stored. (The recipient asks for a one-time code on the link page.)
+ *    The receipt also lists the ledger lines this share wrote (read back, read-only) for the on-screen step trail.
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -20,6 +21,7 @@ import { badRequest, DEMO_OWNER, serverError, serverKey } from "@/lib/server";
 import { createShare, reverifyAndView, type Snapshot } from "@/lib/share-store";
 import { hashIdempotencyKey, shareToken } from "@/lib/shares";
 import { supabase } from "@/lib/supabase";
+import { ledgerLinesFor } from "@/lib/trail-server";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -57,7 +59,8 @@ export async function POST(req: Request) {
     const snapshot: Snapshot = { idem, docs: reverify.map((r) => ({ id: r.id, title: r.title, doc_type: r.doc_type, state: r.state, checked_at: r.checked_at })) };
     const created = await createShare(supabase, { owner: DEMO_OWNER, draft, recipientName: recipient.name, tokenHash: secrets.tokenHash, snapshot, previewedAt: now.toISOString() });
     const ledger = await verify(supabase);
-    return NextResponse.json({ replayed: false, receipt: { ...receipt(created.shareId, now.toISOString(), draft, recipient, link, snapshot), ledger_ok: ledger.ok, ledger_lines: ledger.total } }, { status: 201 });
+    const lines = await ledgerLinesFor(supabase, [["share_id", [created.shareId]], ["token_id", [created.tokenId]]]);
+    return NextResponse.json({ replayed: false, receipt: { ...receipt(created.shareId, now.toISOString(), draft, recipient, link, snapshot), ledger_ok: ledger.ok, ledger_lines: ledger.total, ledger: lines } }, { status: 201 });
   } catch (e) {
     log("error", "share confirm failed", { message: e instanceof Error ? e.message : "unknown" });
     return serverError("create the share");

@@ -28,7 +28,7 @@ async function makeShare(page: Page, n: number) {
   await page.getByRole("button", { name: "Review what they will see" }).click(); // step 4: review
   // The confirm answer carries the new share id; its card on /shares is #share-<id> (unique even when
   // a live database holds earlier shares for the same recipient).
-  const [confirmed] = await Promise.all([page.waitForResponse((r) => r.url().endsWith("/api/share/confirm")), page.getByRole("button", { name: "Share now" }).click({ timeout: 30_000 })]);
+  const [confirmed] = await Promise.all([page.waitForResponse((r) => r.url().endsWith("/api/share/confirm")), page.getByRole("button", { name: /^Share with / }).click({ timeout: 30_000 })]);
   const shareId = ((await confirmed.json()) as { receipt: { share_id: string } }).receipt.share_id;
   await expect(page.getByRole("heading", { name: "Your share is ready" })).toBeVisible({ timeout: 30_000 });
   return {

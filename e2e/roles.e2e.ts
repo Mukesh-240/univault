@@ -130,7 +130,7 @@ test.describe("the whole story", () => {
     await sp.getByRole("button", { name: "Next" }).click();
     await sp.getByRole("button", { name: "Review what they will see" }).click();
     await expect(sp.getByRole("heading", { name: "Review and send" })).toBeVisible({ timeout: 60_000 });
-    await sp.getByRole("button", { name: "Share now" }).click();
+    await sp.getByRole("button", { name: /^Share with / }).click();
     await expect(sp.getByRole("heading", { name: "Your share is ready" })).toBeVisible({ timeout: 60_000 });
 
     // 5. The receiver opens it: banner, only approved items, watermark; the request is answered; a report is sent.

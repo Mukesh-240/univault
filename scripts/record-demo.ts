@@ -2,7 +2,7 @@
  * RECORD DEMO — five short screen recordings (.webm, 1280x720) of the real app, saved in docs/demo/:
  *   1 signin-hero          the hero, the role cards, a demo profile, the code, the consent card
  *   2 verify-with-issuer   a freshly issued document is checked with its issuer: scan line, then the seal stamps
- *   3 share-wizard         the four-step share wizard, step by step, to "Share now"
+ *   3 share-wizard         the four-step share wizard, step by step, to "Share with <name>"
  *   4 issuing-a-document   the issuer wizard: who, what, details, review, sign (the seal stamps the paper)
  *   5 receiving            the receiver opens what was shared: banner, items, watermark
  *   Run with the app up:  BASE=http://localhost:3400 npx tsx scripts/record-demo.ts

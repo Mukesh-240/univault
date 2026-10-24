@@ -801,3 +801,42 @@ details.expert { border: 1px solid var(--line); border-radius: 12px; margin-top:
   .ready-card { padding: 8px 12px; }
 }
 .doc-head > :last-child { visibility: hidden; }
+
+/* ═════════ PHASE 10: STEPPER, STEP TRAIL, UNDER THE HOOD ═════════
+   Stepper: where am I in a flow. Trail: the internal steps that really ran, each with its status and evidence. */
+.stepper { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; }
+.stepper-title { margin: 0 0 8px; max-width: none; }
+.stepper-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.stepper-item { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.875rem; }
+.stepper-dot { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--edge); font-size: 0.8125rem; font-weight: 600; background: var(--card); }
+.stepper-item.done { color: var(--ok); }
+.stepper-item.done .stepper-dot { background: var(--ok); border-color: var(--ok); color: #FFFFFF; }
+.stepper-item.now { color: var(--navy-deep); font-weight: 600; }
+.stepper-item.now .stepper-dot { background: var(--action); border-color: var(--action); color: #FFFFFF; }
+.stepper-what { margin: 0; display: grid; gap: 4px; font-size: 0.875rem; }
+.stepper-what div { display: flex; flex-wrap: wrap; gap: 4px; }
+.stepper-what dt { font-weight: 600; color: var(--navy-deep); }
+.stepper-what dt::after { content: ":"; }
+.stepper-what dd { margin: 0; color: var(--text); }
+.trail { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--action); border-radius: 12px; padding: 12px 16px; margin: 16px 0; }
+.trail-title { display: flex; align-items: center; gap: 8px; font-size: 1rem; margin: 0 0 8px; color: var(--navy-deep); }
+.trail-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: trail; }
+.trail-step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); counter-increment: trail; }
+.trail-step:first-child { border-top: 0; }
+.trail-icon { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; margin-top: 2px; }
+.trail-step.done .trail-icon { background: var(--ok-bg); color: var(--ok); }
+.trail-step.failed .trail-icon { background: var(--bad-bg); color: var(--bad); }
+.trail-step.waiting .trail-icon { background: var(--warn-bg); color: var(--warn); }
+.trail-step.skipped .trail-icon { background: var(--unk-bg); color: var(--unk); }
+.trail-text { margin: 0; max-width: none; }
+.trail-text::before { content: counter(trail) ". "; font-weight: 600; color: var(--muted); }
+.trail-evidence { color: var(--muted); font-size: 0.875rem; }
+.trail-why summary { cursor: pointer; color: var(--link); font-size: 0.875rem; min-height: 28px; display: inline-flex; align-items: center; }
+.trail-why p { margin: 4px 0 0; color: var(--muted); font-size: 0.875rem; }
+.under-hood { border: 1px dashed var(--line); border-radius: 10px; padding: 0 12px; margin: 12px 0; background: var(--card); }
+.under-hood summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 500; color: var(--link); }
+.under-hood dl { margin: 0 0 12px; display: grid; gap: 8px; }
+.under-hood dt { font-family: var(--font-mono); font-weight: 500; font-size: 0.875rem; }
+.under-hood dd { margin: 0; color: var(--muted); font-size: 0.875rem; }
+.mono { font-family: var(--font-mono); font-weight: 500; }
+html[data-contrast="high"] .trail, html[data-contrast="high"] .stepper { border: 2px solid #000; }

@@ -19,10 +19,12 @@ import { useI18n } from "@/components/I18n";
 import { useStepMotion } from "@/components/useStepMotion";
 import { announce } from "@/components/Live";
 import { Reason } from "@/components/Reason";
+import { Stepper, StepTrail, UnderTheHood } from "@/components/Steps";
 import { post } from "@/components/api";
 import type { ShareDraft } from "@/lib/consent";
 import type { Explanation } from "@/lib/explain";
 import { hasTelugu, showTime } from "@/lib/i18n-core";
+import { shareTrail, type LedgerRef } from "@/lib/trail";
 import { watermarkBackground } from "@/lib/watermark";
 
 interface Recipient { code: string; name: string; purpose: string }
@@ -37,8 +39,9 @@ interface Preview {
 }
 interface Receipt {
   share_id: string; created_at: string; recipient: { code: string; name: string }; purpose: string; fields: string[]; expires_at: string;
-  policy: ShareDraft["policy"]; link: string; verified: { title: string; state: string }[]; ledger_ok?: boolean;
+  policy: ShareDraft["policy"]; link: string; verified: { title: string; state: string }[]; ledger_ok?: boolean; ledger?: LedgerRef[];
 }
+const STEPS = ["stepper.share.1", "stepper.share.2", "stepper.share.3", "stepper.share.4"];
 
 const DAY_MS = 86_400_000;
 const DAY_CHOICES = [1, 7, 30] as const;
@@ -100,14 +103,11 @@ export function ShareBuilder({ recipients, items, packs, from, to, ask }: { reci
 
   const bg = useMemo(() => recipient ? watermarkBackground({ name: recipient.name, recipientCode: recipient.code, time: t("share.sampleTime"), session: "SAMPLE" }) : undefined, [recipient, t]);
 
-  if (receipt) return <ReceiptView r={receipt} />;
+  if (receipt) return <ReceiptView r={receipt} purposeTitle={packs.find((p) => p.purpose === receipt.purpose)?.title ?? receipt.purpose} />;
 
   return (
     <div className="stack" ref={root}>
-      <div className="progress">
-        <span className="step-label" aria-hidden="true">{t("signin.stepOf", { n: step, total: 4 })}</span>
-        <progress value={step} max={4} aria-label={t("signin.stepOf", { n: step, total: 4 })} />
-      </div>
+      <Stepper steps={STEPS} current={step} here={`stepper.share.${step}.here`} next={`stepper.share.${step}.next`} />
       <h2 ref={heading} tabIndex={-1}>{t(`wiz.${step}.title`)}</h2>
 
       {step === 1 && (
@@ -117,7 +117,7 @@ export function ShareBuilder({ recipients, items, packs, from, to, ask }: { reci
             <label key={r.code} className="radio-card" htmlFor={`rcp-${r.code}`}>
               <input id={`rcp-${r.code}`} type="radio" name="recipient" checked={code === r.code}
                 onChange={() => { setCode(r.code); setFields(allowedFor(purposeOf(r))); reset(); }} />
-              <span>{r.name}<small>{r.purpose}</small></span>
+              <span>{r.name}<small>{packs.find((p) => p.purpose === r.purpose)?.title ?? r.purpose}</small></span>
             </label>
           ))}
         </fieldset>
@@ -204,14 +204,15 @@ export function ShareBuilder({ recipients, items, packs, from, to, ask }: { reci
         {step > 1 ? <button type="button" className="text" onClick={() => go((step - 1) as Step)}>{t("ui.back")}</button> : <Link href="/shares" className="btn text">{t("ui.back")}</Link>}
         {step < 3 && <button type="button" disabled={step === 2 && fields.length === 0} onClick={() => go((step + 1) as Step)}>{t("ui.next")}</button>}
         {step === 3 && <button type="button" disabled={busy || fields.length === 0} onClick={review}>{busy ? t("share.working") : t("wiz.review")}</button>}
-        {step === 4 && <button type="button" disabled={busy || !preview || preview.blocked.length > 0} onClick={send}>{busy ? t("share.working") : t("share.confirm")}</button>}
+        {step === 4 && <button type="button" disabled={busy || !preview || preview.blocked.length > 0} onClick={send}>{busy ? t("share.working") : t("share.confirmWith", { name: preview?.recipient.name ?? "" })}</button>}
       </div>
       {step === 2 && fields.length === 0 && <p className="meta">{t("wiz.noneTicked")}</p>}
+      {step === 4 && preview && preview.blocked.length > 0 && <p className="meta">{t("share.whyDisabled")}</p>}
     </div>
   );
 }
 
-function ReceiptView({ r }: { r: Receipt }) {
+function ReceiptView({ r, purposeTitle }: { r: Receipt; purposeTitle: string }) {
   const { lang, t, fieldLabel, docTypeLabel, itemLabel } = useI18n();
   return (
     <section className="card stack-s" aria-labelledby="rc-h">
@@ -220,7 +221,7 @@ function ReceiptView({ r }: { r: Receipt }) {
       <dl className="receipt">
         <div><dt>{t("share.recipient")}</dt><dd>{r.recipient.name}</dd></div>
         <div><dt>{t("receipt.recipientId")}</dt><dd><code>{r.recipient.code}</code></dd></div>
-        <div><dt>{t("share.purpose")}</dt><dd>{r.purpose}</dd></div>
+        <div><dt>{t("share.purpose")}</dt><dd>{purposeTitle}</dd></div>
         <div><dt>{t("share.items")}</dt><dd>{r.fields.map((f) => itemLabel(f)).join(", ")}</dd></div>
         <div><dt>{t("receipt.expires")}</dt><dd>{showTime(r.expires_at)}</dd></div>
         <div><dt>{t("share.policy")}</dt><dd>{t(r.policy.mode === "view_only" ? "share.viewOnly" : "share.download")}{r.policy.max_views ? ` · ${t("receipt.maxViews", { n: r.policy.max_views })}` : ""}</dd></div>
@@ -231,6 +232,8 @@ function ReceiptView({ r }: { r: Receipt }) {
       <input id="rc-link" readOnly value={r.link} onFocus={(e) => e.currentTarget.select()} className="wide" />
       <p>{t("receipt.codeHow")} <span className="chip unk">SIMULATED</span></p>
       <p className="note">{t("receipt.once")}</p>
+      <StepTrail steps={shareTrail(r)} id="share-trail-h" />
+      <UnderTheHood items={["attestation", "ledger", "otp", "watermark"]} />
       <p><Link href="/shares" className="btn">{t("receipt.manage")}</Link></p>
     </section>
   );

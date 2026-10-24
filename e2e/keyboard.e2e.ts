@@ -1,7 +1,7 @@
 /**
  * KEYBOARD-ONLY WALKS — two journeys without touching the mouse. Only Tab, Enter, arrows and typing.
  *   1. Home -> Am I ready? -> Are these the same person? (answer Yes) -> Scan and fix (add a scan, fix a field).
- *   2. The SHARE WIZARD, start to finish: who -> what -> how long -> review -> "Share now" -> receipt.
+ *   2. The SHARE WIZARD, start to finish: who -> what -> how long -> review -> "Share with <name>" -> receipt (and its step trail).
  * tabTo() presses Tab until the wanted control has focus, the way a keyboard user would. Each step also
  * checks that the change was announced in the live region. The correct value typed into the scan field
  * comes from the ground-truth label file (the test oracle).
@@ -116,7 +116,7 @@ test("keyboard only: the share wizard from who to receipt", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Review and send" })).toBeVisible({ timeout: 60_000 });
   // Step 4: Back is always there; then send.
   await expect(page.getByRole("button", { name: "Back" })).toBeVisible();
-  await tabTo(page, "button", "Share now");
+  await tabTo(page, "button", "Share with ");
   const [confirmed] = await Promise.all([page.waitForResponse((r) => r.url().endsWith("/api/share/confirm")), page.keyboard.press("Enter")]);
   const shareId = ((await confirmed.json()) as { receipt: { share_id: string } }).receipt.share_id;
   await expect(page.getByRole("heading", { name: "Your share is ready" })).toBeVisible({ timeout: 60_000 });
