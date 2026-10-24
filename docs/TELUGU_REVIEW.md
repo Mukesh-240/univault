@@ -89,3 +89,17 @@ model and policy pages are in English on purpose (marked `lang="en"`); only thei
 
 Grammar to check: endings glued to serial numbers or names written in English letters, for example `{serial}ను`
 (serial + object marker), `{name}కు`, `{by}తో`, `{time}కు జారీదారుతో సరిచూశారు` (`recv.view.banner`).
+
+## Phase 9 additions (AI-written, not reviewed by a native speaker)
+
+| Idea | English in the app | Telugu in the app | Concern |
+|---|---|---|---|
+| Eligibility check | Eligibility check | అర్హత తనిఖీ | Fine? |
+| Met / not met / unknown | Met / Not met / Unknown | తీరింది / తీరలేదు / తెలియదు | "తీరింది" (fulfilled) for a criterion: natural? |
+| Ready under these criteria | Ready under these criteria | ఈ ప్రమాణాల ప్రకారం సిద్ధంగా ఉన్నారు | Must never read as "you are eligible/approved". |
+| Not proof | ... It is not proof ... | ఇది రుజువు కాదు | Must be clear and not softened. |
+| UV-ID note | A UV-ID names an account. It does not prove who is at the keyboard. | UV-ID ఒక ఖాతాను సూచిస్తుంది. కీబోర్డ్ దగ్గర ఎవరున్నారో అది నిరూపించదు. | Check the sentence reads naturally. |
+| Account types | Individual / Government / Institution / Business | వ్యక్తి / ప్రభుత్వం / సంస్థ / వ్యాపారం | |
+| Kill user | Stop all sharing with {name} | {name}తో అన్ని షేరింగ్ ఆపండి | |
+| Neutral receiver notice | Access to this document was ended by the owner. | ఈ పత్రానికి యాక్సెస్‌ను యజమాని ముగించారు. | "యజమాని" (owner) used for the document owner; see the Phase 8 concern. |
+| Synthetic strip | Synthetic data · simulated issuers, identity check and one-time codes | కల్పిత డేటా · అనుకరణ జారీదారులు, గుర్తింపు తనిఖీ, వన్-టైమ్ కోడ్‌లు | |

@@ -1,20 +1,33 @@
 # UNIVAULT — Product Spec, Feature List & Feasibility
 *IMPACTX 2026 · Challenge 02 "Your Documents, One Place" (Hard Mode) · Team of 4 · Stack: Next.js + Supabase*
 
+> **Update 25 Oct 2026.** `docs/FINAL_FEATURES.md` supersedes any conflict with this file. Section 0 below is the current state after Phase 9; sections 1-12 are the original plan and are annotated where reality differs.
+>
 > **How to use this file.** It is written to be understood with **no other context**. Hand it to a teammate, or paste it into Claude Code (Antigravity) as the project brief. Section 12 is a ready-made instruction block for the coding agent.
 
 ---
 
-## 0. Status snapshot (what already exists)
+## 0. Status snapshot (25 Oct 2026, after Phase 9)
 
 | Item | State |
 |---|---|
-| Supabase project `impactx-proofvault` (ref `opgoukjysnsfzzjnfhxa`, region ap-south-1) | Created. Schema v1 + v2 applied and tested (SQL in `docs/sql/`). |
-| Append-only protection + hash-chained ledger | Done in the database (triggers). Tested: chain verifies, UPDATE and DELETE are blocked. |
-| Next.js 15 + TypeScript project, deps installed | Done (`package.json`, `tsconfig.json`). |
-| `src/lib/crypto.ts`, `issuer.ts`, `names.ts`, `injection.ts`, `scrub.ts`, `watermark.ts` | **Typecheck clean and smoke-tested once by hand** (name matching incl. Telugu, original/altered/forged/offline verification, injection phrases, log redaction all behaved as intended). **No Vitest tests yet**; `watermark.ts` has not been run. Treat as a solid first draft. |
-| Rules engine, selective disclosure, seed data, API routes, UI, tests, docs pages | **Not started.** |
-| Signing keys | Generated locally in the original sandbox only. **Regenerate** (script in §12). |
+| Live app | https://univault-zeta.vercel.app (Vercel project `univault`; GitHub is not connected, deploy with `npx vercel deploy --prod --yes`). Repo: https://github.com/Mukesh-240/univault (public, MIT) |
+| Supabase `opgoukjysnsfzzjnfhxa` (ap-south-1) | Migrations 001-003 applied and tested. `docs/sql/004_lock_anon.sql` written, **not yet run (owner action)** |
+| Append-only protection + hash-chained ledger | Done in the database: 12 triggers on 11 tables reject UPDATE/DELETE; `verify_ledger()` checks the chain |
+| Phases 1-6 | Done and deployed: signing, mock issuer, verify flow, trust tiers, readiness, Telugu-aware name matching, OCR correction, selective disclosure attestation, per-recipient shares, watermark, kill, leak trace, fault panel, erase, threat model, policy pages (EN/TE), daily re-check cron, rate limits and code lockout |
+| Phase 7 | Friendly UI, simulated sign-in with synthetic Aadhaar-style numbers (`0000...`), text-size and high-contrast controls, motion |
+| Phase 8 | Premium UI, logo and palette tokens, three roles (Issuer / Sender / Receiver) with demo profiles and server-enforced role areas. Not finished: README three-role story, screenshots re-run, design scores in `docs/DESIGN.md` |
+| Phase 9 | Gap audit against FINAL_FEATURES (25/28/13/1 before, 53/11/3/1 after, `docs/GAP_AUDIT.md`); loophole fixes with regression tests; account types and UV-IDs; issuer authority; eligibility check; decline; kill user |
+| Tests (last full live run, Phase 7) | 252 unit, 148 browser, axe 0 violations, eval held-out P 100% / R 96.6% / 0 false alarms, showcase 17/17, npm audit 0. Phase 8: 255 unit. Phase 9 final counts: from the agent's final report |
+| Not met / not built | Slow 3G target (8.7 s / about 200 KB vs 7.2 s / 169 KB); PDF pipeline and preview-pages mode; accounts table; "Verify a copy" box; issuer-level suspend; Telugu native review; **anon key lock-down pending owner** |
+| Signing keys | Live in `.env.local` and Vercel only. Never in chat, never committed |
+
+### Changes against the original plan (details in FINAL_FEATURES section 8)
+- Cut list said "real login/accounts": a **simulated** sign-in and three demo roles now exist. Real login and onboarding remain cut.
+- Account types, permanent UV-IDs and an issuer-authority table (document type to allowed issuer category) were added.
+- Sharing gained recipient requests (owner can grant less), eligibility checks, kill-user, forwarded-link denial and stamped-download fingerprints.
+- Records are structured fields, not PDF files, so the PDF-only vault and preview-pages mode were not built.
+- A daily server-side issuer re-check now exists (originally "no scheduler required").
 
 ---
 
@@ -87,7 +100,7 @@ Browser (Next.js App Router, TS)           Server (Next.js route handlers)      
 ```
 - **Hashing/signing:** Node `crypto` (SHA-256, Ed25519). Server-side only.
 - **Database enforces integrity:** append-only tables reject UPDATE/DELETE via trigger; `ledger` computes its own hash chain in a BEFORE INSERT trigger; `verify_ledger()` re-checks the chain.
-- **Demo-mode security caveat (put in threat model):** only the public anon key is used, with RLS allowing read + append. No real login (one synthetic persona). The mock issuer registry is writable with the anon key, which is why **registry entries are signed**: forged entries fail signature verification.
+- **Demo-mode security caveat (put in threat model):** only the public anon key is used, with RLS allowing read + append. No real login (a simulated sign-in with three demo roles). **Update:** the app uses `SUPABASE_SERVICE_ROLE_KEY` server-side when set; until the owner sets it and runs `docs/sql/004_lock_anon.sql`, the public anon key can still read every table and the threat model says so. The mock issuer registry is writable with the anon key, which is why **registry entries are signed**: forged entries fail signature verification.
 
 ### Data model (tables already created)
 `documents` (immutable: hash, metadata, tier) · `document_payloads` (deletable sensitive content + OCR confidences) · `document_events` (state log: uploaded, extracted, user_confirmed, verified, unverifiable, tamper_flagged, superseded, revoked, erased) · `assertions` (corrections with provenance) · `entity_links` (user-confirmed same-person decisions) · `issuer_registry` (serial, record hash, per-field hashes, status, version, signature) · `issuer_config` (is_down fault toggle) · `recipients` · `shares` (immutable; includes `policy` jsonb) · `share_events` · `share_tokens` (token stored only as hash, plus recipient code, OTP hash, watermark) · `token_events` · `access_log` (client hint only, hashed) · `ledger` (hash-chained).
@@ -217,7 +230,7 @@ Three in-app pages: **Rules & Regulations** (prototype, synthetic data only, sim
 *Why:* universal hard requirement #3 — the audit found we described it in places but had no single mechanism guaranteeing it everywhere.
 
 ### Explicitly cut
-Live OCR tuning · real login/accounts · a second Indian language · invisible steganographic watermark · delegated forwarding · true zero-knowledge proofs · real issuer integration.
+Live OCR tuning · real login/accounts (a simulated sign-in and demo roles were added later) · a second Indian language · invisible steganographic watermark · delegated forwarding · true zero-knowledge proofs · real issuer integration.
 
 ### Effort vs capacity
 P0 ≈ 45–50h of work (now includes F23); P1 ≈ 40h (now includes F20); nothing remains at P2. A team of 4 over ~20 working hours ≈ 70–80h, so expect **all of P0 plus about 60–70% of P1**. Within P1, build in this order: F20, F9, F10, F12, F13, F14, F16, F5, F17, F21, F22 (Elite-dimension and curveball items first).
@@ -381,19 +394,19 @@ Setup:
 ---
 
 ## 13. Definition of done (checklist)
-- [ ] ≥15 seeded conflicts + one-page data card
-- [ ] Readiness for 3 purposes with pass/fail/unknown + reasons
-- [ ] Name matching: explanations, no auto-merge, user-confirmed links
-- [ ] OCR + side-by-side + corrections as assertions; originals untouched
-- [ ] Verification: hash + per-field + signature; neutral tamper wording; degraded mode
-- [ ] Share: preview → confirm → receipt; minimal-disclosure; over-broad flagged
-- [ ] Ledger verifies live; revocation honest about limits
-- [ ] Per-recipient token + ID/OTP gate + watermark + view-only/download + kill one/all + notifications + leak trace
-- [ ] Fault panel survives 3 faults; hidden-text PDF doesn't trigger a share
-- [ ] ≥15 tests run live with pass rate; zero-leak log check passes
-- [ ] Threat model + 3 policy pages (EN/TE) + erase flow with stated limits
-- [ ] Keyboard-only, screen-reader, Telugu, slow-network checks done and noted
-- [ ] README states what is simulated, what is real, and what was cut
+- [x] ≥15 seeded conflicts + one-page data card (showcase 17/17; `docs/DATA_CARD.md`)
+- [x] Readiness for 3 purposes with pass/fail/unknown + reasons
+- [x] Name matching: explanations, no auto-merge, user-confirmed links
+- [x] OCR + side-by-side + corrections as assertions; originals untouched
+- [x] Verification: hash + per-field (salted, canonical) + signature; neutral tamper wording; degraded mode
+- [~] Share: preview → confirm → receipt; over-broad flagged (done); details-only default hiding exact values is partial
+- [x] Ledger verifies live; revocation honest about limits
+- [~] Per-recipient token + ID/OTP gate + watermark + download + kill link/user/all + notifications + leak trace (done); preview-pages mode not built
+- [x] Fault panel survives 3 faults (5 built); hidden-text document doesn't trigger a share
+- [x] ≥15 tests run live with pass rate (21 scripted); zero-leak log check passes
+- [x] Threat model + policy pages (EN/TE) + erase flow with stated limits
+- [~] Keyboard-only, axe, Telugu, slow-network checks done and noted; Slow 3G target not met; Telugu not native-reviewed
+- [~] README states what is simulated, real and cut; its screenshots and three-role story still need a refresh
 
 ---
 

@@ -14,3 +14,19 @@ Where a rule below conflicts with the Phase 7 brief (20px base text, plain words
 10. **Prove it on the rendered page** (browser-qa, e2e-testing): check 375, 768 and 1440 px in English and Telugu, run axe plus a keyboard-only walk and say plainly that axe covers only part of WCAG, wait on locators and responses (never fixed timeouts), keep screenshots as artifacts, never run mutating journeys against the live demo without saying so, and end with a SHIP / SHIP WITH FIXES / DO NOT SHIP verdict (INCONCLUSIVE when there is no baseline).
 
 Not applied on purpose: the `taste` skill is a music-video aesthetic guide (only its "decide the direction first" idea is used, in rule 1). Nothing was copied from the skill repos into this project, and none of their hooks, commands or scripts were added.
+
+## Phase 8 critique rounds (gan-design style, honest note)
+The generate-and-critique loop was run by ONE agent (the author) scoring screenshots against the rubric, not by a separate evaluator, and only on the three pages the brief names. Scores are 1 to 5, self-assessed from screenshots and objective checks (axe, contrast tests, touch targets, overflow probes). Telugu quality is NOT scored: no native speaker has reviewed it (see TELUGU_REVIEW.md); only layout in Telugu was checked. Animation smoothness was not measured (no frame trace); only that nothing flashes and that reduced motion switches it off.
+
+| Page | Round | Beauty | Older-user clarity | Contrast | Trust | What changed |
+|---|---|---|---|---|---|---|
+| Sign-in chooser | 1 | 2 | 2 | 4 | 3 | Content was squeezed into a 15rem column (no side menu on this page) |
+| | 2 | 4 | 4 | 5 | 4 | Single-column shell when there is no menu; third role card wrapped, narrowed the minimum width |
+| | 3 | 4 | 5 | 5 | 4 | Phone: logo hidden, header stacks; keeps the hero gradient and calm footer line |
+| Sender home | 1 | 3 | 3 | 5 | 4 | Header overflowed (search + 6 buttons) |
+| | 2 | 4 | 4 | 5 | 4 | Search moved into the side menu below 1600px; header on one row at 18px text |
+| | 3 | 4 | 4 | 5 | 4 | Readiness cards became ring + sentence + button in a row |
+| Issue wizard | 1 | 4 | 4 | 5 | 4 | First pass already clear: paper preview beside the form |
+| | 2 | 4 | 5 | 5 | 5 | Only document kinds the issuer is authorised for are offered; SIMULATED ISSUER chip on the paper |
+| | 3 | 5 | 5 | 5 | 5 | Seal stamps on signing; wizard steps slide; reduced motion shows the final state |
+The best version of each page is the one in the repository.
