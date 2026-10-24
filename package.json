@@ -39,5 +39,6 @@
   },
   "overrides": {
     "postcss": "^8.5.28"
-  }
+  },
+  "license": "MIT"
 }

@@ -95,11 +95,11 @@ export function checkDownloadPass(serverSecretB64: string, tokenHash: string, pa
 
 // ─────────────────────────── Access decisions ───────────────────────────
 
-export type Outcome = "allowed" | "code_issued" | "download"
+export type Outcome = "allowed" | "code_issued" | "download" | "locked"
   | "denied:unknown_link" | "denied:revoked" | "denied:killed" | "denied:expired" | "denied:max_views"
-  | "denied:wrong_recipient" | "denied:wrong_code" | "denied:otp_reused" | "denied:view_only";
+  | "denied:wrong_recipient" | "denied:wrong_code" | "denied:otp_reused" | "denied:view_only" | "denied:locked";
 export type NotifyKind = "first_open" | "new_device" | "wrong_recipient_attempt" | "wrong_code_attempt"
-  | "killed_link_attempt" | "revoked_link_attempt" | "expired_link_attempt";
+  | "killed_link_attempt" | "revoked_link_attempt" | "expired_link_attempt" | "share_locked";
 
 /** What the database knows about one link. */
 export interface LinkFacts { shareRevoked: boolean; tokenKilled: boolean; expiresAt: string; maxViews?: number; recipientCode: string; policy: "view_only" | "download" }
@@ -151,6 +151,35 @@ export function decideOpen(link: LinkFacts | null, a: Attempt & { code: string }
   if (link!.maxViews !== undefined && opened.length >= link!.maxViews) return { outcome: "denied:max_views", notify: null };
   if (!opened.length) return { outcome: "allowed", notify: "first_open" };
   return { outcome: "allowed", notify: opened.some((p) => p.deviceHash === a.deviceHash) ? null : "new_device" };
+}
+
+// ─────────────────────────── Lock after wrong codes ───────────────────────────
+//
+// Five wrong (or reused) one-time codes in a row lock the link for 15 minutes: nobody can ask for a
+// code or open it, even with the right one, and the owner is told. The lock is a "locked" row in the
+// access log, so it is the same on every server instance and survives restarts. A successful open or
+// a lock starts the count again from zero.
+
+export const MAX_WRONG_CODES = 5;
+export const LOCK_MS = 15 * 60 * 1000;
+const WRONG_CODE_OUTCOMES = ["denied:wrong_code", "denied:otp_reused"];
+
+/** Wrong codes since the last successful open or the last lock (attempts in oldest-first order). */
+export function wrongCodesSinceReset(past: PastAccess[]): number {
+  let n = 0;
+  for (const p of past) {
+    if (p.outcome === "allowed" || p.outcome === "locked") n = 0;
+    else if (WRONG_CODE_OUTCOMES.includes(p.outcome)) n++;
+  }
+  return n;
+}
+
+/** If the link is locked right now, until when (ISO time); otherwise null. */
+export function lockedUntil(past: PastAccess[], now: Date): string | null {
+  const lock = [...past].reverse().find((p) => p.outcome === "locked");
+  if (!lock?.at) return null;
+  const until = Date.parse(lock.at) + LOCK_MS;
+  return until > now.getTime() ? new Date(until).toISOString() : null;
 }
 
 /** A download from a page that was just opened (its pass already checked). View-only shares never serve a file. */

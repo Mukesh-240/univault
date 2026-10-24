@@ -15,6 +15,7 @@ Set these in **Vercel → Project → Settings → Environment Variables**, for 
 | `VAULT_PRIVATE_KEY` | Your local `.env.local`. It signs credentials, derives share links and signs download passes. If you change it, links already sent stop working. | **Yes** |
 | `VAULT_PUBLIC_KEY` | Your local `.env.local` (the matching public half) | No |
 | `NEXT_TELEMETRY_DISABLED` | `1` (turns off Next.js anonymous telemetry) | No |
+| `CRON_SECRET` | Any long random string you make up (for example `openssl rand -hex 32`). Vercel Cron sends it as `Authorization: Bearer <value>` to `/api/cron/recheck`; without it that route refuses every call (503). | **Yes** |
 
 **Do not set `UNIVAULT_OFFLINE_DEMO`.** It only exists for local browser tests. Without it, a production deploy that is missing the database key shows "Database not configured" instead of quietly using a temporary in-memory store.
 
@@ -24,7 +25,7 @@ New key pair needed? Generate one with the one-line command in `UNIVAULT_SPEC.md
 
 1. Go to **vercel.com/new**, then under *Import Git Repository* choose **Mukesh-240/univault** and click **Import**.
 2. Check that Framework Preset says **Next.js** and Root Directory is **`./`**. Leave Build and Output settings at their defaults.
-3. Open **Environment Variables** and add the seven names from the table above.
+3. Open **Environment Variables** and add the eight names from the table above.
 4. Click **Deploy**. The region is fixed to Mumbai (`bom1`) by `vercel.json`.
 5. Open **Settings → Deployment Protection** and make sure Production is **not** behind Vercel Authentication. Recipients open `/s/<link>` without a Vercel account.
 
@@ -59,3 +60,4 @@ This step permanently deletes the demo history. Only run it on the demo project.
 - The rule packs and OCR fixtures are bundled with the server functions (`outputFileTracingIncludes` in `next.config.mjs`).
 - Security headers (CSP, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`) are set in `next.config.mjs`.
 - `src/middleware.ts` refuses POST bodies over 256 KB, and answers 503 "Database not configured" when the database variables are missing.
+- Vercel Cron (`vercel.json`) calls `GET /api/cron/recheck` once a day at 03:00 UTC, re-asking the issuer about every document in an active share. Once a day is the most the Hobby plan allows. While the owner has `/shares` open, the page also re-checks every 60 s.

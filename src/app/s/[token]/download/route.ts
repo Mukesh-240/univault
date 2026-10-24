@@ -12,6 +12,7 @@ import { sha256 } from "@/lib/crypto";
 import { recipientView } from "@/lib/disclosure";
 import { isLang, LANG_COOKIE, type Lang } from "@/lib/i18n";
 import { deniedHtml, viewHtml } from "@/lib/recipient-html";
+import { recipientLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/scrub";
 import { loadDemoVault, serverKey } from "@/lib/server";
 import { linkByTokenHash, logAccess } from "@/lib/share-store";
@@ -32,6 +33,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const lang: Lang = isLang(lc) ? lc : "en";
   const deviceHash = hashDevice(jar.get("uv_dev")?.value ?? newDeviceId());
   const page = (body: string, status: number) => new Response(body, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+  // Same per-address and per-link limits as the gate (rate-limit.ts): 429, nothing else happens.
+  const limited = recipientLimit(req, hashToken(token));
+  if (!limited.ok) return new Response(deniedHtml(lang, "rate_limited"), { status: 429, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "retry-after": String(limited.retryAfterS) } });
   try {
     const form = await req.formData().catch(() => null);
     const tokenHash = hashToken(token);

@@ -127,3 +127,25 @@ test("share -> gate + watermark -> second device -> stranger denied -> leak trac
 
   for (const c of [devA, devB, stranger, other]) await c.ctx.close();
 });
+
+test("five wrong codes lock the link for 15 minutes (429), even the right code is refused, owner told", async ({ page, browser }) => {
+  test.setTimeout(120_000);
+  const made = await makeShare(page, 2);
+  const { ctx, p } = await openAs(browser, made.link, made.recipientId);
+  const real = (await p.locator("[data-otp]").innerText()).trim();
+  const bad = real === "000000" ? "111111" : "000000";
+  // The same browser (same device cookie) submits the gate form, as the Open button would.
+  const open = (code: string) => p.request.post(made.link, { form: { step: "open", recipient_id: made.recipientId, code } });
+  for (let i = 1; i <= 4; i++) expect((await open(bad)).status(), `wrong code ${i}`).toBe(403);
+  const fifth = await open(bad);
+  expect(fifth.status()).toBe(429);
+  expect(Number(fifth.headers()["retry-after"])).toBeGreaterThan(14 * 60);
+  expect(await fifth.text()).toContain("Locked");
+
+  // Even the right code is refused while locked, and the gate page itself says so.
+  expect((await open(real)).status()).toBe(429);
+  await p.goto(made.link);
+  await expect(p.getByRole("alert")).toContainText("Locked");
+  expect((await notifications(page)).map((n) => n.kind)).toContain("share_locked");
+  await ctx.close();
+});

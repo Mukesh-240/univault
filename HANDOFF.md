@@ -1,5 +1,5 @@
 # UNIVAULT HANDOFF
-Last updated: 2026-10-24 18:41 IST · Commit: 793cc6a · Phase: 5 (done; waiting for the Vercel URL)
+Last updated: 2026-10-24 (Phase 6 committed) · Commit: see `git log -1` ("phase 6: …") · Phase: 6 done, waiting for Vercel URL
 
 ## 1. What this is (3 lines max)
 UNIVAULT for IMPACTX 2026 Challenge 02. The promise: "Prove you're ready. Share only what's needed. Take it back."
@@ -17,71 +17,58 @@ npm test                        # vitest: unit + property + live-DB tests (live 
 npm run eval                    # precision / recall / false alarms on dev (seed 7) + held-out (seed 99) + showcase
 npm run db:check                # live Supabase: issuer_config, append ledger line, verify_ledger(), migration 003
 npm run seed                    # load the showcase vault into Supabase (run ONCE per fresh DB)
-npx playwright test             # browser tests in Edge (builds must exist: npm run build first)
+npx playwright test             # browser tests in Edge (npm run build first); writes e2e-results/axe.json + slow3g.json
 npm run screenshots             # README screenshots; app must run on :3400
 ```
 Env var names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ISSUER_PRIVATE_KEY`, `ISSUER_PUBLIC_KEY`,
-`VAULT_PRIVATE_KEY`, `VAULT_PUBLIC_KEY`, `NEXT_TELEMETRY_DISABLED`. Test-only: `UNIVAULT_OFFLINE_DEMO=1` (never set on Vercel).
+`VAULT_PRIVATE_KEY`, `VAULT_PUBLIC_KEY`, `NEXT_TELEMETRY_DISABLED`, `CRON_SECRET`. Test-only: `UNIVAULT_OFFLINE_DEMO=1` (never set on Vercel).
 
 ## 3. Current state
 ### Done and verified
-- Phases 1–4: vault, readiness, names, verification, OCR, assistant, faults, sharing, leak trace, kill, ledger, erase.
-- Phase 5 Step 1, live DB (2026-10-24):
-  - `npm run db:check` passes.
-  - Seed loaded 11 documents, 7 registry entries and 3 recipients. Ledger verified after seeding.
-  - Live tamper test (`tests/live-db.test.ts`): a ledger line is appended, then UPDATE and DELETE are tried on 13 protected tables. All are refused and the rows are unchanged; `verify_ledger` returns ok:true with broken_at null.
-  - Latest `db:check`: verify_ledger ok, 580 lines.
-  - `/api/health` against the live DB returns `db:"up"`.
-- Phase 5 Step 2, all on the live DB:
-  - `tsc` is clean. `npm test`: 168 passed (17 files).
-  - Playwright: 32 passed, including the new `e2e/journey.e2e.ts` (manual-style journey + every fault on/off).
-  - axe: 26 runs (13 pages × en/te), 0 violations at any level.
-  - Eval, held-out: precision 100%, recall 96.6%, 0 false alarms; misses are 19 OCR plus 1 Telugu-script name. Dev: 100% / 97.8% / 0. Showcase: 17/17.
-  - Slow 3G: recipient preview 2.1 s, 3.4 KB, 0 scripts. Vault 12.0 s, 405 KB.
-- Phase 5 Step 3, security:
-  - No secrets in the repo or history; only `.env.example` is tracked.
-  - CSP, X-Frame-Options, Referrer-Policy and nosniff are set in `next.config.mjs`.
-  - `src/middleware.ts` refuses POST bodies over 256 KB (413) or without a length (411).
-  - The recipient form is now validated with Zod.
-  - `npm audit`: 0 vulnerabilities, via a postcss override.
-  - Tesseract runs under the CSP with 0 violations.
-- Phase 5 Step 4, Vercel readiness:
-  - A clean build with no `.env.local` is green.
-  - With no key in production: pages show "Database not configured", APIs and `/s/*` return 503, and health returns 503 with `db:"down"`.
-  - `DEPLOY.md` is written.
-### In progress
-- Nothing. Phase 5 is committed (793cc6a). README.md is rewritten with the live numbers; "Live demo" reads `[VERCEL URL TO BE ADDED]`.
-### Not started
+- Phases 1–5: vault, readiness, names, verification, OCR, assistant, faults, sharing, leak trace, kill, ledger, erase; live DB verified, hardened, deploy-ready (details in CHANGELOG).
+- Phase 6 (2026-10-24):
+  - MIT `LICENSE` + README badge; `"license": "MIT"` in package.json.
+  - `/threat-model`: 14 rows (incl. new `bruteForce`), each citing real code + test files; `tests/trust-pages.test.ts` checks every cited file exists, every row cites a test, and the stated limits equal the code constants. Telugu headings.
+  - `/policy`: 6 sections, Telugu headings, time limits (30 d, 10 min, 5 codes → 15 min lock, 15 min pass, 24 h, 1 year) checked against code constants.
+  - Server-side issuer re-check: `src/lib/recheck.ts` shared by POST /api/recheck (page) and GET /api/cron/recheck (Vercel Cron, daily 03:00 UTC in `vercel.json`, Hobby max). `src/lib/cron-auth.ts`: SHA-256 + timingSafeEqual against `Bearer CRON_SECRET`; no secret → 503 for everyone. Tests `tests/recheck.test.ts`: revoked after share → 1 alert, not repeated; unchanged → none; issuer down → unknown, no alert; cron guard.
+  - Rate limits: `src/lib/rate-limit.ts`, 60/min per IP and 20/min per link, on `/s/[token]` (GET+POST) and `/s/[token]/download`; 429 + Retry-After + plain en/te message. In-memory PER INSTANCE (stated in README + threat model).
+  - Lockout: 5 wrong/reused codes in a row → a `locked` access_log row → 15 min of 429 for every attempt incl. the right code; owner notification `share_locked`. Derived from the DB, so it holds across instances. Tests `tests/lockout.test.ts` + e2e in `e2e/share.e2e.ts`.
+  - Perf: Noto Telugu font is now only on Telugu pages, not preloaded, and installed Telugu fonts (Nirmala UI, Kohinoor Telugu) come first. Fixed a `/api/notifications` fetch loop (useI18n returned a new t() each render). English vault on Slow 3G: 12.0 s / 405 KB → 7.2 s / 169 KB, first paint 4.5 s. Telugu vault on the test machine: 7.2 s / 183 KB (system font present).
+- Verification run (2026-10-24, live DB): tsc clean; `npm test` 183 passed (20 files, live-DB tests ran); Playwright 37 passed; axe 30 runs (15 pages × en/te) 0 violations; eval dev P 100% / R 97.8% / 0 FA, held-out P 100% / R 96.6% / 0 FA, showcase 17/17; `npm audit` 0; clean build without `.env.local` green.
+### Not met / not built
+- Slow 3G vault < 6 s to the load event: NOT met (7.2 s). The React+Next runtime is ~102 KB, which is about the floor. Next lever: send only the active locale dictionary to the client (~17 KB net, about 0.35 s). Devices without a Telugu system font also download 124.6 KB of font on Telugu pages.
+- Overrides and disputes are recorded but do not change decisions.
 - Vercel deploy (the user imports it) and the smoke test against the URL.
-- Threat-model page (F17) and policy pages (F21).
-- Overrides and disputes changing decisions (today they are only recorded).
-- A server-side cron for the issuer re-check.
 
 ## 4. Next 5 actions
-1. Wait for the user to import the repo on Vercel (`DEPLOY.md`) and send the URL.
-2. Smoke test the URL: `/api/health` (expect `db:"up"`), the vault page, one `POST /api/verify`, and one share flow (preview → confirm → `/s/<token>` gate → code → open → kill). Report any failures.
-3. Replace `[VERCEL URL TO BE ADDED]` in README.md with the URL. Commit "docs: live demo URL", push, and update CHANGELOG + this file.
-4. If the user agrees: reset the live demo data (`DEPLOY.md` §4, owner SQL), then `npm run seed` and `npm run db:check`. Do not run e2e against the live DB afterwards.
-5. Next feature work, if asked: the threat-model page (F17) and policy pages (F21), then a server-side issuer re-check.
+1. Wait for the user to import the repo on Vercel (`DEPLOY.md`, now 8 env vars incl. `CRON_SECRET`) and send the URL.
+2. Smoke test the URL: `/api/health` (expect `db:"up"`), the vault page, one `POST /api/verify`, one share flow (preview → confirm → `/s/<token>` gate → code → open → kill), and `GET /api/cron/recheck` without auth (expect 401). Report any failures.
+3. Replace `[VERCEL URL TO BE ADDED]` in README.md with the URL. Commit "docs: live demo URL", push, update CHANGELOG + this file.
+4. If the user agrees: reset the live demo data (`DEPLOY.md` §4, owner SQL), then `npm run seed` and `npm run db:check`. Do not run e2e against the live DB afterwards (it creates shares, including one locked share).
+5. Optional perf: per-language dictionary on the client (see §3 "Not met").
 
 ## 5. Decisions made
 - 2026-10-24: The offline in-memory store is allowed in dev only, or with `UNIVAULT_OFFLINE_DEMO=1`. Production without a key shows "Database not configured". Reason: never silently fake a DB.
 - 2026-10-24: The offline store returns `document_payloads` as one object or null, matching PostgREST for one-to-one embeds. Reason: the faults route broke only on the live DB.
 - 2026-10-24: The faults test restores the issuer record (publishes the original value as a new version). The share test erases a throwaway upload. Reason: e2e runs against the live DB must not damage demo data.
-- 2026-10-24: Body-size guard is 256 KB, enforced in middleware. There is no rate limiter: in-memory limits are unreliable on serverless.
+- 2026-10-24: Body-size guard is 256 KB, enforced in middleware.
+- 2026-10-24 (Phase 6): Rate limiting is in-memory per instance (honestly stated), but the 5-wrong-codes lock is derived from access_log so it is cross-instance. No new table or migration: access_log.outcome is free text. Reason: no new infrastructure for a demo; the security-critical part (code guessing) is DB-backed.
+- 2026-10-24 (Phase 6): Cron runs daily, the Vercel Hobby maximum (a more frequent schedule fails the deploy on Hobby). The /shares page still polls every 60 s.
+- 2026-10-24 (Phase 6): Each (document, kind) re-check alert is raised once, deduplicated via existing `recheck.affected` ledger lines.
 - 2026-10-24: `postcss` override `^8.5.28` to clear the high advisory, instead of jumping to Next 16.
 - Phase 4: one-time codes are shown on screen, labelled SIMULATED. Recipient pages are plain HTML with no JS.
 
 ## 6. Known problems and workarounds
 - **Live demo data has test leftovers.**
-  - What's there: about 24 shares and an erased Identity card. The Identity card was erased by an older share-test version.
+  - What's there: about 30 shares (one of them locked by the lockout e2e) and an erased Identity card from an older share-test version.
   - Fix: run the reset SQL in `DEPLOY.md` §4, then `npm run seed`, before judging. Owner action in the Supabase SQL editor.
 - **Triggers are never reached with the anon key.**
   - RLS (no UPDATE/DELETE policy) returns 0 rows first. The triggers are a second layer for privileged roles.
   - To see the trigger fire, run the UPDATE snippet on `/ledger` in the SQL editor.
 - **Clicks before React hydrates are lost.** E2E tests wait via `go()` in `e2e/journey.e2e.ts`. `networkidle` never fires on the live app because Realtime keeps a connection open.
 - **Ending a background `next start` with TaskStop can leave node holding the port.** Kill it by port (`Get-NetTCPConnection -LocalPort N`).
-- **Vault page on Slow 3G takes 12 s** (405 KB JS). Recipient pages are light.
+- **Git Bash rewrites a bare `/` argument into a Windows path** (e.g. `node script.mjs /`). Pass paths via env vars.
+- **All local e2e requests share one rate-limit bucket** (no x-forwarded-for locally → IP "unknown", 60/min). The current suite stays under it; a much bigger suite may need a higher limit in tests.
 - **OCR review hints miss confident misreads.** Recall is 72.5% on held-out. These are by design unconfirmed until a person confirms them.
 
 ## 7. Rules that must not break
@@ -100,19 +87,21 @@ Env var names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ISS
 - `src/middleware.ts`: 256 KB body guard; 503 "Database not configured".
 - `src/lib/ingest.ts`: the single front door for every document (Zod schema).
 - `src/lib/verify.ts`, `verify-run.ts`, `issuer-service.ts`: issuer check, 8 s timeout, retries.
-- `src/lib/shares.ts`: pure share rules. `share-store.ts`: share DB operations. `recipient-html.ts`: recipient pages.
+- `src/lib/recheck.ts`, `cron-auth.ts`, `src/app/api/cron/recheck/route.ts`: issuer re-check (page + scheduled).
+- `src/lib/shares.ts`: pure share rules incl. the lock (`wrongCodesSinceReset`, `lockedUntil`). `share-store.ts`: share DB operations. `recipient-html.ts`: recipient pages. `rate-limit.ts`: per-IP/per-link limits.
+- `src/lib/trust-pages.ts`: threat-model rows and policy sections (with evidence paths). Pages: `src/app/threat-model`, `src/app/policy`.
 - `src/lib/disclosure.ts`: selective disclosure; unconfirmed OCR is withheld.
 - `src/lib/ledger.ts`: append/verify. `docs/sql/001-003*.sql`: schema, triggers, RLS.
-- `src/lib/i18n.ts` + `src/locales/{en,te}.json`: all UI strings; `itemLabel` = "Doc type · Field".
+- `src/lib/i18n.ts` + `src/locales/{en,te}.json`: all UI strings; `components/I18n.tsx`: stable `t()`.
 - `eval/harness.ts`, `scripts/eval.ts`: evaluation. `synthetic/`: generators and data.
-- `tests/live-db.test.ts`: the live tamper test. `e2e/journey.e2e.ts`: the live journey and faults.
-- `next.config.mjs`: security headers and tracing includes. `vercel.json`: region bom1. `DEPLOY.md`: deploy steps.
+- `tests/live-db.test.ts`: the live tamper test. `e2e/journey.e2e.ts`: the live journey and faults. `e2e/slow3g.e2e.ts`: perf numbers.
+- `next.config.mjs`: security headers and tracing includes. `vercel.json`: region bom1 + daily cron. `DEPLOY.md`: deploy steps.
 
 ## 9. External state
 - GitHub: https://github.com/Mukesh-240/univault (branch `main`).
-- Supabase project ref `opgoukjysnsfzzjnfhxa`. Migrations 001, 002 and 003 are applied (confirmed by `db:check` and the live tests). Seeded once, on 2026-10-24.
+- Supabase project ref `opgoukjysnsfzzjnfhxa`. Migrations 001, 002 and 003 are applied (confirmed by `db:check` and the live tests). Seeded once, on 2026-10-24. No new migration in Phase 6.
 - Vercel: not yet imported. URL: none yet.
 
 ## 10. Open questions for the user
 - Reset the live demo data (`DEPLOY.md` §4) before judging?
-- Which licence should the repo use? The README badge still says TBD.
+- Vercel URL, once imported (remember to set `CRON_SECRET`).

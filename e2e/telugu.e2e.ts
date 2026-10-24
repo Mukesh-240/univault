@@ -20,7 +20,7 @@ test("Telugu switch works on the main flow", async ({ page }) => {
     await page.goto(path);
     await expect(page.locator("html")).toHaveAttribute("lang", "te");
     await expect(page.locator("h1")).toHaveText(te[key]);
-    await expect(page.getByRole("navigation")).toContainText(te["nav.vault"]);
+    await expect(page.getByRole("navigation", { name: te["nav.label"] })).toContainText(te["nav.vault"]);
   }
   // Readiness reasons come from the engines in English and are shown in Telugu.
   await page.goto("/readiness");

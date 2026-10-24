@@ -2,10 +2,10 @@
 
 ### Prove you're ready. Share only what's needed. Take it back.
 
-![unit tests](https://img.shields.io/badge/unit%20tests-168%20passing-2ea44f)
-![browser tests](https://img.shields.io/badge/browser%20tests-32%20passing%20on%20live%20DB-2ea44f)
+![unit tests](https://img.shields.io/badge/unit%20tests-183%20passing-2ea44f)
+![browser tests](https://img.shields.io/badge/browser%20tests-37%20passing%20on%20live%20DB-2ea44f)
 ![axe](https://img.shields.io/badge/axe-0%20violations-2ea44f)
-![license](https://img.shields.io/badge/license-TBD-lightgrey)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase&logoColor=white)
 ![synthetic data](https://img.shields.io/badge/data-100%25%20synthetic-F4A53B)
@@ -85,6 +85,7 @@ flowchart LR
   B -- yes --> C{fresh one-time code?<br/>single use, 10 min}
   C -- no --> D3[denied, logged,<br/>owner notified]
   C -- yes --> V[minimal view + watermark<br/>recipient · code · time · session]
+  C -- 5th wrong in a row --> K[locked 15 min, 429<br/>owner notified]
   V -. new device .-> N[owner notified]
 ```
 
@@ -97,7 +98,7 @@ flowchart LR
 | Reason, confidence, source, freshness, override/escalate on every output | One shared `<Explain>` component on every automated result; overrides and disputes are append-only ledger lines | `src/components/Explain.tsx` |
 | Survive injected faults | Issuer timeout, stale data, malformed upload, conflicting issuer update, connectivity loss, each with a defined response and recovery, all tested on the live database | `/faults`, `e2e/journey.e2e.ts` |
 | Keyboard, screen reader, English + Telugu, low bandwidth | Skip link, visible focus, live region, Telugu for the whole flow, script-free recipient page | `e2e/` |
-| Scripted tests with pass rate and precision/recall | 168 unit tests, 32 browser tests, evaluation harness on dev and held-out sets | `tests/`, `e2e/`, `eval/` |
+| Scripted tests with pass rate and precision/recall | 183 unit tests, 37 browser tests, evaluation harness on dev and held-out sets | `tests/`, `e2e/`, `eval/` |
 | Tamper-evident audit log | Hash chain computed by a database trigger; `verify_ledger()`; edits and deletes refused (tested live) | `/ledger`, `docs/sql/001` |
 | Declarative readiness, pass/fail/unknown | Rule packs are JSON files; a new recipient needs no code | `src/rules/*.json`, `/readiness` |
 | Entity resolution that never auto-merges | Initials, word order, Telugu↔Latin spelling; ranked with reasons; Confirm/Reject only | `/names` |
@@ -106,7 +107,9 @@ flowchart LR
 | Consent ledger with purpose, fields, recipient, expiry, access count | Every attempt (allowed or denied) goes to `access_log` **and** the ledger | `/shares`, `/ledger` |
 | Verifiable revocation, with its limits stated | Kill one or all links, then "Test this link now"; "copies already downloaded can't be recalled" | `/shares` |
 | Elite: per-recipient tokens and watermarks; trace and kill a leak | 256-bit links stored only as SHA-256; watermark shows recipient · code · time · session; leak trace | `/s/[token]`, `/leak-trace` |
-| Elite: issuer re-check, notify, list affected shares | "Re-check now" plus a 60 s poll while the page is open; affected active shares listed | `/shares` |
+| Elite: issuer re-check, notify, list affected shares | A scheduled server-side run once a day (Vercel Cron, protected by `CRON_SECRET`), plus "Re-check now" and a 60 s poll while `/shares` is open. Revoked, changed or expired → one alert per change; issuer down → "unknown", never failed | `src/lib/recheck.ts`, `/api/cron/recheck`, `tests/recheck.test.ts` |
+| Brute-force resistance | 5 wrong codes in a row lock the link for 15 min (even against the right code) and alert the owner; 60 requests/min per address, 20 per link → 429 | `src/lib/rate-limit.ts`, `tests/lockout.test.ts` |
+| Threat model and policy, backed by code | `/threat-model`: 14 threats, what stops each, what does not, and the code + test files behind it (a test checks every cited file exists). `/policy`: what is stored, erased, kept and for how long; numbers checked against the code | `/threat-model`, `/policy`, `tests/trust-pages.test.ts` |
 | Curveball: one altered digit | Names the exact field: "doesn't match the issuer's record… may be a scanning or typing mistake" | `/verify` |
 | Curveball: hidden text tells the assistant to share everything | The assistant only proposes and cannot share; the hidden text is flagged; ledger/share counts unchanged | `/assistant` |
 | Curveball: over-broad request | Flagged, with a one-click minimal alternative | `/share` |
@@ -201,14 +204,16 @@ wrong recipient ID followed by an attempt on a killed link (#16).
 
 | Check | Result | Command |
 |---|---|---|
-| Unit, property, metamorphic, oracle, anti-hardcoding and live-DB tests | **168 passed** (17 files) | `npm test` |
-| Browser tests in Edge, against the live database | **32 passed** | `npx playwright test` |
-| Accessibility (axe-core, WCAG 2.1 A/AA) | 13 pages × English/Telugu = 26 runs: **0** critical, serious, moderate or minor | `docs/evidence/axe.json` |
+| Unit, property, metamorphic, oracle, anti-hardcoding and live-DB tests | **183 passed** (20 files) | `npm test` |
+| Browser tests in Edge, against the live database | **37 passed** | `npx playwright test` |
+| Accessibility (axe-core, WCAG 2.1 A/AA) | 15 pages × English/Telugu = 30 runs: **0** critical, serious, moderate or minor | `docs/evidence/axe.json` |
 | Manual-style journey | upload → OCR fix → verify → readiness → confirm a name link → 2 shares → wrong ID, wrong code, right code → owner alert → trace watermark → kill one → kill all → ledger OK: passed | `e2e/journey.e2e.ts` |
 | Faults | each fault on → the UI says what happened → off → recovers (issuer timeout, stale, malformed, conflicting update, offline): passed | `e2e/journey.e2e.ts` |
 | Share scenario | gate + watermark → second device → stranger denied + owner notified → leak trace → kill one → other works → erase: passed | `e2e/share.e2e.ts` |
+| Lockout | 4 wrong codes → 403; 5th → 429 + Retry-After ≈ 15 min; the right code is then refused (429); owner gets "share_locked": passed | `e2e/share.e2e.ts` |
+| Issuer re-check | revoked after sharing → 1 alert, not repeated; unchanged → none; issuer down → unknown, no alert: passed | `tests/recheck.test.ts` |
 | Keyboard-only walk | vault → readiness → confirm a name link → correct an OCR field: passed | `e2e/keyboard.e2e.ts` |
-| Slow 3G (≈400 kbit/s, 2 s latency) | recipient page **2.1 s, 3.4 KB, 0 scripts**; full vault page 12.0 s, 405 KB | `docs/evidence/slow3g.json` |
+| Slow 3G (≈400 kbit/s, 2 s latency) | recipient page **2.1 s, 3.4 KB, 0 scripts**. Vault page **7.2 s, 169 KB** to the load event, readable at **4.5 s** (first paint); before Phase 6: 12.0 s, 405 KB | `docs/evidence/slow3g.json` |
 | Real OCR on the 4 generated scans | 22 of 28 fields read exactly before correction | `npm run ocr:fixtures` |
 | Dependencies | `npm audit`: 0 vulnerabilities | `npm audit` |
 
@@ -219,6 +224,10 @@ wrong recipient ID followed by an attempt on a killed link (#16).
 - **Input validation.** Every API route and the recipient form validate input with Zod. Error replies name the
   field that was wrong, never its value.
 - **Size limits.** A POST over 256 KB is refused (413) before any route reads it.
+- **Slow-down.** Recipient pages allow 60 requests a minute per address and 20 per link (429 past that).
+  Five wrong one-time codes in a row lock the link for 15 minutes and alert the owner.
+- **Scheduled job.** `/api/cron/recheck` runs only with `Authorization: Bearer <CRON_SECRET>`, compared in
+  constant time; without the variable set it refuses every call.
 - **Headers.** Content-Security-Policy, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` (share links
   contain a secret) and `X-Content-Type-Options: nosniff`.
 - **Fails safe.** A production deploy without a database shows "Database not configured". It never falls back
@@ -233,11 +242,21 @@ wrong recipient ID followed by an attempt on a killed link (#16).
 - **Screenshots cannot be prevented.** The watermark only tells you *whose* screenshot it was.
 - **Revocation can't recall copies.** Killing a link stops access, but a downloaded copy stays downloaded.
 - **Demo-mode database key, no login.** One synthetic vault uses the public key. Row-level security limits that
-  key to reading and appending, but anyone with it can append, and there is no per-user rate limiting.
+  key to reading and appending, but anyone with it can append directly to the database (the app's rate limits
+  do not apply to direct database calls).
+- **Rate limits are per server instance.** The per-minute counters live in memory, so on Vercel each instance
+  counts on its own and a cold start begins at zero. The 15-minute lock after 5 wrong codes is stored in the
+  database, so it holds on every instance.
 - **OCR is unconfirmed** until you confirm it, and it can be confidently wrong (see the misses above).
 - **The one-time code is shown on screen** (labelled SIMULATED) instead of being sent by SMS or email.
-- **The issuer re-check runs only while `/shares` is open**; there is no server-side schedule yet.
-- **The owner's vault page is heavy on Slow 3G** (12 s). The recipient's page is light.
+- **The scheduled issuer re-check runs once a day** (the most the Vercel Hobby plan allows), so a change can
+  go unnoticed for up to a day when nobody has `/shares` open. Nothing is revoked automatically.
+- **The owner's vault page misses the 6-second Slow 3G goal**: 7.2 s to the load event (readable at 4.5 s).
+  The React and Next.js runtime alone is about 102 KB. Telugu pages also need the 124.6 KB Noto Sans Telugu
+  font on devices with no Telugu system font installed. The test machine has one (Nirmala UI), so the Telugu
+  number in `slow3g.json` (7.2 s, 183 KB) does not include that font.
+- **Not built:** overrides and disputes are recorded but do not change decisions; no real SMS/email delivery;
+  no sign-in or per-user data separation.
 - Telugu name matching was tuned on generated names. It is not a general transliteration engine.
 
 ## 9. Business

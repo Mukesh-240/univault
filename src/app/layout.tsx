@@ -9,7 +9,9 @@
  *   - the owner's notification bell (components/NotificationBell.tsx).
  * In production without a database key, every page shows "Database not configured" instead.
  * The language comes from a cookie, so the server renders the page in the chosen language directly.
- * Telugu text uses the Noto Sans Telugu font (downloaded at build time and served from this app).
+ * Telugu text uses the Noto Sans Telugu font (downloaded at build time and served from this app). It is
+ * switched on only for Telugu pages and never preloaded: on a slow phone an English page doesn't pay
+ * ~157 KB of font for the one word "తెలుగు" in the language switch (that word uses the phone's own font).
  */
 import type { ReactNode } from "react";
 import { Noto_Sans_Telugu } from "next/font/google";
@@ -23,14 +25,14 @@ import { DB_CONFIGURED, OFFLINE } from "@/lib/supabase";
 import en from "@/locales/en.json";
 import "./globals.css";
 
-const telugu = Noto_Sans_Telugu({ subsets: ["telugu"], weight: ["400", "600", "700"], variable: "--font-telugu", display: "swap" });
+const telugu = Noto_Sans_Telugu({ subsets: ["telugu"], weight: ["400", "600", "700"], variable: "--font-telugu", display: "swap", preload: false });
 
 export const metadata = { title: en["app.title"], description: en["app.description"] };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { lang, t } = await getI18n();
   return (
-    <html lang={lang} className={telugu.variable}>
+    <html lang={lang} className={lang === "te" ? telugu.variable : undefined}>
       <body>
         <a href="#main" className="skip-link">{t("a11y.skip")}</a>
         {/* role="note": screen readers announce this as supplementary information on every page. */}
@@ -53,6 +55,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             )}
           </main>
           <footer className="wrap site-footer">
+            <nav aria-label={t("footer.links")} className="footer-links">
+              <ul>
+                <li><a href="/threat-model">{t("footer.threatModel")}</a></li>
+                <li><a href="/policy">{t("footer.policy")}</a></li>
+              </ul>
+            </nav>
             <p>{t("footer.issuer")}</p>
             <p>{t("footer.attestation")}</p>
           </footer>

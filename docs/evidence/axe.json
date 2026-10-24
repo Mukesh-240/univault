@@ -108,6 +108,24 @@
   "rules": []
  },
  {
+  "page": "/threat-model",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/policy",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
   "page": "/s/not-a-real-link",
   "lang": "en",
   "critical": 0,
@@ -217,6 +235,24 @@
  },
  {
   "page": "/ledger",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/threat-model",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/policy",
   "lang": "te",
   "critical": 0,
   "serious": 0,

@@ -7,15 +7,24 @@
  },
  "preview": {
   "path": "/s/preview?purpose=scholarship",
-  "loadMs": 2118,
+  "loadMs": 2122,
+  "fcpMs": 2092,
   "bytes": 3359,
   "scripts": 0
  },
  "vault": {
   "path": "/",
-  "loadMs": 12015,
-  "bytes": 405409,
-  "scripts": 8
+  "loadMs": 7167,
+  "fcpMs": 4476,
+  "bytes": 169338,
+  "scripts": 10
  },
- "recordedAt": "2026-10-24T12:58:56.005Z"
+ "vaultTe": {
+  "path": "/",
+  "loadMs": 7152,
+  "fcpMs": 4460,
+  "bytes": 183432,
+  "scripts": 10
+ },
+ "recordedAt": "2026-10-24T16:10:04.640Z"
 }
