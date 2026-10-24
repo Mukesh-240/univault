@@ -323,7 +323,7 @@
  "shares.none": "No shares yet.",
  "shares.meta": " {purpose} · until {until} · {policy}",
  "shares.items": "Items",
- "shares.count": "Opened {opened} times; {total} attempts in total",
+ "shares.count": "Times opened: {opened}. Attempts in total: {total}.",
  "shares.history": "Every attempt on this link",
  "shares.when": "When",
  "shares.outcome": "Result",

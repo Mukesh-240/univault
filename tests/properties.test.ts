@@ -4,8 +4,8 @@
  *   - nothing is ever auto-merged,
  *   - no sensitive value appears in logs or web addresses,
  *   - preview tokens carry no document values.
- * Two properties need the live database (ledger verify) or Phase 4 (share tokens); they are listed
- * as pending, not silently skipped.
+ * The live-database property (ledger verifies after every write) is in tests/live-db.test.ts;
+ * "no raw share token is stored" is in tests/shares.test.ts.
  */
 import { generateKeyPairSync } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -71,5 +71,5 @@ describe("properties", () => {
     expect(body).not.toContain("degree");
   });
 
-  it.todo("ledger always verifies after every write (live database: pending Supabase anon key)");
+  // "Ledger always verifies after every write" on the LIVE database is tested in tests/live-db.test.ts.
 });

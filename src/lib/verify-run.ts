@@ -24,8 +24,10 @@ export async function runVerification(db: Db, documentId: string, issuerPubB64: 
   // 1. The document and any fields the person confirmed/corrected.
   const doc = await db.from("documents").select("id, doc_type, title, issuer, serial, document_payloads(content, ocr_confidence)").eq("id", documentId).single();
   if (doc.error || !doc.data) return { ok: false, status: 404, error: "Document not found." };
-  const d = doc.data as { doc_type: string; title: string; issuer: string | null; serial: string | null; document_payloads: { content: { capture: "digital" | "scan"; fields: Record<string, string> } }[] | { content: { capture: "digital" | "scan"; fields: Record<string, string> } } | null };
-  const payload = Array.isArray(d.document_payloads) ? d.document_payloads[0] : d.document_payloads;
+  // document_payloads is one-per-document, so Supabase returns it as an object (or null once erased);
+  // the client library guesses "list" without generated types, hence the cast through unknown.
+  const d = doc.data as unknown as { doc_type: string; title: string; issuer: string | null; serial: string | null; document_payloads: { content: { capture: "digital" | "scan"; fields: Record<string, string> } } | null };
+  const payload = d.document_payloads; // one per document: an object, or null once erased
   if (!payload) return { ok: false, status: 409, error: "This document's content was erased, so it can't be verified." };
   if (!d.serial) return { ok: false, status: 422, error: "This document has no issuer serial number, so the issuer can't be asked about it." };
   const assertions = await db.from("assertions").select("field, asserted_value").eq("document_id", documentId).order("created_at");

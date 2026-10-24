@@ -2,13 +2,15 @@
 
 ### Prove you're ready. Share only what's needed. Take it back.
 
-![tests](https://img.shields.io/badge/tests-151%20unit%20%2B%2030%20browser%20passing-2ea44f)
+![unit tests](https://img.shields.io/badge/unit%20tests-168%20passing-2ea44f)
+![browser tests](https://img.shields.io/badge/browser%20tests-32%20passing%20on%20live%20DB-2ea44f)
+![axe](https://img.shields.io/badge/axe-0%20violations-2ea44f)
 ![license](https://img.shields.io/badge/license-TBD-lightgrey)
 ![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase&logoColor=white)
 ![synthetic data](https://img.shields.io/badge/data-100%25%20synthetic-F4A53B)
 
-**[LIVE DEMO](#) — live demo link goes here**
+**Live demo: [VERCEL URL TO BE ADDED]**
 
 > Every person, document, issuer and recipient here is **synthetic**. The issuer is a **simulation**.
 > The hashes and signatures are real cryptography, but no government or university system is connected.
@@ -23,12 +25,14 @@ form. His marksheet is a blurry scan in English and Telugu. His income certifica
 ago, and he didn't notice. One recipient asks for his full ID number when the last four digits would
 do. Today he would email PDFs to everyone, forever, with no idea who opened them.
 
-## 2. The idea
+## 2. The promise
 
-UNIVAULT treats your **original documents as immutable evidence**. Every correction, name link, share,
-revocation and erasure is a **separate, append-only layer** on top of them. Documents are checked
-against a **signed issuer registry**. Each recipient gets **their own link**, which shows only what
-the purpose needs, carries a watermark naming them, and can be **killed** without touching anyone else's.
+1. **Prove you're ready.** Every document is checked against a signed issuer record, and every
+   purpose (job, scholarship, credential check) has a readiness checklist that says pass, fail or unknown, with reasons.
+2. **Share only what's needed.** You see exactly what the recipient will see before you confirm.
+   Over-broad requests are flagged, with a smaller alternative (the last 4 digits instead of the full ID number).
+3. **Take it back.** Each recipient gets their own watermarked link. You can kill one link or all of them and test
+   that it is really dead. Every attempt, allowed or denied, is in a tamper-evident ledger.
 
 | Trust tier | Meaning | How it looks |
 |---|---|---|
@@ -38,45 +42,75 @@ the purpose needs, carries a watermark naming them, and can be **killed** withou
 
 Tiers are **computed** from what happened (verification events and assertions), never declared by data.
 
-## 3. Screenshots
+## 3. Every feature, shown
 
-All of these were captured from the running app by `npm run screenshots`.
+Screenshots are captured from the running app by `npm run screenshots`, which clicks through it like a person would.
 
-| Vault (three tiers, immutable originals) | Readiness per purpose |
+| Vault: three tiers, immutable originals | Readiness per purpose |
 |---|---|
 | ![Vault](docs/evidence/screen-vault.png) | ![Readiness](docs/evidence/screen-readiness.png) |
-| **Name detective (ranked, never auto-merges)** | **Verification: one altered digit, neutral wording** |
+| **Name detective: ranked, never auto-merges** | **Verification: one altered digit, in neutral words** |
 | ![Name detective](docs/evidence/screen-name-detective.png) | ![Altered digit](docs/evidence/screen-verification-altered-digit.png) |
-| **OCR: scan beside fields, confidence, accuracy before/after** | **Share receipt** |
+| **OCR: scan beside fields, confidence, corrections as layers** | **Share receipt: what was shared, with whom, until when** |
 | ![OCR](docs/evidence/screen-ocr.png) | ![Share receipt](docs/evidence/screen-share-receipt.png) |
-| **Recipient view: minimal fields, diagonal watermark** | **Leak trace: watermark text → recipient + session** |
-| ![Recipient view](docs/evidence/screen-recipient-view.png) | ![Leak trace](docs/evidence/screen-leak-trace.png) |
-| **Ledger: verify the hash chain** | **Recipient gate: ID + SIMULATED one-time code** |
-| ![Ledger](docs/evidence/screen-ledger-verify.png) | ![Gate](docs/evidence/screen-recipient-gate.png) |
+| **Recipient gate: ID + SIMULATED one-time code** | **Recipient view: minimal fields, diagonal watermark** |
+| ![Gate](docs/evidence/screen-recipient-gate.png) | ![Recipient view](docs/evidence/screen-recipient-view.png) |
+| **Leak trace: watermark text → recipient + session** | **Shares: access count, kill one link, test it** |
+| ![Leak trace](docs/evidence/screen-leak-trace.png) | ![Shares](docs/evidence/screen-shares.png) |
+| **Fault panel: issuer timeout on, defined response** | **Ledger: verify the whole hash chain** |
+| ![Faults](docs/evidence/screen-faults.png) | ![Ledger](docs/evidence/screen-ledger-verify.png) |
+
+**How a share moves through its states** (each step is a separate append-only event plus a ledger line):
+
+```mermaid
+stateDiagram-v2
+  [*] --> drafted
+  drafted --> previewed: you see the exact recipient view
+  previewed --> confirmed: you confirm (idempotency key: a retry never makes a second share)
+  confirmed --> active: 256-bit link issued, only its SHA-256 stored
+  active --> revoked: you kill it, or the document is erased
+  active --> expired: expiry time passes (30 days at most)
+  revoked --> [*]
+  expired --> [*]
+```
+
+**What happens when a link is opened:**
+
+```mermaid
+flowchart LR
+  L[/s/link/] --> A{link live?}
+  A -- killed / revoked / expired --> D1[Access denied<br/>logged + owner notified]
+  A -- yes --> B{approved recipient ID?}
+  B -- no --> D2[denied, logged,<br/>owner notified]
+  B -- yes --> C{fresh one-time code?<br/>single use, 10 min}
+  C -- no --> D3[denied, logged,<br/>owner notified]
+  C -- yes --> V[minimal view + watermark<br/>recipient · code · time · session]
+  V -. new device .-> N[owner notified]
+```
 
 ## 4. What it does, mapped to the brief
 
 | Brief requirement | How UNIVAULT meets it | Where |
 |---|---|---|
 | ≥15 planted conflicts + data card | 17 planted conflicts in a generated showcase vault, plus 2 × 1,380 generated test documents | `synthetic/`, `docs/DATA_CARD.md` |
-| Explicit state machines | Document, share (drafted → previewed → confirmed → active → revoked/expired) and token states are separate, and each transition is an event row plus a ledger line | `src/lib/shares.ts`, `share-store.ts` |
-| Reason, confidence, source, freshness, override/escalate on every output | One shared `<Explain>` component on every automated result; override and dispute are append-only ledger lines | `src/components/Explain.tsx` |
-| Survive injected faults | Fault panel covering issuer timeout, stale data, malformed upload, conflicting issuer update and connectivity loss, each with a defined response and recovery | `/faults` |
-| Keyboard, screen reader, English + Telugu, low bandwidth | Skip link, visible focus, live region, Telugu for the whole flow, and a script-free recipient page | `e2e/` |
-| Scripted tests with pass rate and precision/recall | 151 unit tests, 30 browser tests, and an evaluation harness on dev and held-out sets | `tests/`, `eval/` |
-| Tamper-evident audit log | Hash-chained ledger computed by a database trigger; `verify_ledger()`; UPDATE and DELETE rejected | `/ledger`, `docs/sql/001` |
+| Explicit state machines | Document, share and token states are separate; each transition is an event row plus a ledger line | `src/lib/shares.ts`, `share-store.ts` |
+| Reason, confidence, source, freshness, override/escalate on every output | One shared `<Explain>` component on every automated result; overrides and disputes are append-only ledger lines | `src/components/Explain.tsx` |
+| Survive injected faults | Issuer timeout, stale data, malformed upload, conflicting issuer update, connectivity loss, each with a defined response and recovery, all tested on the live database | `/faults`, `e2e/journey.e2e.ts` |
+| Keyboard, screen reader, English + Telugu, low bandwidth | Skip link, visible focus, live region, Telugu for the whole flow, script-free recipient page | `e2e/` |
+| Scripted tests with pass rate and precision/recall | 168 unit tests, 32 browser tests, evaluation harness on dev and held-out sets | `tests/`, `e2e/`, `eval/` |
+| Tamper-evident audit log | Hash chain computed by a database trigger; `verify_ledger()`; edits and deletes refused (tested live) | `/ledger`, `docs/sql/001` |
 | Declarative readiness, pass/fail/unknown | Rule packs are JSON files; a new recipient needs no code | `src/rules/*.json`, `/readiness` |
-| Entity resolution that never auto-merges | Handles initials, word order and Telugu↔Latin spelling; ranked with reasons; Confirm/Reject only | `/names` |
+| Entity resolution that never auto-merges | Initials, word order, Telugu↔Latin spelling; ranked with reasons; Confirm/Reject only | `/names` |
 | OCR with confidence, side-by-side view, corrections as assertions | Tesseract.js (eng+tel), live or saved runs; the original reading is never changed | `/ocr` |
 | Field-level selective disclosure + recipient preview | The exact recipient view before confirming; signed yes/no attestations ("over 18") | `/share` |
-| Consent ledger with purpose, fields, recipient, expiry, access count | Every attempt (allowed or denied) is in `access_log` **and** the ledger | `/shares`, `/ledger` |
+| Consent ledger with purpose, fields, recipient, expiry, access count | Every attempt (allowed or denied) goes to `access_log` **and** the ledger | `/shares`, `/ledger` |
 | Verifiable revocation, with its limits stated | Kill one or all links, then "Test this link now"; "copies already downloaded can't be recalled" | `/shares` |
-| Elite: per-recipient tokens and watermarks; trace and kill a leak | 256-bit links stored only as SHA-256; watermark shows recipient · code · time · session; leak trace tool | `/s/[token]`, `/leak-trace` |
-| Elite: issuer re-check, notify, list affected shares | "Re-check now" plus a 60 s poll; affected active shares listed; owner notified | `/shares` |
+| Elite: per-recipient tokens and watermarks; trace and kill a leak | 256-bit links stored only as SHA-256; watermark shows recipient · code · time · session; leak trace | `/s/[token]`, `/leak-trace` |
+| Elite: issuer re-check, notify, list affected shares | "Re-check now" plus a 60 s poll while the page is open; affected active shares listed | `/shares` |
 | Curveball: one altered digit | Names the exact field: "doesn't match the issuer's record… may be a scanning or typing mistake" | `/verify` |
-| Curveball: hidden text tells the assistant to share everything | The assistant only proposes and cannot share; the hidden text is flagged and ledger/share counts are unchanged | `/assistant` |
-| Curveball: over-broad request | Flagged, with a one-click minimal alternative (e.g. last 4 digits instead of the full ID) | `/share` |
-| Curveball: issuer down | "Unverified: issuer unreachable at HH:MM, retrying", with retries at 10/30/60/120 s and "Retry now" | `/verify` |
+| Curveball: hidden text tells the assistant to share everything | The assistant only proposes and cannot share; the hidden text is flagged; ledger/share counts unchanged | `/assistant` |
+| Curveball: over-broad request | Flagged, with a one-click minimal alternative | `/share` |
+| Curveball: issuer down | "Unverified: issuer unreachable at HH:MM, retrying", retries at 10/30/60/120 s, never shown as a mismatch | `/verify` |
 | OCR never authoritative | Unconfirmed OCR values can't pass a rule and are **withheld from shares** | `src/lib/disclosure.ts` |
 | Nothing sensitive in links, URLs or logs | Log scrubber with tests; links carry only a random token; no analytics; telemetry off | `src/lib/scrub.ts` |
 | Erasure and its limits | Limits shown first; content deleted; active shares revoked; fingerprint and times kept | vault → "Erase this document…" |
@@ -86,11 +120,12 @@ All of these were captured from the running app by `npm run screenshots`.
 ```mermaid
 flowchart LR
   subgraph Browser
-    O[Owner pages<br/>vault · readiness · names · verify · OCR · share · ledger]
+    O[Owner pages<br/>vault · readiness · names · verify · OCR · share · ledger · faults]
     R[Recipient page /s/token<br/>plain HTML, no JavaScript]
     T[Tesseract.js OCR<br/>eng + tel]
   end
-  subgraph Server["Next.js route handlers (Node.js runtime)"]
+  subgraph Server["Next.js on Vercel (Node.js runtime, region bom1)"]
+    M[Middleware<br/>256 KB body limit · 503 if no DB]
     E[Deterministic engines<br/>rules · names · verify · shares · leak trace]
     I[SIMULATED ISSUER<br/>Ed25519-signed registry]
   end
@@ -98,8 +133,9 @@ flowchart LR
     A[(documents · events · assertions<br/>shares · tokens · access_log)]
     L[(ledger<br/>hash chain by trigger)]
   end
-  O --> E
-  R --> E
+  O --> M
+  R --> M
+  M --> E
   T --> O
   E --> I
   E --> A
@@ -107,21 +143,35 @@ flowchart LR
   A -. Realtime: access_log .-> O
 ```
 
-**The database enforces the rules, not just the app.** History tables reject UPDATE and DELETE with a
-trigger (`Table ledger is append-only: UPDATE is not allowed`). The ledger computes its own
-previous-line fingerprint and line fingerprint in a BEFORE INSERT trigger, and `verify_ledger()`
-re-checks the whole chain. The only deletable table is the one holding document *content*, which is
-how erasure works. Registry entries are signed, so a forged entry fails verification even though the
-demo anon key can write to the table. No AI model makes any decision: verification, readiness,
-matching, sharing and revocation are deterministic code. OCR is the only machine-learning component,
-and its output stays *unconfirmed* until a person confirms it.
+**The database enforces the rules, not just the app.**
+
+- **Two layers stop edits.** Row-level security gives the app's public key no UPDATE or DELETE rights on any
+  history table, so an edit or delete changes **0 rows**. We tested this against the live database on 13
+  tables. Behind that, a trigger refuses UPDATE and DELETE even for privileged roles
+  (`Table ledger is append-only: UPDATE is not allowed`).
+- **The chain is computed by the database.** The ledger works out each line's fingerprint, and the previous
+  line's, in a BEFORE INSERT trigger. `verify_ledger()` re-checks the whole chain.
+- **Two writes are allowed, by design:** deleting a document's *content* (that is how erasure works) and
+  flipping the simulated issuer's on/off switch.
+- **Forgery is caught.** Registry entries are signed, so a forged entry fails verification.
+- **No AI model makes any decision.** Verification, readiness, matching, sharing and revocation are
+  deterministic code. OCR is the only machine-learning part, and its output stays *unconfirmed* until a person confirms it.
 
 ## 6. Results
 
-Every number below is copied from a command that was run on 2026-10-24.
+Every number below comes from a command run on 2026-10-24 against the **live Supabase database**, not the offline test store.
 
-**Detection on generated data** (`npm run eval`): 1,380 documents per set, 800 cases. Tuning was done
-on the dev set only; the held-out set (seed 99) was not used for tuning.
+**Live database checks**
+
+| Check | Result | Command |
+|---|---|---|
+| Connectivity, ledger append, chain verify, migration 003 | all pass; `verify_ledger()` → `ok: true, broken_at: null` (580 lines) | `npm run db:check` |
+| Seed | 11 documents, 7 signed registry entries, 3 recipients; ledger intact | `npm run seed` |
+| Tamper test with the app's key | UPDATE + DELETE tried on 13 history tables: all refused, every row unchanged, chain still verifies | `tests/live-db.test.ts` |
+| Health | `{"ok":true,"db":"up"}` | `GET /api/health` |
+
+**Detection on generated data** (`npm run eval`): 1,380 documents per set, 800 cases. Tuning used the dev
+set only; the held-out set (seed 99) was not used for tuning.
 
 | Category | Dev precision | Dev recall | Held-out precision | Held-out recall | False alarms (dev / held-out) |
 |---|---|---|---|---|---|
@@ -136,82 +186,96 @@ on the dev set only; the held-out set (seed 99) was not used for tuning.
 | Sharing (access, notifications, expiry, kill, revoke) | 100% | 100% | 100% | 100% | 0 / 0 |
 | **All evaluated cases** | **100%** | **97.8%** | **100%** | **96.6%** | **0 / 0** |
 
-Negative controls: 20 documents per set that should raise no alarm, and 0 alarms were raised.
+Negative controls: 20 documents per set should raise no alarm, and none did.
+**Showcase vault: 17 of 17 planted conflicts detected**, including the second-device open (#15) and the
+wrong recipient ID followed by an attempt on a killed link (#16).
 
-**Showcase vault: 17 of 17 planted conflicts detected** (`npm run eval`), including the second-device
-open (#15) and the wrong recipient ID followed by an attempt on a killed link (#16).
+**Where it fails (held-out, 20 misses):**
+
+- **OCR, 19 misses:** digit confusion 4, heavy noise 4, mild blur 3, skew 3, low contrast 3, mixed script 1, Telugu conjuncts 1.
+  These are misreads where Tesseract is confident and wrong: 10% of fields read with confidence ≥ 0.85
+  were misread. That is why no OCR value counts until a person confirms it.
+- **Names, 1 miss:** a name pair in Telugu script, scored 0.603 (below the "likely same" threshold).
+
+**Tests**
 
 | Check | Result | Command |
 |---|---|---|
-| Unit, property, metamorphic, oracle and anti-hardcoding tests | 151 passed, 1 to-do (16 files) | `npm test` |
-| Browser tests (Edge) | 30 passed | `npm run e2e` |
-| Accessibility (axe-core, WCAG 2.1 A/AA) | 13 pages × English/Telugu = 26 runs: **0** critical, 0 serious, 0 moderate, 0 minor | `npm run e2e` → `docs/evidence/axe.json` |
+| Unit, property, metamorphic, oracle, anti-hardcoding and live-DB tests | **168 passed** (17 files) | `npm test` |
+| Browser tests in Edge, against the live database | **32 passed** | `npx playwright test` |
+| Accessibility (axe-core, WCAG 2.1 A/AA) | 13 pages × English/Telugu = 26 runs: **0** critical, serious, moderate or minor | `docs/evidence/axe.json` |
+| Manual-style journey | upload → OCR fix → verify → readiness → confirm a name link → 2 shares → wrong ID, wrong code, right code → owner alert → trace watermark → kill one → kill all → ledger OK: passed | `e2e/journey.e2e.ts` |
+| Faults | each fault on → the UI says what happened → off → recovers (issuer timeout, stale, malformed, conflicting update, offline): passed | `e2e/journey.e2e.ts` |
+| Share scenario | gate + watermark → second device → stranger denied + owner notified → leak trace → kill one → other works → erase: passed | `e2e/share.e2e.ts` |
 | Keyboard-only walk | vault → readiness → confirm a name link → correct an OCR field: passed | `e2e/keyboard.e2e.ts` |
-| Phase 4 scenario | share → gate + watermark → second device → stranger denied + owner notified → leak trace → kill one link → other share works → ledger OK → erase: passed | `e2e/share.e2e.ts` |
-| Slow 3G (≈400 kbit/s, 2 s latency) | recipient preview page: **2.1 s, 2.8 KB, 0 scripts**; full vault page: 10.4 s, 321 KB | `docs/evidence/slow3g.json` |
-| Real OCR on the 4 generated scans | 22 of 28 fields read exactly before correction | `npm run ocr:fixtures` + OCR page |
+| Slow 3G (≈400 kbit/s, 2 s latency) | recipient page **2.1 s, 3.4 KB, 0 scripts**; full vault page 12.0 s, 405 KB | `docs/evidence/slow3g.json` |
+| Real OCR on the 4 generated scans | 22 of 28 fields read exactly before correction | `npm run ocr:fixtures` |
+| Dependencies | `npm audit`: 0 vulnerabilities | `npm audit` |
 
-**What is missed:** OCR review hints miss 13 of 70 misreads on dev and 19 of 69 on held-out. These are
-plausible-looking misreads where Tesseract is confident and wrong. On the four real scans, `S` was
-read as `5` with confidence 0.81. That is exactly why no OCR value counts until a person confirms it.
-One held-out name pair in Telugu script is missed.
+## 7. Security
 
-## 7. Honest limits
+- **No secrets in git.** Only `.env.example` (names, no values) is tracked; we checked the repo and its full history.
+  Signing keys live only in local `.env.local` and in Vercel's environment settings.
+- **Input validation.** Every API route and the recipient form validate input with Zod. Error replies name the
+  field that was wrong, never its value.
+- **Size limits.** A POST over 256 KB is refused (413) before any route reads it.
+- **Headers.** Content-Security-Policy, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` (share links
+  contain a secret) and `X-Content-Type-Options: nosniff`.
+- **Fails safe.** A production deploy without a database shows "Database not configured". It never falls back
+  to a temporary in-memory store.
+- **Logs.** All logging goes through a scrubber; there are no `console.log` calls with personal data.
+
+## 8. Honest limits
 
 - **Simulated issuer.** No real government, university or DigiLocker connection.
-- **Attestation, not zero-knowledge.** UNIVAULT sees your full data and signs statements like
-  "over 18 = yes"; the recipient trusts that signature.
+- **Attestation, not zero-knowledge.** UNIVAULT sees your full data and signs statements like "over 18 = yes".
+  The recipient trusts that signature and cannot check the fact independently.
+- **Screenshots cannot be prevented.** The watermark only tells you *whose* screenshot it was.
 - **Revocation can't recall copies.** Killing a link stops access, but a downloaded copy stays downloaded.
-- **Watermarks trace, they don't prevent.** A screenshot is still possible; the watermark says whose it was.
-- **Demo-mode database key.** There is no real login. One synthetic vault uses the public anon key, and
-  row-level security allows only read and append.
-- **OCR is unconfirmed** until you confirm it, and the calibration table shows high-confidence misreads.
+- **Demo-mode database key, no login.** One synthetic vault uses the public key. Row-level security limits that
+  key to reading and appending, but anyone with it can append, and there is no per-user rate limiting.
+- **OCR is unconfirmed** until you confirm it, and it can be confidently wrong (see the misses above).
 - **The one-time code is shown on screen** (labelled SIMULATED) instead of being sent by SMS or email.
+- **The issuer re-check runs only while `/shares` is open**; there is no server-side schedule yet.
+- **The owner's vault page is heavy on Slow 3G** (12 s). The recipient's page is light.
 - Telugu name matching was tuned on generated names. It is not a general transliteration engine.
 
-## 8. Business
+## 9. Business
 
-*All figures below are hypotheses to test, not results.*
+*All points below are hypotheses to test, not results.*
 
-- **Who it's for:** (1) students and graduates applying to several programmes at once; (2) universities
-  and scholarship bodies that receive and verify thousands of documents each season; (3) employers'
+- **Who it's for:** (1) students and graduates applying to several programmes at once; (2) universities and
+  scholarship bodies that receive and verify thousands of documents each season; (3) employers'
   background-verification teams; (4) overseas credential evaluators.
-- **Go-to-market (hypothesis):** start with university placement cells and scholarship portals. One
-  institution onboards a whole graduating batch, and recipients reached through student shares then
-  adopt the verifier side.
-- **Pricing (hypotheses):** free for individuals; per-verification or per-seat pricing for receiving
-  organisations; an issuer-integration fee for institutions publishing signed registries.
-- **Why now (hypothesis):** document requests are moving online faster than document *control* is.
-  Per-recipient, revocable, minimal sharing is the gap.
+- **Go-to-market:** start with university placement cells and scholarship portals. One institution onboards a
+  whole graduating batch, and recipients reached through student shares then adopt the verifier side.
+- **Pricing:** free for individuals; per-verification or per-seat for receiving organisations; an
+  issuer-integration fee for institutions publishing signed registries.
+- **Why now:** document requests are moving online faster than document *control* is.
 
-## 9. Run it locally
+## 10. Run it locally, or deploy
 
 ```bash
 npm install
-cp .env.example .env.local        # fill in the values
+cp .env.example .env.local        # fill in the values (names in DEPLOY.md)
 npm run dev                       # http://localhost:3000
 ```
-
-Environment variables (names only; values never go in git):
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ISSUER_PRIVATE_KEY`, `ISSUER_PUBLIC_KEY`,
-`VAULT_PRIVATE_KEY`, `VAULT_PUBLIC_KEY`, `NEXT_TELEMETRY_DISABLED=1`. Generate the four Ed25519 keys
-with the script in `UNIVAULT_SPEC.md` §12.
 
 ```bash
 npm run synth:all       # regenerate the synthetic datasets (dev 7, held-out 99, showcase 2026)
 npm run seed            # load the showcase vault into Supabase through ingestDocument()
-npm run db:check        # schema and ledger sanity check
-npm test                # unit, property, metamorphic, oracle and anti-hardcoding tests
+npm run db:check        # live database check: append, verify_ledger(), migration 003
+npm test                # unit, property, metamorphic, oracle, anti-hardcoding and live-DB tests
 npm run eval            # precision/recall/false alarms on dev and held-out, plus the 17 showcase conflicts
-npm run build && npm run e2e   # browser tests in Edge: axe, keyboard, Telugu, Slow 3G, share scenario
+npm run build && npx playwright test   # browser tests in Edge
 ```
 
-Without a database key, `npm run dev` uses an in-memory **offline demo store** with the same
-append-only rules and hash chain. A production build (`npm start`, Vercel) **refuses** to do that
-and shows "Database not configured" instead; set `UNIVAULT_OFFLINE_DEMO=1` only for local tests.
-`GET /api/health` returns `{ ok, db, time }` and nothing else.
+Without a database key, `npm run dev` uses an in-memory **offline demo store** with the same append-only rules
+and hash chain. A production build refuses to do that. `GET /api/health` returns `{ ok, db, time }` and nothing else.
 
-## 10. Libraries and licences
+**Deploying to Vercel:** see [DEPLOY.md](DEPLOY.md). It lists the env var names, where each value comes from, and the 5 clicks.
+
+## 11. Open-source credits
 
 | Library | Version | Licence | Used for |
 |---|---|---|---|
@@ -229,9 +293,9 @@ and shows "Database not configured" instead; set `UNIVAULT_OFFLINE_DEMO=1` only 
 
 Node's built-in `crypto` provides SHA-256, HMAC and Ed25519. There are no paid APIs, analytics or trackers.
 
-**AI tools used: Claude** (Anthropic) was used as a coding assistant under the team's direction. The
-team reviews, tests and can explain every part. **No AI model runs inside the product.**
+**AI tools used: Claude** (Anthropic) was used as a coding assistant under the team's direction. The team
+reviews, tests and can explain every part. **No AI model runs inside the product.**
 
-## 11. Team
+## 12. Team
 
 **Team SPACEX** · VIT-AP University · **IMPACTX 2026** · Challenge 02 "Your Documents, One Place"

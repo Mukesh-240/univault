@@ -22,6 +22,7 @@ import {
   matchLeak, shareToken, type LinkFacts, type PastAccess,
 } from "../src/lib/shares";
 import { recipientView } from "../src/lib/disclosure";
+import { itemLabel } from "../src/lib/i18n";
 import { contextFor, type VaultDoc } from "../src/lib/vault";
 import { watermarkLabel } from "../src/lib/watermark";
 
@@ -105,6 +106,11 @@ describe("what a recipient sees", () => {
     const ctx = contextFor([scan], "2026-10-24");
     expect(recipientView(ctx, ["marksheet.result"])).toMatchObject({ fields: {}, withheld: ["marksheet.result"] });
     expect(recipientView({ ...ctx, confirmedFields: { m1: { result: "PASS" } } }, ["marksheet.result"])).toMatchObject({ fields: { "marksheet.result": "PASS" }, withheld: [] });
+  });
+
+  it("every shared item names its document, so two 'Name' fields can't be confused", () => {
+    expect(itemLabel("en", "id_card.name")).toBe("Identity card · Name");
+    expect(itemLabel("en", "degree_certificate.name")).toBe("Degree certificate · Name");
   });
 });
 

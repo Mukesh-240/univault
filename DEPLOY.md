@@ -1,0 +1,61 @@
+# Deploying UNIVAULT on Vercel
+
+This guide imports the GitHub repo into Vercel and connects it to the Supabase project that already holds the seeded demo data. It contains variable **names only**. Secret values never go in this file or in git.
+
+## 1. Environment variables
+
+Set these in **Vercel → Project → Settings → Environment Variables**, for the Production environment. Add them *before* the first deploy: Next.js copies the two `NEXT_PUBLIC_*` values into the build, so a deploy made without them stays "Database not configured" until it is rebuilt.
+
+| Name | Where the value comes from | Secret? |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase dashboard → Project Settings → API → Project URL (`https://<ref>.supabase.co`) | No (public) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase dashboard → Project Settings → API Keys → **publishable** key (`sb_publishable_…`). Never use the secret / service-role key. | No (public; the database rules limit it to read + append) |
+| `ISSUER_PRIVATE_KEY` | Your local `.env.local`. It must be the **same** value used for `npm run seed`, because the issuer records in the database were signed with it. | **Yes** |
+| `ISSUER_PUBLIC_KEY` | Your local `.env.local` (the matching public half) | No, but keep the pair together |
+| `VAULT_PRIVATE_KEY` | Your local `.env.local`. It signs credentials, derives share links and signs download passes. If you change it, links already sent stop working. | **Yes** |
+| `VAULT_PUBLIC_KEY` | Your local `.env.local` (the matching public half) | No |
+| `NEXT_TELEMETRY_DISABLED` | `1` (turns off Next.js anonymous telemetry) | No |
+
+**Do not set `UNIVAULT_OFFLINE_DEMO`.** It only exists for local browser tests. Without it, a production deploy that is missing the database key shows "Database not configured" instead of quietly using a temporary in-memory store.
+
+New key pair needed? Generate one with the one-line command in `UNIVAULT_SPEC.md` section 12. A new issuer key means re-seeding a fresh database (see section 4).
+
+## 2. The 5 clicks to import the repo
+
+1. Go to **vercel.com/new**, then under *Import Git Repository* choose **Mukesh-240/univault** and click **Import**.
+2. Check that Framework Preset says **Next.js** and Root Directory is **`./`**. Leave Build and Output settings at their defaults.
+3. Open **Environment Variables** and add the seven names from the table above.
+4. Click **Deploy**. The region is fixed to Mumbai (`bom1`) by `vercel.json`.
+5. Open **Settings → Deployment Protection** and make sure Production is **not** behind Vercel Authentication. Recipients open `/s/<link>` without a Vercel account.
+
+## 3. Check it after deploying
+
+- `https://<your-app>.vercel.app/api/health` returns `{"ok":true,"db":"up",...}`. If it says `"db":"down"`, the URL/key variables are missing or wrong: fix them and **redeploy**.
+- The vault page lists the synthetic documents, with no "Offline demo store" banner.
+- Send the URL back so the smoke test can run (health, vault page, one verify call, one share flow).
+
+## 4. Optional: reset the demo data before judging
+
+The live database is append-only, so test runs leave their shares, notifications and erased test documents behind. (The browser tests themselves only erase a throwaway document they upload.) To start the demo from a clean showcase:
+
+1. In **Supabase → SQL Editor**, as the project owner, run the statement below. `TRUNCATE` is an owner-only action: the app's public key cannot do it, and row-level append-only triggers do not apply to it.
+
+   ```sql
+   truncate public.access_log, public.token_events, public.share_events, public.share_tokens, public.shares,
+            public.entity_links, public.assertions, public.document_events, public.document_payloads,
+            public.documents, public.recipients, public.issuer_registry, public.ledger
+            restart identity cascade;
+   update public.issuer_config set is_down = false, updated_at = now() where id = 1;
+   ```
+
+2. Locally, run `npm run seed` and then `npm run db:check`.
+
+This step permanently deletes the demo history. Only run it on the demo project.
+
+## What runs where
+
+- Every page and API route runs on the Node.js runtime (`export const runtime = "nodejs"`), because hashing and signing use `node:crypto`.
+- Nothing writes to local disk. Everything is stored in Supabase.
+- The rule packs and OCR fixtures are bundled with the server functions (`outputFileTracingIncludes` in `next.config.mjs`).
+- Security headers (CSP, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`) are set in `next.config.mjs`.
+- `src/middleware.ts` refuses POST bodies over 256 KB, and answers 503 "Database not configured" when the database variables are missing.

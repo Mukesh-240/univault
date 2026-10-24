@@ -75,8 +75,10 @@ export async function POST(req: Request) {
 async function conflictingUpdate(documentId: string, field: string, value: string): Promise<{ version: number } | { error: string; status: number }> {
   const doc = await supabase.from("documents").select("serial, doc_type, issuer, document_payloads(content)").eq("id", documentId).single();
   if (doc.error || !doc.data) return { error: "Document not found.", status: 404 };
-  const d = doc.data as { serial: string | null; doc_type: string; issuer: string | null; document_payloads: { content: { fields: Record<string, string> } }[] };
-  const fields = d.document_payloads[0]?.content.fields;
+  // document_payloads is one-per-document, so Supabase returns it as an object (or null once erased);
+  // the client library guesses "list" without generated types, hence the cast through unknown.
+  const d = doc.data as unknown as { serial: string | null; doc_type: string; issuer: string | null; document_payloads: { content: { fields: Record<string, string> } } | null };
+  const fields = d.document_payloads?.content.fields;
   if (!d.serial || !fields) return { error: "This document has no issuer record to update.", status: 422 };
   if (!(field in fields)) return { error: "That field is not on this document.", status: 422 };
   const rows = await supabase.from("issuer_registry").select("*").eq("serial", d.serial).order("version", { ascending: false });

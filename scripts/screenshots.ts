@@ -59,6 +59,19 @@ async function main() {
   await page.getByRole("heading", { name: "Result" }).waitFor();
   await shot("screen-leak-trace");
 
+  // Shares: the consent ledger card with access history, "Kill this link" and "Test this link now".
+  await page.goto("/shares");
+  await shot("screen-shares", page.locator("li.card").first());
+
+  // Fault panel: issuer timeout switched on, then off again (the switch is recorded in the ledger).
+  await page.goto("/faults");
+  const timeout = page.locator("section.panel").filter({ has: page.getByRole("heading", { name: "Issuer timeout" }) });
+  await timeout.getByRole("button", { name: "Turn fault on" }).click();
+  await timeout.getByText("Issuer is now unreachable").waitFor();
+  await shot("screen-faults", timeout);
+  await timeout.getByRole("button", { name: "Turn fault off" }).click();
+  await timeout.getByText("Issuer is reachable again").waitFor();
+
   // Ledger verify.
   await page.goto("/ledger");
   await page.getByRole("button", { name: "Verify ledger now" }).click();

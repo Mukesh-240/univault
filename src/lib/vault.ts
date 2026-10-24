@@ -81,7 +81,8 @@ export async function loadVault(db: Db, owner: string, today: string): Promise<E
 
   const vaultDocs: VaultDoc[] = [];
   for (const d of docs.data ?? []) {
-    const payload = (Array.isArray(d.document_payloads) ? d.document_payloads[0] : d.document_payloads) as { content: { capture: "digital" | "scan"; fields: Record<string, string>; body_text: string | null; hidden_text: string | null }; ocr_confidence: Record<string, number> | null } | null;
+    // One per document: Supabase returns an object (or null once erased), not a list.
+    const payload = d.document_payloads as unknown as { content: { capture: "digital" | "scan"; fields: Record<string, string>; body_text: string | null; hidden_text: string | null }; ocr_confidence: Record<string, number> | null } | null;
     if (!payload) continue; // erased: content gone, so it can't take part in decisions
     vaultDocs.push({ id: d.id as string, doc_type: d.doc_type as string, title: d.title as string, issuer: d.issuer as string | null, serial: d.serial as string | null,
       sha256: d.sha256 as string, capture: payload.content.capture, fields: payload.content.fields, body_text: payload.content.body_text, hidden_text: payload.content.hidden_text, ocr_confidence: payload.ocr_confidence });

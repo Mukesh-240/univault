@@ -11,7 +11,7 @@
  */
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-interface Made { link: string; recipientId: string; name: string }
+interface Made { link: string; recipientId: string; name: string; shareId: string }
 
 /** Owner: build and confirm a share for the n-th recipient in the list. */
 async function makeShare(page: Page, n: number): Promise<Made> {
@@ -22,12 +22,15 @@ async function makeShare(page: Page, n: number): Promise<Made> {
   await page.getByRole("button", { name: "Preview what they will see" }).click();
   await expect(page.getByRole("heading", { name: /^Preview: what/ })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Exactly what they will see (watermark sample)" })).toBeVisible();
-  await page.getByRole("button", { name: "Confirm and share" }).click();
+  // The confirm answer carries the new share id; its card on /shares is #share-<id> (unique even when
+  // a live database holds earlier shares for the same recipient).
+  const [confirmed] = await Promise.all([page.waitForResponse((r) => r.url().endsWith("/api/share/confirm")), page.getByRole("button", { name: "Confirm and share" }).click()]);
+  const shareId = ((await confirmed.json()) as { receipt: { share_id: string } }).receipt.share_id;
   await expect(page.getByRole("heading", { name: "Share receipt" })).toBeVisible({ timeout: 30_000 });
   const link = await page.getByLabel("Their personal link").inputValue();
   const recipientId = (await page.locator(".receipt dd code").first().innerText()).trim();
   const name = (await page.locator(".receipt dd").first().innerText()).trim();
-  return { link, recipientId, name };
+  return { link, recipientId, name, shareId };
 }
 
 /** A recipient on a fresh device: ask for a code, read the SIMULATED code off the screen, open. */
@@ -88,7 +91,7 @@ test("share -> gate + watermark -> second device -> stranger denied -> leak trac
 
   // 5. Kill link 1 only; "Test this link now" says denied, and the link really is denied.
   await page.goto("/shares");
-  const card1 = page.locator("li.card").filter({ hasText: one.recipientId });
+  const card1 = page.locator(`#share-${one.shareId}`);
   await card1.getByRole("button", { name: "Kill this link" }).click();
   await expect(page.locator("#live-region")).toContainText("Access stopped");
   await card1.getByRole("button", { name: "Test this link now" }).click();
@@ -107,9 +110,14 @@ test("share -> gate + watermark -> second device -> stranger denied -> leak trac
   await expect(page.locator("#live-region")).toContainText("Ledger intact");
 
   // 8. Erase a document: limits shown first, explicit acknowledgement, then erase.
+  //    A throwaway document is uploaded first (through the normal upload route) and erased, so running
+  //    this test against a live database never erases the demo documents.
+  const title = `Erase test ${Date.now()}`;
+  const up = await page.request.post("/api/upload", { data: { owner: "demo", doc_type: "reference_letter", title, issuer: null, serial: null,
+    capture: "digital", fields: { note: "throwaway document for the erase test" }, synthetic: true } });
+  expect(up.status()).toBe(201);
   await page.goto("/");
-  const firstCard = page.locator("li.card").first();
-  const title = (await firstCard.locator("h3").first().innerText()).trim();
+  const firstCard = page.locator("li.card").filter({ has: page.getByRole("heading", { name: title }) });
   await firstCard.getByRole("button", { name: "Erase this document…" }).click();
   await expect(firstCard.getByText("Copies a recipient already downloaded cannot be recalled.")).toBeVisible();
   await firstCard.getByLabel("I understand these limits").check();

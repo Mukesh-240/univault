@@ -19,7 +19,7 @@ import { Reason } from "@/components/Reason";
 import { post } from "@/components/api";
 import type { ShareDraft } from "@/lib/consent";
 import type { Explanation } from "@/lib/explain";
-import { fieldLabel, hasTelugu, showTime } from "@/lib/i18n";
+import { docTypeLabel, fieldLabel, hasTelugu, itemLabel, showTime } from "@/lib/i18n";
 import { watermarkBackground } from "@/lib/watermark";
 
 interface Recipient { code: string; name: string; purpose: string }
@@ -64,7 +64,6 @@ export function ShareBuilder({ recipients, items, packs }: { recipients: Recipie
     for (const i of items) (g[i.split(".")[0]] ??= []).push(i);
     return g;
   }, [items]);
-  const docLabel = (type: string) => { const s = t(`doctype.${type}`); return s === `doctype.${type}` ? type.replace(/_/g, " ") : s; };
 
   const doPreview = async () => {
     const d: ShareDraft = { recipient_code: code, purpose, fields: [...fields].sort(), expires_at: new Date(Date.now() + days * DAY_MS).toISOString(),
@@ -114,7 +113,7 @@ export function ShareBuilder({ recipients, items, packs }: { recipients: Recipie
         <p className="note">{t("share.itemsNote")}</p>
         {Object.entries(groups).map(([type, list]) => (
           <div key={type} className="item-group">
-            <p className="meta"><strong>{docLabel(type)}</strong></p>
+            <p className="meta"><strong>{docTypeLabel(lang, type)}</strong></p>
             {list.map((i) => {
               const id = `it-${i.replace(".", "-")}`;
               return (
@@ -164,11 +163,11 @@ export function ShareBuilder({ recipients, items, packs }: { recipients: Recipie
           <div className="card watermarked" style={{ backgroundImage: bg }}>
             <h3>{t("share.exactly")}</h3>
             <table className="fields"><tbody>
-              {Object.entries(preview.recipientView.fields).map(([k, v]) => <tr key={k}><th scope="row">{docLabel(k.split(".")[0])} · {fieldLabel(lang, k.split(".")[1])}</th><td lang={hasTelugu(v) ? "te" : undefined}>{v}</td></tr>)}
-              {Object.entries(preview.recipientView.attestations).map(([k, v]) => <tr key={k}><th scope="row">{fieldLabel(lang, k.split(".")[1])}</th><td>{t(v ? "preview.yes" : "preview.no")} ({t("share.attested")})</td></tr>)}
+              {Object.entries(preview.recipientView.fields).map(([k, v]) => <tr key={k}><th scope="row">{itemLabel(lang, k)}</th><td lang={hasTelugu(v) ? "te" : undefined}>{v}</td></tr>)}
+              {Object.entries(preview.recipientView.attestations).map(([k, v]) => <tr key={k}><th scope="row">{itemLabel(lang, k)}</th><td>{t(v ? "preview.yes" : "preview.no")} ({t("share.attested")})</td></tr>)}
             </tbody></table>
             {preview.recipientView.withheld.length > 0 && (
-              <p className="callout neutral">{t("share.withheld", { list: preview.recipientView.withheld.map((k) => `${docLabel(k.split(".")[0])} · ${fieldLabel(lang, k.split(".")[1])}`).join(", ") })}</p>
+              <p className="callout neutral">{t("share.withheld", { list: preview.recipientView.withheld.map((k) => itemLabel(lang, k)).join(", ") })}</p>
             )}
             <p className="note">{t("preview.attestationNote")}</p>
             <p className="note">{t("share.summary", { days, policy: t(mode === "view_only" ? "share.viewOnly" : "share.download"), until: showTime(draft.expires_at) })}</p>
@@ -193,7 +192,7 @@ function ReceiptView({ r }: { r: Receipt }) {
         <div><dt>{t("share.recipient")}</dt><dd>{r.recipient.name}</dd></div>
         <div><dt>{t("receipt.recipientId")}</dt><dd><code>{r.recipient.code}</code></dd></div>
         <div><dt>{t("share.purpose")}</dt><dd>{r.purpose}</dd></div>
-        <div><dt>{t("share.items")}</dt><dd>{r.fields.map((f) => fieldLabel(lang, f.split(".")[1])).join(", ")}</dd></div>
+        <div><dt>{t("share.items")}</dt><dd>{r.fields.map((f) => itemLabel(lang, f)).join(", ")}</dd></div>
         <div><dt>{t("receipt.expires")}</dt><dd>{showTime(r.expires_at)}</dd></div>
         <div><dt>{t("share.policy")}</dt><dd>{t(r.policy.mode === "view_only" ? "share.viewOnly" : "share.download")}{r.policy.max_views ? ` · ${t("receipt.maxViews", { n: r.policy.max_views })}` : ""}</dd></div>
         <div><dt>{t("share.reverified")}</dt><dd>{r.verified.map((v) => `${v.title}: ${t(`state.${v.state}`)}`).join("; ")}</dd></div>

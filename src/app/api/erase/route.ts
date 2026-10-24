@@ -27,9 +27,9 @@ export async function POST(req: Request) {
   const { document_id } = parsed.data;
   try {
     const doc = await supabase.from("documents").select("id, owner, document_payloads(document_id)").eq("id", document_id).single();
-    const d = doc.data as { owner: string; document_payloads: unknown[] | null } | null;
+    const d = doc.data as { owner: string; document_payloads: unknown | null } | null;
     if (doc.error || !d || d.owner !== DEMO_OWNER) return NextResponse.json({ error: "Document not found." }, { status: 404 });
-    if (!d.document_payloads || (Array.isArray(d.document_payloads) && !d.document_payloads.length)) return NextResponse.json({ error: "This document was already erased." }, { status: 409 });
+    if (!d.document_payloads) return NextResponse.json({ error: "This document was already erased." }, { status: 409 });
 
     // 1. Revoke every active share that used this document.
     const revoked: string[] = [];

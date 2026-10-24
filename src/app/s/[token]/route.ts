@@ -12,6 +12,7 @@
  * cookie identifies the visitor's browser so a SECOND device can be noticed; only its fingerprint is logged.
  */
 import { cookies } from "next/headers";
+import { z } from "zod";
 import { recipientView } from "@/lib/disclosure";
 import { isLang, LANG_COOKIE, translate, type Lang } from "@/lib/i18n";
 import { deniedHtml, gateHtml, viewHtml } from "@/lib/recipient-html";
@@ -44,6 +45,13 @@ function html(body: string, status: number, device: { id: string; isNew: boolean
   return new Response(body, { status, headers });
 }
 
+/** The gate form: which step, the recipient ID (UV-R-…) and the one-time code. Anything else is refused. */
+const GateForm = z.object({
+  step: z.enum(["send", "open"]).default("send"),
+  recipient_id: z.string().trim().max(40).default(""),
+  code: z.string().trim().max(20).default(""),
+});
+
 const lookup = (token: string) => (token.length <= MAX_TOKEN_LENGTH ? linkByTokenHash(supabase, hashToken(token)) : Promise.resolve(null));
 
 export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -75,8 +83,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const action = `/s/${token}`;
   try {
     const form = await req.formData().catch(() => null);
-    const step = String(form?.get("step") ?? "send");
-    const recipientId = String(form?.get("recipient_id") ?? "").slice(0, 40);
+    const parsed = GateForm.safeParse(form ? Object.fromEntries([...form.entries()].filter(([, v]) => typeof v === "string")) : {});
+    if (!parsed.success) return html(gateHtml(v.lang, action, { error: translate(v.lang, "gate.wrong") }), 400, dev);
+    const { step, recipient_id: recipientId, code } = parsed.data;
     const found = await lookup(token);
     if (!found) return html(deniedHtml(v.lang, "denied:unknown_link"), 403, dev);
     const now = new Date();
@@ -96,7 +105,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
       return html(gateHtml(v.lang, action, { recipientId, sentCode: code }), 200, dev);
     }
 
-    const code = String(form?.get("code") ?? "").slice(0, 20);
     const d = decideOpen(found.link, { recipientId, code, deviceHash, now }, found.past);
     if (d.outcome !== "allowed") { await logAccess(supabase, { ...base, outcome: d.outcome, notify: d.notify }); return refuse(d.outcome); }
     const session = newSessionCode();

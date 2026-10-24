@@ -33,6 +33,18 @@ describe("offline demo store", () => {
     expect((await db.from("issuer_config").select("is_down").eq("id", 1).single()).data).toEqual({ is_down: true });
   });
 
+  it("a document's content comes back the way Supabase returns it: one object, or null once erased", async () => {
+    // Regression: the real database returns this one-per-document child as an object, the offline store
+    // used to return a list, and the conflicting-update fault broke only on the live database.
+    const { db } = fresh();
+    const id = ((await db.from("documents").insert({ owner: "o", doc_type: "x", title: "t", sha256: "h" }).select("id").single()).data as { id: string }).id;
+    await db.from("document_payloads").insert({ document_id: id, content: { fields: { a: "1" } } });
+    const read = async () => (await db.from("documents").select("id, document_payloads(content)").eq("id", id).single()).data as { document_payloads: unknown };
+    expect((await read()).document_payloads).toEqual({ content: { fields: { a: "1" } } });
+    await db.from("document_payloads").delete().eq("document_id", id);
+    expect((await read()).document_payloads).toBeNull();
+  });
+
   it("rejects rows pointing at a document that does not exist", async () => {
     const { db } = fresh();
     expect((await db.from("assertions").insert({ document_id: "nope", field: "f", asserted_value: "v" })).error?.code).toBe("23503");

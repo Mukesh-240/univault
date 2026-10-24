@@ -64,14 +64,21 @@ function splitCols(cols: string): string[] {
   return out;
 }
 
+/**
+ * Tables whose document_id is their PRIMARY KEY (one row per document at most). Supabase returns such a
+ * nested child as a single object (or null), not a list, so the offline store does the same.
+ */
+const ONE_PER_DOCUMENT = new Set(["document_payloads"]);
+
 /** Keep only the asked-for columns; "child(cols)" attaches the child rows whose document_id is this row's id. */
 function project(store: Store, row: Row, cols: string): Row {
   if (cols.trim() === "*") return { ...row };
   const out: Row = {};
   for (const c of splitCols(cols)) {
     const nested = c.match(/^(\w+)\((.*)\)$/);
-    if (nested) out[nested[1]] = (store.tables[nested[1]] ?? []).filter((r) => r.document_id === row.id).map((r) => project(store, r, nested[2]));
-    else out[c] = row[c];
+    if (!nested) { out[c] = row[c]; continue; }
+    const children = (store.tables[nested[1]] ?? []).filter((r) => r.document_id === row.id).map((r) => project(store, r, nested[2]));
+    out[nested[1]] = ONE_PER_DOCUMENT.has(nested[1]) ? children[0] ?? null : children;
   }
   return out;
 }

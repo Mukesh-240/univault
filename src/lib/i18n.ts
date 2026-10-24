@@ -36,6 +36,22 @@ export function fieldLabel(lang: Lang, field: string): string {
   return s === key ? field.replace(/_/g, " ") : s;
 }
 
+/** A document type for people: "degree_certificate" -> "Degree certificate" (or its Telugu label). */
+export function docTypeLabel(lang: Lang, type: string): string {
+  const key = `doctype.${type}`;
+  const s = translate(lang, key);
+  return s === key ? type.replace(/_/g, " ") : s;
+}
+
+/**
+ * A shared item for people: "id_card.name" -> "Identity card · Name". The document type is always
+ * included, because two documents can both have a "Name" and the reader must know which is which.
+ */
+export const itemLabel = (lang: Lang, item: string) => {
+  const [type, field] = item.split(".");
+  return field ? `${docTypeLabel(lang, type)} · ${fieldLabel(lang, field)}` : fieldLabel(lang, type);
+};
+
 /** Times are shown as "YYYY-MM-DD HH:MM UTC" (the server works in UTC). */
 export const showTime = (iso: string) => `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
 

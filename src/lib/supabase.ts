@@ -15,15 +15,13 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Dataset } from "../../synthetic/generate";
+import { ALLOW_OFFLINE, OFFLINE, SUPABASE_KEY as key, SUPABASE_URL as url } from "./db-config";
 import { newStore, offlineClient, type Store } from "./offline-db";
 import { log } from "./scrub";
 import { seedDataset } from "./seed";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-/** True when there is no usable database key, so the offline demo store is in use. */
-export const OFFLINE = !url || !key || key.startsWith("<") || key.length < 40;
+// The settings check lives in db-config.ts (shared with the middleware); re-exported for the pages.
+export { ALLOW_OFFLINE, DB_CONFIGURED, OFFLINE } from "./db-config";
 
 /** One offline store per server process (kept on globalThis so every route shares it). */
 function offline(): SupabaseClient {
@@ -43,10 +41,6 @@ function offline(): SupabaseClient {
   return g.__univaultOffline.client;
 }
 
-/** Offline store allowed? Always in development; in production only with the explicit test opt-in. */
-export const ALLOW_OFFLINE = process.env.NODE_ENV !== "production" || process.env.UNIVAULT_OFFLINE_DEMO === "1";
-/** False = production without a database key: pages show "Database not configured", APIs refuse. */
-export const DB_CONFIGURED = !OFFLINE || ALLOW_OFFLINE;
 
 /** A client that refuses everything (production without a key). */
 function notConfigured(): SupabaseClient {

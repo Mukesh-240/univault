@@ -5,7 +5,7 @@
  */
 import Link from "next/link";
 import { getI18n } from "@/lib/i18n-server";
-import { fieldLabel, showTime } from "@/lib/i18n";
+import { itemLabel, showTime } from "@/lib/i18n";
 import { DEMO_OWNER } from "@/lib/server";
 import { loadShares } from "@/lib/share-store";
 import { supabase } from "@/lib/supabase";
@@ -37,7 +37,7 @@ export default async function SharesPage() {
                   <span className={`badge share-${s.state}`}>{t(`shareState.${s.state}`)}</span>
                   {t("shares.meta", { purpose: s.purpose, until: showTime(s.expiresAt), policy: t(s.policy.mode === "view_only" ? "share.viewOnly" : "share.download") })}
                 </p>
-                <p>{t("shares.items")}: {s.fields.map((f) => fieldLabel(lang, f.split(".")[1])).join(", ")}</p>
+                <p>{t("shares.items")}: {s.fields.map((f) => itemLabel(lang, f)).join(", ")}</p>
                 <p><strong>{t("shares.count", { opened, total: s.accesses.length })}</strong></p>
                 <ShareActions shareId={s.id} active={s.state === "active"} />
                 {s.accesses.length > 0 && (

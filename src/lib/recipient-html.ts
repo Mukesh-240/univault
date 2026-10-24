@@ -8,7 +8,7 @@
  *   with a diagonal watermark naming the recipient, their code, the time and a session code).
  *   Every value is escaped, so nothing from a document can turn into page code.
  */
-import { fieldLabel, translate, type Lang } from "./i18n";
+import { itemLabel, translate, type Lang } from "./i18n";
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
@@ -63,8 +63,7 @@ export interface ViewData {
 /** The recipient's view: only the shared items, watermarked. */
 export function viewHtml(v: ViewData, bg: string): string {
   const t = (k: string, vars?: Record<string, string | number>) => esc(translate(v.lang, k, vars));
-  const docType = (type: string) => { const k = `doctype.${type}`; const s = translate(v.lang, k); return s === k ? type.replace(/_/g, " ") : s; };
-  const label = (item: string) => esc(`${docType(item.split(".")[0])} · ${fieldLabel(v.lang, item.split(".")[1] ?? item)}`);
+  const label = (item: string) => esc(itemLabel(v.lang, item));
   const rows = Object.entries(v.fields).map(([k, val]) => `<tr><th scope="row">${label(k)}</th><td>${esc(val)}</td></tr>`).join("");
   const atts = Object.entries(v.attestations).map(([k, val]) => `<li>${label(k)}: <strong>${t(val ? "preview.yes" : "preview.no")}</strong></li>`).join("");
   const ver = v.verified.map((d) => `<li>${esc(d.title)}: ${t(`state.${d.state}`)}</li>`).join("");
