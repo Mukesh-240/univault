@@ -81,7 +81,7 @@ export const THREATS: Threat[] = [
   {
     key: "noLogin",
     stops: "Stated limit. The demo uses one synthetic vault and the public database key. Row-level security lets that key only read and append, never change or delete history.",
-    notStopped: "Anyone with the app's address can read the demo vault and add rows. A real deployment needs sign-in and per-user row security.",
+    notStopped: "The sign-in is simulated: any valid demo number (starts 0000) gets in, and everyone who signs in sees the same one synthetic vault. The 5-wrong-codes lock counts per server instance. A real deployment needs real identity and per-user row security.",
     evidence: ["docs/sql/001_core_schema.sql", "tests/live-db.test.ts"],
   },
   {
@@ -130,7 +130,7 @@ export const POLICY: PolicySection[] = [
   {
     key: "whoSees",
     paragraphs: [
-      "Demo mode has no sign-in: anyone using the app sees the one synthetic vault.",
+      "Sign-in is simulated: any valid demo number (starting 0000) opens the one synthetic vault, which everyone who signs in shares.",
       "A recipient sees only the items you approved, after passing the ID and one-time-code gate. Values read by OCR that you have not confirmed are withheld. Recipients never see your other documents.",
       "Logs and web addresses carry no personal values: logs go through a scrubber, and links contain only a random token.",
     ],

@@ -1,7 +1,7 @@
 /**
- * TELUGU SWITCH — press "తెలుగు" and walk the main flow (vault, readiness, name detective,
- * verification). Every page must come back with lang="te", Telugu headings from the locale file,
- * and engine reasons rendered in Telugu where a translation exists.
+ * TELUGU SWITCH — press "తెలుగు" and walk the main screens (Home, Am I ready?, Are these the same person?,
+ * Check with the issuer, My shares, Alerts). Every page must come back with lang="te", Telugu headings from
+ * the locale file, the Telugu menu, and engine reasons rendered in Telugu where a translation exists.
  */
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
@@ -13,18 +13,19 @@ test("Telugu switch works on the main flow", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "తెలుగు" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "te");
-  await expect(page.locator("h1")).toHaveText(te["vault.title"]);
+  await expect(page.locator("h1")).toContainText(te["home.greetingNoName"]);
   await expect(page.locator(".banner")).toContainText(te["banner.synthetic"]);
+  await expect(page.getByRole("button", { name: te["ui.help"] })).toBeVisible();
 
-  for (const [path, key] of [["/readiness", "readiness.title"], ["/names", "names.title"], ["/verify", "verify.title"]] as const) {
+  for (const [path, key] of [["/readiness", "ready.title"], ["/names", "names.title"], ["/verify", "verify.title"], ["/shares", "shares.title"], ["/alerts", "alerts.title"]] as const) {
     await page.goto(path);
     await expect(page.locator("html")).toHaveAttribute("lang", "te");
     await expect(page.locator("h1")).toHaveText(te[key]);
-    await expect(page.getByRole("navigation", { name: te["nav.label"] })).toContainText(te["nav.vault"]);
+    await expect(page.getByRole("navigation", { name: te["nav.label"] })).toContainText(te["nav.side.home"]);
   }
   // Readiness reasons come from the engines in English and are shown in Telugu.
   await page.goto("/readiness");
-  const reason = await page.locator(".explain-reason").first().innerText();
+  const reason = await page.locator(".checklist .meta").first().innerText();
   expect(reason).toMatch(TELUGU);
 
   // Switching back restores English.

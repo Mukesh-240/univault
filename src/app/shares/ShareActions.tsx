@@ -1,13 +1,16 @@
 "use client";
 /**
  * SHARE CONTROLS — buttons that call the share routes and announce the answer:
- *   ShareActions  "Kill this link" and "Test this link now" for one share;
- *   KillAll       "Kill all links";
- *   Recheck       "Re-check issuers now", also repeated every 60 s while this page is open, listing every
- *                 active share that used a record the issuer has since replaced or revoked.
+ *   StopShare    "Stop sharing" for one share, after a confirm sentence ("This link will stop working for
+ *                everyone. You can create a new one.") with "Stop sharing" / "Keep sharing";
+ *   ShareActions StopShare plus "Test this link now" (asks the server what the link would do right now);
+ *   KillAll      "Stop all sharing" (kept on the More page, away from the normal button);
+ *   Recheck      "Check now", also repeated every 60 s while this page is open, listing every share that
+ *                still uses a record the issuer has since replaced or revoked.
  */
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { ConfirmButton } from "@/components/ConfirmDialog";
 import { StateBadge } from "@/components/Badges";
 import { useI18n } from "@/components/I18n";
 import { announce } from "@/components/Live";
@@ -15,26 +18,31 @@ import { post } from "@/components/api";
 
 const RECHECK_EVERY_MS = 60_000;
 
-export function ShareActions({ shareId, active }: { shareId: string; active: boolean }) {
+export function StopShare({ shareId, name, onDone }: { shareId: string; name: string; onDone?: (m: string) => void }) {
   const { t } = useI18n();
   const router = useRouter();
-  const [msg, setMsg] = useState<string | null>(null);
-  const say = (m: string) => { setMsg(m); announce(m); };
-
   const kill = async () => {
     const r = await post<{ killed: string[] }>("/api/shares/kill", { share_id: shareId });
-    say(r.offline ? t("api.offline") : r.ok ? t("shares.killed") : t("api.failed"));
+    const m = r.offline ? t("api.offline") : r.ok ? t("shares.killed") : t("api.failed");
+    announce(m); onDone?.(m);
     if (r.ok) router.refresh();
   };
+  return <ConfirmButton label={t("shares.kill")} title={t("shares.confirm.title", { name })} body={t("shares.confirm.body")} yes={t("shares.confirm.yes")} no={t("shares.confirm.no")} onConfirm={kill} />;
+}
+
+export function ShareActions({ shareId, active, name }: { shareId: string; active: boolean; name: string }) {
+  const { t } = useI18n();
+  const [msg, setMsg] = useState<string | null>(null);
+  const say = (m: string) => { setMsg(m); announce(m); };
   const test = async () => {
     const r = await post<{ result: string }>("/api/shares/test", { share_id: shareId });
     say(r.offline ? t("api.offline") : r.ok ? t("shares.testResult", { result: t(`outcome.${r.data.result}`) }) : t("api.failed"));
   };
   return (
-    <div className="row">
-      {active && <button type="button" onClick={kill}>{t("shares.kill")}</button>}
-      <button type="button" className="secondary" onClick={test}>{t("shares.test")}</button>
-      {msg && <span className="test-result">{msg}</span>}
+    <div className="card-actions">
+      {active && <StopShare shareId={shareId} name={name} onDone={setMsg} />}
+      <button type="button" className="text" onClick={test}>{t("shares.test")}</button>
+      {msg && <span className="test-result" role="status">{msg}</span>}
     </div>
   );
 }
@@ -42,12 +50,19 @@ export function ShareActions({ shareId, active }: { shareId: string; active: boo
 export function KillAll({ disabled }: { disabled: boolean }) {
   const { t } = useI18n();
   const router = useRouter();
+  const [msg, setMsg] = useState<string | null>(null);
   const kill = async () => {
     const r = await post<{ killed: string[] }>("/api/shares/kill", { all: true });
-    announce(r.offline ? t("api.offline") : r.ok ? t("shares.killedAll", { n: r.data.killed.length }) : t("api.failed"));
+    const m = r.offline ? t("api.offline") : r.ok ? t("shares.killedAll", { n: r.data.killed.length }) : t("api.failed");
+    setMsg(m); announce(m);
     if (r.ok) router.refresh();
   };
-  return <button type="button" disabled={disabled} onClick={kill}>{t("shares.killAll")}</button>;
+  return (
+    <div className="stack-s">
+      <ConfirmButton className="danger" disabled={disabled} label={t("shares.killAll")} title={t("shares.confirmAll.title")} body={t("shares.confirmAll.body")} yes={t("shares.confirmAll.yes")} no={t("shares.confirm.no")} onConfirm={kill} />
+      {msg && <p className="test-result" role="status">{msg}</p>}
+    </div>
+  );
 }
 
 interface Affected { document_id: string; title: string; state: string; reason: string; shares: { id: string; recipient: string; purpose: string }[] }
@@ -66,7 +81,7 @@ export function Recheck() {
   }, [t]);
   useEffect(() => { const id = setInterval(run, RECHECK_EVERY_MS); return () => clearInterval(id); }, [run]);
   return (
-    <section className="panel" aria-labelledby="rc-h">
+    <section className="card" aria-labelledby="rc-h">
       <h2 id="rc-h" className="h3">{t("recheck.title")}</h2>
       <p className="note">{t("recheck.intro")}</p>
       <button type="button" className="secondary" onClick={run} disabled={busy}>{busy ? t("verify.busy") : t("recheck.run")}</button>

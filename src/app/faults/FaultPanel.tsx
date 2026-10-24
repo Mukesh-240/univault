@@ -12,13 +12,13 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/components/I18n";
 import { announce } from "@/components/Live";
 import { get, OFFLINE_KEY, post } from "@/components/api";
-import { fieldLabel } from "@/lib/i18n";
+
 
 interface State { issuer_down: boolean; stale_since: string | null; offline_store: boolean; counts: { documents: number; ledger: number; shares: number; registry: number } }
 interface Doc { id: string; title: string; fields: string[] }
 
 export function FaultPanel({ docs }: { docs: Doc[] }) {
-  const { lang, t } = useI18n();
+  const { lang, t, fieldLabel } = useI18n();
   const [state, setState] = useState<State | null>(null);
   const [offline, setOffline] = useState(false);
   const [results, setResults] = useState<Record<string, string>>({});
@@ -51,7 +51,7 @@ export function FaultPanel({ docs }: { docs: Doc[] }) {
 
   const conflicting = async () => {
     const r = await post<{ new_version?: number; error?: string }>("/api/faults", { fault: "conflicting_update", document_id: docId, field, value });
-    say("conflicting", r.offline ? t("api.offline") : r.ok ? t("faults.conflicting.result", { v: r.data.new_version ?? "?", field: fieldLabel(lang, field) }) : r.data.error ?? t("api.failed"));
+    say("conflicting", r.offline ? t("api.offline") : r.ok ? t("faults.conflicting.result", { v: r.data.new_version ?? "?", field: fieldLabel(field) }) : r.data.error ?? t("api.failed"));
     refresh();
   };
 
@@ -105,7 +105,7 @@ export function FaultPanel({ docs }: { docs: Doc[] }) {
           </select>
           <label htmlFor="cu-field">{t("faults.conflicting.field")}</label>
           <select id="cu-field" value={field} onChange={(e) => setField(e.target.value)}>
-            {(doc?.fields ?? []).map((f) => <option key={f} value={f}>{fieldLabel(lang, f)}</option>)}
+            {(doc?.fields ?? []).map((f) => <option key={f} value={f}>{fieldLabel(f)}</option>)}
           </select>
           <label htmlFor="cu-value">{t("faults.conflicting.value")}</label>
           <input id="cu-value" value={value} onChange={(e) => setValue(e.target.value)} required />

@@ -11,7 +11,7 @@
  */
 import { useState } from "react";
 import type { Explanation } from "@/lib/explain";
-import { showTime } from "@/lib/i18n";
+import { showTime } from "@/lib/i18n-core";
 import { post } from "./api";
 import { useI18n } from "./I18n";
 import { announce } from "./Live";
@@ -60,7 +60,7 @@ export function Explain({ explanation, kind, targetId, docs, hideReason }: Props
         <div><dt>{t("explain.freshness")}</dt><dd>{s.checkedAt ? `${t("explain.checkedAt", { time: showTime(s.checkedAt) })} · ` : ""}{t(`fresh.${s.freshness ?? "n/a"}`)}</dd></div>
         {docs && explanation.documentIds.length > 0 && (
           <div><dt>{t("explain.documents")}</dt><dd>{explanation.documentIds.map((id, i) => (
-            <span key={id}>{i ? ", " : ""}<a href={`/#doc-${id}`}>{docs[id] ?? t("explain.unknownDoc")}</a></span>))}</dd></div>
+            <span key={id}>{i ? ", " : ""}<a href={`/doc/${id}`}>{docs[id] ?? t("explain.unknownDoc")}</a></span>))}</dd></div>
         )}
       </dl>
       <div className="explain-actions">

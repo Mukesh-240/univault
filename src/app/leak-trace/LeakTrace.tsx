@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useI18n } from "@/components/I18n";
 import { announce } from "@/components/Live";
 import { post } from "@/components/api";
-import { showTime } from "@/lib/i18n";
+import { showTime } from "@/lib/i18n-core";
 
 interface Match { session: string; recipientCode: string; recipientName: string; shareId: string; purpose: string; at: string; device: string | null }
 interface Result { read: { recipientCode?: string; session?: string }; matches: Match[]; events: Record<string, { outcome: string; at: string; session: string | null; device: string | null }[]> }

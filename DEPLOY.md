@@ -66,3 +66,7 @@ This step permanently deletes the demo history. Only run it on the demo project.
 - Security headers (CSP, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`) are set in `next.config.mjs`.
 - `src/middleware.ts` refuses POST bodies over 256 KB, and answers 503 "Database not configured" when the database variables are missing.
 - Vercel Cron (`vercel.json`) calls `GET /api/cron/recheck` once a day at 03:00 UTC, re-asking the issuer about every document in an active share. Once a day is the most the Hobby plan allows. While the owner has `/shares` open, the page also re-checks every 60 s.
+
+## Phase 7: no new secrets
+
+The simulated sign-in signs its cookies with the existing `VAULT_PRIVATE_KEY`. No new environment variable is needed. Sign-in is demo-only: any valid demo number (starts 0000) is accepted.

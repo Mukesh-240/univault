@@ -1,26 +1,24 @@
 /**
- * THE APP SHELL — the frame around every page.
- *
- *   - a "Skip to main content" link (first thing a keyboard user reaches);
- *   - the permanent SYNTHETIC DEMO DATA · SIMULATED ISSUER banner (required on every screen), plus a
- *     note when the offline demo store is in use (no database key on this machine);
- *   - the header with the navigation and the English / తెలుగు switch;
- *   - the live region that reads status changes aloud (see components/Live.tsx);
- *   - the owner's notification bell (components/NotificationBell.tsx).
+ * THE APP SHELL — the frame around every page. The visible parts (banner, top bar, side menu, bottom
+ * tabs, "Need help?") live in components/Chrome.tsx; this file works out what the frame needs:
+ *   - the language (cookie, or on a first visit the browser's own language: Telugu if it starts with "te");
+ *   - the saved text size and High contrast choice (cookies), so the first paint is already right;
+ *   - who is signed in, from the signed session cookie (null on the sign-in page and the public pages);
+ *   - whether the offline demo store is in use (no database key on this machine).
  * In production without a database key, every page shows "Database not configured" instead.
- * The language comes from a cookie, so the server renders the page in the chosen language directly.
- * Telugu text uses the Noto Sans Telugu font (downloaded at build time and served from this app). It is
- * switched on only for Telugu pages and never preloaded: on a slow phone an English page doesn't pay
- * ~157 KB of font for the one word "తెలుగు" in the language switch (that word uses the phone's own font).
+ * Telugu text uses the installed Telugu font when there is one, else Noto Sans Telugu (downloaded at build
+ * time, served from this app, and only on Telugu pages, never preloaded).
  */
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
 import { Noto_Sans_Telugu } from "next/font/google";
+import { Chrome } from "@/components/Chrome";
 import { I18nProvider } from "@/components/I18n";
-import { LangSwitch } from "@/components/LangSwitch";
+import { dictFor } from "@/lib/i18n";
 import { LiveRegion } from "@/components/Live";
-import { NavLinks } from "@/components/NavLinks";
-import { NotificationBell } from "@/components/NotificationBell";
+import { currentSession } from "@/lib/auth-server";
 import { getI18n } from "@/lib/i18n-server";
+import { CONTRAST_COOKIE, parseContrast, parseSize, SIZE_COOKIE } from "@/lib/prefs";
 import { DB_CONFIGURED, OFFLINE } from "@/lib/supabase";
 import en from "@/locales/en.json";
 import "./globals.css";
@@ -31,39 +29,20 @@ export const metadata = { title: en["app.title"], description: en["app.descripti
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { lang, t } = await getI18n();
+  const jar = await cookies();
+  const size = parseSize(jar.get(SIZE_COOKIE)?.value);
+  const contrast = parseContrast(jar.get(CONTRAST_COOKIE)?.value);
+  const session = await currentSession();
   return (
-    <html lang={lang} className={lang === "te" ? telugu.variable : undefined}>
+    <html lang={lang} className={lang === "te" ? telugu.variable : undefined} data-size={size} data-contrast={contrast === "high" ? "high" : undefined}>
       <body>
-        <a href="#main" className="skip-link">{t("a11y.skip")}</a>
-        {/* role="note": screen readers announce this as supplementary information on every page. */}
-        <div role="note" className="banner">
-          <strong>{t("banner.synthetic")}</strong> · <strong>{t("banner.simulatedIssuer")}</strong>
-          {OFFLINE && <> · <span>{t("banner.offlineStore")}</span></>}
-        </div>
-        <I18nProvider lang={lang}>
-          <header className="site-header">
-            <div className="wrap header-inner">
-              <a href="/" className="brand">UNIVAULT</a>
-              <nav aria-label={t("nav.label")}><NavLinks /></nav>
-              <div className="header-tools"><NotificationBell /><LangSwitch /></div>
-            </div>
-          </header>
-          <main id="main" tabIndex={-1} className="wrap">
+        <I18nProvider lang={lang} dict={dictFor(lang)}>
+          <Chrome user={session ? { name: session.name, last4: session.last4 } : null} size={size} contrast={contrast} offline={OFFLINE}>
             {DB_CONFIGURED ? children : (
               // Production without a database key: say so plainly instead of silently using demo memory.
               <section className="panel"><h1>{t("db.notConfigured")}</h1><p>{t("db.notConfiguredBody")}</p></section>
             )}
-          </main>
-          <footer className="wrap site-footer">
-            <nav aria-label={t("footer.links")} className="footer-links">
-              <ul>
-                <li><a href="/threat-model">{t("footer.threatModel")}</a></li>
-                <li><a href="/policy">{t("footer.policy")}</a></li>
-              </ul>
-            </nav>
-            <p>{t("footer.issuer")}</p>
-            <p>{t("footer.attestation")}</p>
-          </footer>
+          </Chrome>
           <LiveRegion />
         </I18nProvider>
       </body>

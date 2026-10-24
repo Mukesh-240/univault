@@ -16,17 +16,17 @@ interface Made { link: string; recipientId: string; name: string; shareId: strin
 /** Owner: build and confirm a share for the n-th recipient in the list. */
 async function makeShare(page: Page, n: number): Promise<Made> {
   await page.goto("/share");
-  const select = page.getByLabel("Recipient (synthetic)");
-  const value = await select.locator("option").nth(n).getAttribute("value");
-  await select.selectOption(value!);
-  await page.getByRole("button", { name: "Preview what they will see" }).click();
-  await expect(page.getByRole("heading", { name: /^Preview: what/ })).toBeVisible({ timeout: 30_000 });
+  await page.locator(".radio-card").nth(n).click(); // step 1: who
+  await page.getByRole("button", { name: "Next" }).click(); // step 2: what (only what the request needs is ticked)
+  await page.getByRole("button", { name: "Next" }).click(); // step 3: how long
+  await page.getByRole("button", { name: "Review what they will see" }).click(); // step 4: review
+  await expect(page.getByRole("heading", { name: "Review and send" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Exactly what they will see (watermark sample)" })).toBeVisible();
   // The confirm answer carries the new share id; its card on /shares is #share-<id> (unique even when
   // a live database holds earlier shares for the same recipient).
-  const [confirmed] = await Promise.all([page.waitForResponse((r) => r.url().endsWith("/api/share/confirm")), page.getByRole("button", { name: "Confirm and share" }).click()]);
+  const [confirmed] = await Promise.all([page.waitForResponse((r) => r.url().endsWith("/api/share/confirm")), page.getByRole("button", { name: "Share now" }).click()]);
   const shareId = ((await confirmed.json()) as { receipt: { share_id: string } }).receipt.share_id;
-  await expect(page.getByRole("heading", { name: "Share receipt" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Your share is ready" })).toBeVisible({ timeout: 30_000 });
   const link = await page.getByLabel("Their personal link").inputValue();
   const recipientId = (await page.locator(".receipt dd code").first().innerText()).trim();
   const name = (await page.locator(".receipt dd").first().innerText()).trim();
@@ -79,7 +79,7 @@ test("share -> gate + watermark -> second device -> stranger denied -> leak trac
   const kinds = (await notifications(page)).map((n) => n.kind);
   expect(kinds).toEqual(expect.arrayContaining(["first_open", "new_device", "wrong_recipient_attempt"]));
   await page.goto("/shares");
-  await page.getByRole("button", { name: /^Notifications/ }).click();
+  await page.getByRole("button", { name: /^Alerts/ }).click();
   await expect(page.locator("#bell-panel")).toContainText("wrong recipient ID");
 
   // 4. Leak trace: the text read off the watermark resolves to the recipient and that session.
@@ -92,8 +92,9 @@ test("share -> gate + watermark -> second device -> stranger denied -> leak trac
   // 5. Kill link 1 only; "Test this link now" says denied, and the link really is denied.
   await page.goto("/shares");
   const card1 = page.locator(`#share-${one.shareId}`);
-  await card1.getByRole("button", { name: "Kill this link" }).click();
-  await expect(page.locator("#live-region")).toContainText("Access stopped");
+  await card1.getByRole("button", { name: "Stop sharing" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Stop sharing" }).click(); // the confirm sentence, then the choice
+  await expect(page.locator("#live-region")).toContainText("Sharing stopped");
   await card1.getByRole("button", { name: "Test this link now" }).click();
   await expect(card1.locator(".test-result")).toContainText("Denied: the owner stopped this share.");
   await devA.p.goto(one.link);
@@ -106,8 +107,8 @@ test("share -> gate + watermark -> second device -> stranger denied -> leak trac
 
   // 7. Verify ledger.
   await page.goto("/ledger");
-  await page.getByRole("button", { name: "Verify ledger now" }).click();
-  await expect(page.locator("#live-region")).toContainText("Ledger intact");
+  await page.getByRole("button", { name: "Check the history now" }).click();
+  await expect(page.locator("#live-region")).toContainText("History intact");
 
   // 8. Erase a document: limits shown first, explicit acknowledgement, then erase.
   //    A throwaway document is uploaded first (through the normal upload route) and erased, so running
@@ -116,13 +117,15 @@ test("share -> gate + watermark -> second device -> stranger denied -> leak trac
   const up = await page.request.post("/api/upload", { data: { owner: "demo", doc_type: "reference_letter", title, issuer: null, serial: null,
     capture: "digital", fields: { note: "throwaway document for the erase test" }, synthetic: true } });
   expect(up.status()).toBe(201);
-  await page.goto("/");
-  const firstCard = page.locator("li.card").filter({ has: page.getByRole("heading", { name: title }) });
-  await firstCard.getByRole("button", { name: "Erase this document…" }).click();
-  await expect(firstCard.getByText("Copies a recipient already downloaded cannot be recalled.")).toBeVisible();
-  await firstCard.getByLabel("I understand these limits").check();
-  await firstCard.getByRole("button", { name: `Erase "${title}" permanently` }).click();
+  const docId = ((await up.json()) as { id: string }).id;
+  await page.goto(`/doc/${docId}`);
+  await page.getByRole("button", { name: "Erase this document…" }).click();
+  await expect(page.getByText("Copies a recipient already downloaded cannot be recalled.")).toBeVisible();
+  await page.getByLabel("I understand these limits").check();
+  await page.getByRole("button", { name: `Erase "${title}" permanently` }).click();
   await expect(page.locator("#live-region")).toContainText("erased");
+  await page.goto("/");
+  await page.locator("details.expert", { hasText: "Checks across your documents" }).locator("summary").click();
   await expect(page.getByRole("heading", { name: "Erased documents" })).toBeVisible();
 
   for (const c of [devA, devB, stranger, other]) await c.ctx.close();

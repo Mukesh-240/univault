@@ -1,61 +1,134 @@
 /**
- * THE VAULT — every document the person holds, as cards.
+ * HOME / MY DOCUMENTS — the first screen after sign-in.
  *
- * Each card shows: the trust tier (issuer-verified solid / user-uploaded outlined / user-corrected
- * dashed, each with words), the verification state and freshness, the ORIGINAL values (immutable —
- * shown with a lock note), any separate correction layered on top, warnings about instructions hidden
- * in the document, and where synthetic demo data came from. Scans get the confirm/correct table.
- * Every automated result is shown through <Explain>. This page only DISPLAYS engine results.
+ * Plain-English picture, top to bottom:
+ *   1. "Namaste, <name>": the name comes from the vault's identity card (read at sign-in, kept in the session);
+ *   2. one "Am I ready?" card per purpose (Job, Overseas credential check, Scholarship) with ONE sentence
+ *      ("Job application: 2 things need your attention") and one button;
+ *   3. the documents, on two tabs ("From issuers" / "Uploaded by me"), with a search box and a status
+ *      filter. Each card: icon, title, issuer, status chip (icon + word + colour), "Last checked <time>",
+ *      and one button, "Open". The search and filter are a plain form, so they work without JavaScript;
+ *   4. "Add a document" with two big choices;
+ *   5. for experts (collapsed): date-of-birth and duplicate checks across documents, and erased documents.
+ * This page only DISPLAYS what the engines decided; it makes no decision of its own.
  */
 import Link from "next/link";
-import { StateBadge, TierBadge } from "@/components/Badges";
+import { DocIcon } from "@/components/DocIcon";
 import { Explain } from "@/components/Explain";
-import { EraseDocument } from "@/components/EraseDocument";
-import { FieldReview } from "@/components/FieldReview";
-import { LedgerCheck } from "@/components/LedgerCheck";
+import { StatusChip } from "@/components/StatusChip";
+import { Camera, Upload } from "lucide-react";
+import { currentSession } from "@/lib/auth-server";
 import { dobConsistency, dobExplanation, findDuplicates } from "@/lib/duplicates";
-import { fieldLabel, hasTelugu, showTime, type Lang } from "@/lib/i18n";
+import { hasTelugu, showTime } from "@/lib/i18n";
 import { getI18n } from "@/lib/i18n-server";
-import { injectionExplanation, scanDocument } from "@/lib/injection";
-import { verify } from "@/lib/ledger";
-import { reviewHints } from "@/lib/ocr";
+import { evaluatePack, loadPacks } from "@/lib/rules";
 import { DEMO_OWNER, loadDemoVault } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
-import { tierOf, type EngineContext, type VaultDoc } from "@/lib/vault";
+import { agoKey, agoParts, filterDocs, parseStatusFilter, parseTab, STATUSES, statusOfDoc } from "@/lib/ui-logic";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-type Origin = { recipe?: string; seed?: number; dataset?: string } | null;
-
-export default async function VaultPage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string; status?: string }> }) {
   const { lang, t } = await getI18n();
-  const ctx = await loadDemoVault();
-  // Labels only (never used for decisions): which documents are synthetic, and where they came from.
-  const labels = await supabase.from("documents").select("id, synthetic, synthetic_origin").eq("owner", DEMO_OWNER);
-  const origin = new Map((labels.data ?? []).map((r) => [r.id as string, { synthetic: Boolean(r.synthetic), origin: r.synthetic_origin as Origin }]));
-  const ledger = await verify(supabase);
+  const sp = await searchParams;
+  const tab = parseTab(sp.tab), q = (sp.q ?? "").slice(0, 80), status = parseStatusFilter(sp.status);
+  const [ctx, session] = await Promise.all([loadDemoVault(), currentSession()]);
+  const now = new Date();
+  const docs = filterDocs(ctx.docs, ctx, { tab, q, status });
+
+  const packs = loadPacks().map((pack) => {
+    const r = evaluatePack(pack, ctx);
+    const open = r.results.filter((x) => x.status !== "pass").length;
+    return { id: pack.id, title: lang === "te" && pack.title_te ? pack.title_te : pack.title, open };
+  });
+
+  // For experts: checks across documents, and the erased documents (only a fingerprint remains of those).
   const titles = Object.fromEntries(ctx.docs.map((d) => [d.id, d.title]));
   const dups = findDuplicates(ctx.docs);
   const dob = dobConsistency(ctx.docs);
-  // Erased documents: the immutable cover record remains (fingerprint, type, times); the content is gone.
   const all = await supabase.from("documents").select("id, doc_type, sha256, created_at").eq("owner", DEMO_OWNER).order("created_at");
   const erased = ((all.data ?? []) as { id: string; doc_type: string; sha256: string; created_at: string }[]).filter((d) => !ctx.docs.some((x) => x.id === d.id));
 
+  const when = (iso: string | undefined) => { const a = agoKey(agoParts(iso, now)); return t(a.key, { n: a.n ?? 0 }); };
+  const tabHref = (tb: string) => `/?tab=${tb}${q ? `&q=${encodeURIComponent(q)}` : ""}${status !== "all" ? `&status=${status}` : ""}`;
+
   return (
     <>
-      <h1>{t("vault.title")}</h1>
-      <p className="lead">{t("vault.intro", { n: ctx.docs.length })}</p>
-      <p className="note">{t("vault.immutable")}</p>
+      <div className="page-head">
+        <h1 className="greeting">{session?.name ? t("home.greeting", { name: session.name }) : t("home.greetingNoName")}</h1>
+        <p className="lead">{t("home.subtitle")}</p>
+      </div>
 
-      <section className="panel" aria-labelledby="ledger-h">
-        <h2 id="ledger-h">{t("ledger.title")}</h2>
-        <p>{ledger.ok ? t("ledger.ok", { n: ledger.total }) : t("ledger.broken", { line: String(ledger.broken_at) })}</p>
-        <LedgerCheck />
+      <section aria-labelledby="ready-h" className="stack-s">
+        <h2 id="ready-h">{t("home.readyTitle")}</h2>
+        <div className="grid">
+          {packs.map((p) => (
+            <article key={p.id} className="card ready-card" aria-labelledby={`rc-${p.id}`}>
+              <h3 id={`rc-${p.id}`} className="sr-only">{p.title}</h3>
+              <p className="big">{p.open === 0 ? t("home.ready.ok", { pack: p.title }) : p.open === 1 ? t("home.ready.one", { pack: p.title }) : t("home.ready.n", { pack: p.title, n: p.open })}</p>
+              <div className="card-actions"><Link href={`/readiness#pack-${p.id}`} className="btn secondary">{p.open === 0 ? t("home.ready.btnOk") : t("home.ready.btn")}</Link></div>
+            </article>
+          ))}
+        </div>
       </section>
 
-      <section aria-labelledby="checks-h" className="panel">
-        <h2 id="checks-h">{t("vault.checks")}</h2>
+      <section aria-labelledby="docs-h" className="stack-s" style={{ marginTop: "var(--s4)" }}>
+        <h2 id="docs-h">{t("home.docsTitle")}</h2>
+        <nav aria-label={t("home.tabsLabel")} className="tabs-nav">
+          <Link href={tabHref("issuer")} aria-current={tab === "issuer" ? "page" : undefined}>{t("home.tab.issuer")}</Link>
+          <Link href={tabHref("mine")} aria-current={tab === "mine" ? "page" : undefined}>{t("home.tab.mine")}</Link>
+        </nav>
+        <form className="filter-form" method="get" action="/">
+          <input type="hidden" name="tab" value={tab} />
+          <div className="field">
+            <label htmlFor="q">{t("home.search")}</label>
+            <div className="search">
+              <input id="q" name="q" type="search" defaultValue={q} autoComplete="off" />
+              <button type="submit">{t("home.searchBtn")}</button>
+            </div>
+          </div>
+          <fieldset className="radio-cards">
+            <legend>{t("home.statusLegend")}</legend>
+            {(["all", ...STATUSES] as const).map((s) => (
+              <label key={s} className="radio-card">
+                <input type="radio" name="status" value={s} defaultChecked={status === s} />
+                {s === "all" ? t("home.status.all") : t(`status.${s}`)}
+              </label>
+            ))}
+          </fieldset>
+        </form>
+
+        {docs.length === 0 ? <p className="card">{tab === "mine" && !q && status === "all" ? t("home.noneMine") : t("home.none")}</p> : (
+          <ul className="cards">
+            {docs.map((d) => {
+              const v = ctx.verification[d.id];
+              return (
+                <li key={d.id} id={`doc-${d.id}`} className="card">
+                  <div className="card-head">
+                    <div className="icon-title"><DocIcon type={d.doc_type} /><h3 lang={hasTelugu(d.title) ? "te" : undefined}>{d.title}</h3></div>
+                    <StatusChip status={statusOfDoc(d, ctx)} t={t} />
+                  </div>
+                  <p className="meta">{d.issuer ? t("home.issuedBy", { issuer: d.issuer }) : t("vault.noIssuer")}</p>
+                  <p className="meta">{t("home.lastChecked", { when: when(v?.checkedAt) })}</p>
+                  <div className="card-actions"><Link href={`/doc/${d.id}`} className="btn" aria-label={`${t("home.open")}: ${d.title}`}>{t("home.open")}</Link></div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="add-h" className="stack-s" style={{ marginTop: "var(--s4)" }}>
+        <h2 id="add-h">{t("home.addTitle")}</h2>
+        <div className="grid">
+          <Link href="/ocr" className="choice"><Camera size={32} aria-hidden="true" /><div><strong>{t("home.add.photo")}</strong><span>{t("home.add.photoNote")}</span></div></Link>
+          <Link href="/add/file" className="choice"><Upload size={32} aria-hidden="true" /><div><strong>{t("home.add.file")}</strong><span>{t("home.add.fileNote")}</span></div></Link>
+        </div>
+      </section>
+
+      <details className="expert" style={{ marginTop: "var(--s4)" }}>
+        <summary>{t("ui.experts")}: {t("vault.checks")}</summary>
         <h3>{t("vault.dob")}</h3>
         <Explain explanation={dobExplanation(dob)} kind="duplicate" targetId="dob-consistency" docs={titles} />
         <h3>{t("vault.duplicates")}</h3>
@@ -69,83 +142,14 @@ export default async function VaultPage() {
             ))}
           </ul>
         )}
-      </section>
-
-      {erased.length > 0 && (
-        <section className="panel" aria-labelledby="erased-h">
-          <h2 id="erased-h" className="h3">{t("erase.listTitle")}</h2>
-          <p className="note">{t("erase.listNote")}</p>
-          <ul>{erased.map((d) => <li key={d.id}>{d.doc_type.replace(/_/g, " ")} · <code>{d.sha256.slice(0, 16)}…</code> · {showTime(d.created_at)}</li>)}</ul>
-        </section>
-      )}
-
-      <h2>{t("vault.documents")}</h2>
-      <ul className="cards">
-        {ctx.docs.map((d) => (
-          <li key={d.id} id={`doc-${d.id}`} className="card">
-            <DocCard doc={d} ctx={ctx} lang={lang} t={t} label={origin.get(d.id)} />
-          </li>
-        ))}
-      </ul>
+        {erased.length > 0 && (
+          <>
+            <h3>{t("erase.listTitle")}</h3>
+            <p className="note">{t("erase.listNote")}</p>
+            <ul>{erased.map((d) => <li key={d.id}>{d.doc_type.replace(/_/g, " ")} · <code>{d.sha256.slice(0, 16)}…</code> · {showTime(d.created_at)}</li>)}</ul>
+          </>
+        )}
+      </details>
     </>
-  );
-}
-
-function DocCard({ doc, ctx, lang, t, label }: { doc: VaultDoc; ctx: EngineContext; lang: Lang; t: (k: string, v?: Record<string, string | number>) => string; label?: { synthetic: boolean; origin: Origin } }) {
-  const v = ctx.verification[doc.id];
-  const asserted = ctx.confirmedFields[doc.id] ?? {};
-  const scan = scanDocument(doc);
-  const hints = new Map(reviewHints(doc).map((h) => [h.field, h.why]));
-  const headingId = `doc-h-${doc.id}`;
-  return (
-    <article aria-labelledby={headingId}>
-      <div className="card-head">
-        <h3 id={headingId}>{doc.title}</h3>
-        <p className="meta">
-          <TierBadge tier={tierOf(doc, ctx)} t={t} />
-          {v ? <StateBadge state={v.state} t={t} /> : <StateBadge state="not_checked" t={t} />}
-          {v?.freshness === "stale" && <span className="badge state-stale">{t("verify.staleBadge")}</span>}
-        </p>
-      </div>
-      <p className="meta">
-        {t(`capture.${doc.capture}`)} · {doc.issuer ?? t("vault.noIssuer")}{doc.serial ? ` · ${t("vault.serial")}: ${doc.serial}` : ""}
-        {label?.synthetic && <> · {t("vault.synthetic")}{label.origin?.recipe ? ` (${t("vault.origin", { recipe: label.origin.recipe, seed: label.origin.seed ?? "?", dataset: label.origin.dataset ?? "?" })})` : ""}</>}
-      </p>
-
-      {doc.capture === "scan" ? (
-        <FieldReview docId={doc.id} idPrefix={`f-${doc.id}`} fields={Object.entries(doc.fields).map(([name, original]) => ({
-          name, original, asserted: asserted[name], confidence: doc.ocr_confidence?.[name], hints: hints.get(name) ?? [] }))} />
-      ) : (
-        <table className="fields">
-          <caption>{t("vault.originalValues")} <span className="lock">— {t("vault.lock")}</span></caption>
-          <tbody>
-            {Object.entries(doc.fields).map(([k, val]) => (
-              <tr key={k}>
-                <th scope="row">{fieldLabel(lang, k)}</th>
-                <td>
-                  <span className="original" lang={hasTelugu(val) ? "te" : undefined}>{val}</span>
-                  {asserted[k] !== undefined && asserted[k] !== val && <span className="layer">{t("vault.yourLayer")}: {asserted[k]}</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {scan.suspected && (
-        <div className="callout neutral">
-          <p><strong>{t("vault.injectionTitle")}</strong> {t("vault.injectionNote")}</p>
-          <Explain explanation={injectionExplanation(scan, doc.id)} kind="injection_flag" targetId={doc.id} />
-        </div>
-      )}
-
-      <EraseDocument docId={doc.id} title={doc.title} />
-      <h4 className="sr-only">{t("vault.verification")}</h4>
-      {v ? (
-        <Explain explanation={{ ...v.explanation, reason: v.reason }} kind="verification" targetId={doc.id} />
-      ) : (
-        <p className="note">{t("vault.notChecked")} {doc.serial && <Link href={`/verify#v-${doc.id}`}>{t("vault.verifyLink")}</Link>}</p>
-      )}
-    </article>
   );
 }

@@ -1,7 +1,8 @@
 /**
- * SHARE BUILDER — choose recipient, purpose, items, expiry and policy; see exactly what they will see;
- * confirm; get a receipt. Every share needs this explicit confirmation (nothing else can create one).
- * This page only gathers the choices; the server re-verifies, previews and creates (ShareBuilder.tsx).
+ * SHARE WIZARD page — gathers what the four steps need: the approved recipients, every item that can be
+ * shared, and the purpose packs (which say what each purpose needs). The wizard (ShareBuilder.tsx) asks the
+ * questions; the server re-verifies, previews and creates. Every share needs the explicit "Share now";
+ * nothing else can create one. "?from=<document type>" (from a document page) puts that document's items first.
  */
 import { getI18n } from "@/lib/i18n-server";
 import { loadPacks } from "@/lib/rules";
@@ -12,8 +13,9 @@ import { ShareBuilder } from "./ShareBuilder";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export default async function SharePage() {
+export default async function SharePage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
   const { lang, t } = await getI18n();
+  const from = (await searchParams).from;
   const ctx = await loadDemoVault();
   const packs = loadPacks();
   const rec = await supabase.from("recipients").select("recipient_code, name, org").order("recipient_code");
@@ -26,7 +28,7 @@ export default async function SharePage() {
     <>
       <h1>{t("share.title")}</h1>
       <p className="lead">{t("share.intro")}</p>
-      <ShareBuilder recipients={recipients} items={items}
+      <ShareBuilder recipients={recipients} items={items} from={from && /^[a-z_]+$/.test(from) ? from : undefined}
         packs={packs.map((p) => ({ purpose: p.purpose, title: lang === "te" && p.title_te ? p.title_te : p.title, allowed: p.allowed_fields }))} />
     </>
   );

@@ -45,7 +45,7 @@ export default async function LedgerPage() {
         <p className="note">{t("ledgerPage.sqlNote")}</p>
         <pre className="sql" tabIndex={0} aria-label={t("ledgerPage.sqlTitle")}><code lang="en">{SQL}</code></pre>
       </section>
-      <table>
+      <div className="table-scroll" tabIndex={0} role="region" aria-label={t("ledgerPage.caption", { n: lines.length })}><table>
         <caption>{t("ledgerPage.caption", { n: lines.length })}</caption>
         <thead><tr><th scope="col">#</th><th scope="col">{t("shares.when")}</th><th scope="col">{t("ledgerPage.kind")}</th><th scope="col">{t("ledgerPage.details")}</th><th scope="col">{t("ledgerPage.hash")}</th></tr></thead>
         <tbody>
@@ -54,7 +54,7 @@ export default async function LedgerPage() {
               <td className="payload"><code lang="en">{JSON.stringify(l.payload).slice(0, 160)}</code></td><td><code>{l.hash.slice(0, 12)}…</code></td></tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </>
   );
 }

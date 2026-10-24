@@ -89,6 +89,18 @@ flowchart LR
   V -. new device .-> N[owner notified]
 ```
 
+## Phase 7: made for everyone
+
+A 70-year-old who has never used a vault app can use UNIVAULT alone, in Telugu or English, on a cheap phone: 20 px text, a Text size control (A-/A/A+), a High contrast switch, one main button per screen, plain words with the technical term under "For experts", a "Need help?" panel on every screen, and gentle motion that switches off for people who ask for less movement.
+
+Sign-in is **simulated**: a synthetic Aadhaar-style number (always starts 0000, with a Verhoeff check digit), a code shown on screen, a consent screen. No real Aadhaar or government service is used, and the number is masked after sign-in and never stored in full. The sign-in lock counts per server instance.
+
+| Sign-in | Home | Share wizard |
+|---|---|---|
+| ![](docs/screenshots/signin-1-number-390-en-normal.png) | ![](docs/screenshots/home-390-en-normal.png) | ![](docs/screenshots/share-4-review-390-en-normal.png) |
+
+Telugu and large text: ![](docs/screenshots/home-390-te-A+.png) All screens are in `docs/screenshots/` (1440 and 390 wide, English and Telugu, normal and A+). Telugu was written by an AI model and is not yet reviewed by a native speaker: see `docs/TELUGU_REVIEW.md`.
+
 ## 4. What it does, mapped to the brief
 
 | Brief requirement | How UNIVAULT meets it | Where |
@@ -303,6 +315,7 @@ and hash chain. A production build refuses to do that. `GET /api/health` returns
 | @supabase/supabase-js | 2 | MIT | Database client and Realtime |
 | Zod | 4 | MIT | Input validation at every boundary |
 | Tesseract.js (+ `eng`, `tel` tessdata) | 6.0 | Apache-2.0 | OCR |
+| lucide-react | 1.51 | ISC | The one icon set |
 | Noto Sans Telugu (via `next/font`) | — | SIL OFL 1.1 | Telugu typeface |
 | sharp | 0.35 | Apache-2.0 | Rendering the synthetic scan images (dev only) |
 | Vitest | 5 | MIT | Unit tests |

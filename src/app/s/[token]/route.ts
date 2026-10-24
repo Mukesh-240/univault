@@ -14,10 +14,10 @@
  * them, nothing else happens). Five wrong codes in a row lock the link for 15 minutes (429, owner told);
  * the lock is a row in the access log, so every server instance sees it.
  */
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { recipientView } from "@/lib/disclosure";
-import { isLang, LANG_COOKIE, translate, type Lang } from "@/lib/i18n";
+import { isLang, LANG_COOKIE, preferredLang, translate, type Lang } from "@/lib/i18n";
 import { deniedHtml, gateHtml, viewHtml } from "@/lib/recipient-html";
 import { recipientLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/scrub";
@@ -40,7 +40,7 @@ const MAX_TOKEN_LENGTH = 100;
 async function visitor() {
   const jar = await cookies();
   const c = jar.get(LANG_COOKIE)?.value;
-  const lang: Lang = isLang(c) ? c : "en";
+  const lang: Lang = isLang(c) ? c : preferredLang((await headers()).get("accept-language"));
   const existing = jar.get(DEVICE_COOKIE)?.value;
   const device = existing && existing.length <= 64 ? existing : newDeviceId();
   return { lang, device, isNew: device !== existing };

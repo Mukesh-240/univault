@@ -11,8 +11,8 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-/** The verify button reads "Verify with issuer", "Verify again" or "Retry now" depending on the last result. */
-const VERIFY = /^(Verify with issuer|Verify again|Retry now)$/;
+/** The verify button reads "Check with the issuer", "Check again" or "Try again now" depending on the last result. */
+const VERIFY = /^(Check with the issuer|Check again|Try again now)$/;
 const live = (page: Page) => page.locator("#live-region");
 /** Open a page and wait until it is interactive (buttons rendered on the server only work once React has loaded). */
 const go = async (page: Page, url: string) => { await page.goto(url);
@@ -22,14 +22,15 @@ const go = async (page: Page, url: string) => { await page.goto(url);
 
 async function makeShare(page: Page, n: number) {
   await go(page, "/share");
-  const select = page.getByLabel("Recipient (synthetic)");
-  await select.selectOption((await select.locator("option").nth(n).getAttribute("value"))!);
-  await page.getByRole("button", { name: "Preview what they will see" }).click();
+  await page.locator(".radio-card").nth(n).click(); // step 1: who
+  await page.getByRole("button", { name: "Next" }).click(); // step 2: what (only what the request needs is ticked)
+  await page.getByRole("button", { name: "Next" }).click(); // step 3: how long
+  await page.getByRole("button", { name: "Review what they will see" }).click(); // step 4: review
   // The confirm answer carries the new share id; its card on /shares is #share-<id> (unique even when
   // a live database holds earlier shares for the same recipient).
-  const [confirmed] = await Promise.all([page.waitForResponse((r) => r.url().endsWith("/api/share/confirm")), page.getByRole("button", { name: "Confirm and share" }).click({ timeout: 30_000 })]);
+  const [confirmed] = await Promise.all([page.waitForResponse((r) => r.url().endsWith("/api/share/confirm")), page.getByRole("button", { name: "Share now" }).click({ timeout: 30_000 })]);
   const shareId = ((await confirmed.json()) as { receipt: { share_id: string } }).receipt.share_id;
-  await expect(page.getByRole("heading", { name: "Share receipt" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Your share is ready" })).toBeVisible({ timeout: 30_000 });
   return {
     link: await page.getByLabel("Their personal link").inputValue(),
     recipientId: (await page.locator(".receipt dd code").first().innerText()).trim(),
@@ -59,28 +60,30 @@ test("journey: upload -> OCR fix -> verify -> readiness -> names -> share -> rec
   const input = page.locator(`[id="ocr-${scan.file.replace("scans/", "")}-reg_no"]`);
   await go(page, "/ocr");
   if (!(await input.count())) {
-    await page.getByRole("button", { name: "Add to vault" }).first().click();
-    await expect(live(page)).toContainText("Added to your vault", { timeout: 30_000 });
+    await page.getByRole("button", { name: "Add to my documents" }).first().click();
+    await expect(live(page)).toContainText("Added to your documents", { timeout: 30_000 });
   }
 
   // OCR correction: type the true value (from the ground-truth label, the test oracle) and save.
   await expect(input).toBeVisible({ timeout: 30_000 });
+  const box = input.locator("xpath=ancestor::li[1]");
+  await box.getByRole("button", { name: "Let me fix it" }).click();
   await input.fill(scan.fields.reg_no);
-  await input.locator("xpath=ancestor::tr").getByRole("button", { name: "Save correction" }).click();
-  await expect(live(page)).toContainText("corrected");
+  await box.getByRole("button", { name: "Save my fix" }).click();
+  await expect(live(page)).toContainText("fixed");
 
   // Verify one document with the issuer.
   await go(page, "/verify");
   const card = page.locator("li.card").first();
   await card.getByRole("button", { name: VERIFY }).click();
-  await expect(card.locator(".verify-state .badge").first()).not.toHaveText("Not checked yet", { timeout: 30_000 });
+  await expect(card.locator(".verify-state .chip").first()).not.toHaveText("Not checked yet", { timeout: 30_000 });
 
   // Readiness and names.
   await go(page, "/readiness");
-  await expect(page.locator("h1")).toHaveText("Readiness");
+  await expect(page.locator("h1")).toHaveText("Am I ready?");
   await go(page, "/names");
-  await page.getByRole("button", { name: "Confirm: same person" }).first().click();
-  await expect(live(page)).toContainText("Recorded:");
+  await page.getByRole("button", { name: "Yes, same person" }).first().click();
+  await expect(live(page)).toContainText("Saved:");
 
   // Two shares; the recipient tries a wrong ID, then a wrong code, then the right code.
   const one = await makeShare(page, 0);
@@ -101,7 +104,7 @@ test("journey: upload -> OCR fix -> verify -> readiness -> names -> share -> rec
 
   // The owner sees the alerts.
   await go(page, "/shares");
-  await page.getByRole("button", { name: /^Notifications/ }).click();
+  await page.getByRole("button", { name: /^Alerts/ }).click();
   await expect(page.locator("#bell-panel")).toContainText("wrong recipient ID");
 
   // Trace the watermark.
@@ -113,8 +116,9 @@ test("journey: upload -> OCR fix -> verify -> readiness -> names -> share -> rec
   // Kill one link: it is denied, the other still opens.
   await go(page, "/shares");
   const card1 = page.locator(`#share-${one.shareId}`);
-  await card1.getByRole("button", { name: "Kill this link" }).click();
-  await expect(live(page)).toContainText("Access stopped");
+  await card1.getByRole("button", { name: "Stop sharing" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Stop sharing" }).click();
+  await expect(live(page)).toContainText("Sharing stopped");
   await r.p.goto(one.link);
   await expect(r.p.getByRole("heading", { name: "Access denied" })).toBeVisible();
   const other = await askCode(browser, two.link, two.recipientId);
@@ -123,16 +127,17 @@ test("journey: upload -> OCR fix -> verify -> readiness -> names -> share -> rec
   await expect(other.p.getByRole("heading", { name: "Shared with you" })).toBeVisible();
 
   // Kill all: the second link is now denied too.
-  await go(page, "/shares");
-  await page.getByRole("button", { name: "Kill all links" }).click();
-  await expect(live(page)).toContainText("links stopped");
+  await go(page, "/more"); // "Stop all sharing" lives on the More page, away from the normal button
+  await page.getByRole("button", { name: "Stop all sharing" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Stop all sharing" }).click();
+  await expect(live(page)).toContainText("shares stopped");
   await other.p.goto(two.link);
   await expect(other.p.getByRole("heading", { name: "Access denied" })).toBeVisible();
 
   // Ledger check.
   await go(page, "/ledger");
-  await page.getByRole("button", { name: "Verify ledger now" }).click();
-  await expect(live(page)).toContainText("Ledger intact");
+  await page.getByRole("button", { name: "Check the history now" }).click();
+  await expect(live(page)).toContainText("History intact");
 
   for (const c of [wrongId, r, other]) await c.ctx.close();
 });
@@ -152,26 +157,26 @@ test("faults: each one on -> the UI says what happened -> off -> recovers", asyn
   await block("Issuer timeout").getByRole("button", { name: "Turn fault on" }).click();
   await expect(block("Issuer timeout")).toContainText("Issuer is now unreachable");
   let card = await verifyFirst();
-  await expect(card.locator(".verify-state")).toContainText("Unverified", { timeout: 30_000 });
+  await expect(card.locator(".verify-state")).toContainText("Not checked yet", { timeout: 30_000 });
   await expect(card).toContainText(/Automatic retry 1 of 4/);
-  await expect(card).not.toContainText("Doesn't match issuer record");
+  await expect(card).not.toContainText("Not accepted");
   await go(page, "/faults");
   await block("Issuer timeout").getByRole("button", { name: "Turn fault off" }).click();
   await expect(block("Issuer timeout")).toContainText("Issuer is reachable again");
   card = await verifyFirst();
-  await expect(card.locator(".verify-state")).not.toContainText("Unverified", { timeout: 30_000 });
+  await expect(card.locator(".verify-state")).not.toContainText("Not checked yet", { timeout: 30_000 });
 
   // Stale data: earlier verifications are labelled stale; off -> the label goes away.
   await go(page, "/faults");
   await block("Stale data").getByRole("button", { name: "Turn fault on" }).click();
   await expect(block("Stale data")).toContainText("Earlier verifications are now stale");
   await go(page, "/verify");
-  await expect(page.getByText("Stale: re-check before sharing").first()).toBeVisible();
+  await expect(page.getByText("Checked long ago: check again before sharing").first()).toBeVisible();
   await go(page, "/faults");
   await block("Stale data").getByRole("button", { name: "Turn fault off" }).click();
   await expect(block("Stale data")).toContainText("normal 24-hour rule");
   await go(page, "/verify");
-  await expect(page.getByText("Stale: re-check before sharing")).toHaveCount(0);
+  await expect(page.getByText("Checked long ago: check again before sharing")).toHaveCount(0);
 
   // Malformed upload: refused with reasons, document count unchanged.
   await go(page, "/faults");
@@ -205,7 +210,7 @@ test("faults: each one on -> the UI says what happened -> off -> recovers", asyn
   }
   await go(page, "/verify");
   await changed.getByRole("button", { name: VERIFY }).click();
-  await expect(changed.locator(".verify-state .badge").first()).toHaveText("Verified", { timeout: 30_000 });
+  await expect(changed.locator(".verify-state .chip").first()).toHaveText("Verified", { timeout: 30_000 });
 
   // Connectivity loss: buttons refuse to send and say so; off -> they work again.
   await go(page, "/faults");

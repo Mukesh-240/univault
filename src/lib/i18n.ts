@@ -16,10 +16,8 @@ import en from "../locales/en.json";
 import te from "../locales/te.json";
 import teReasons from "../locales/te-reasons.json";
 
-export type Lang = "en" | "te";
-export const LANGS: Lang[] = ["en", "te"];
-export const LANG_COOKIE = "uv_lang";
-export const isLang = (v: unknown): v is Lang => v === "en" || v === "te";
+import { labelers, type Lang } from "./i18n-core";
+export { LANGS, LANG_COOKIE, isLang, preferredLang, showTime, hasTelugu, type Lang } from "./i18n-core";
 
 const DICTS: Record<Lang, Record<string, string>> = { en, te };
 
@@ -29,34 +27,14 @@ export function translate(lang: Lang, key: string, vars?: Record<string, string 
   return vars ? s.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? "")) : s;
 }
 
-/** A field name for people: "total_marks" -> "Total marks" (or its Telugu label when one exists). */
-export function fieldLabel(lang: Lang, field: string): string {
-  const key = `field.${field}`;
-  const s = translate(lang, key);
-  return s === key ? field.replace(/_/g, " ") : s;
-}
+/** The dictionary for one language (server side; the browser receives only this one). */
+export const dictFor = (lang: Lang) => DICTS[lang];
 
-/** A document type for people: "degree_certificate" -> "Degree certificate" (or its Telugu label). */
-export function docTypeLabel(lang: Lang, type: string): string {
-  const key = `doctype.${type}`;
-  const s = translate(lang, key);
-  return s === key ? type.replace(/_/g, " ") : s;
-}
-
-/**
- * A shared item for people: "id_card.name" -> "Identity card · Name". The document type is always
- * included, because two documents can both have a "Name" and the reader must know which is which.
- */
-export const itemLabel = (lang: Lang, item: string) => {
-  const [type, field] = item.split(".");
-  return field ? `${docTypeLabel(lang, type)} · ${fieldLabel(lang, field)}` : fieldLabel(lang, type);
-};
-
-/** Times are shown as "YYYY-MM-DD HH:MM UTC" (the server works in UTC). */
-export const showTime = (iso: string) => `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
-
-/** Does this text contain Telugu letters? (Used to mark it lang="te" for screen readers and the Telugu font.) */
-export const hasTelugu = (s: string) => /[\u0C00-\u0C7F]/.test(s);
+const tFor = (lang: Lang) => (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars);
+/** A field name / document type / shared item for people, in the chosen language. */
+export const fieldLabel = (lang: Lang, field: string) => labelers(tFor(lang)).fieldLabel(field);
+export const docTypeLabel = (lang: Lang, type: string) => labelers(tFor(lang)).docTypeLabel(type);
+export const itemLabel = (lang: Lang, item: string) => labelers(tFor(lang)).itemLabel(item);
 
 /** A piece of translated text and the language it ended up in. */
 export interface Segment { text: string; lang: Lang }

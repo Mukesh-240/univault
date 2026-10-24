@@ -18,7 +18,7 @@ import { useI18n } from "@/components/I18n";
 import { announce } from "@/components/Live";
 import { Reason } from "@/components/Reason";
 import { post } from "@/components/api";
-import { fieldLabel, hasTelugu } from "@/lib/i18n";
+import { hasTelugu } from "@/lib/i18n-core";
 import { extractFields, type OcrLine } from "@/lib/ocr-extract";
 import { reviewHints } from "@/lib/ocr";
 
@@ -28,30 +28,33 @@ type Mode = "saved" | "live";
 interface Block { paragraphs: { lines: OcrLine[] }[] }
 
 export function OcrWorkbench({ items, engine, created }: { items: ScanItem[]; engine: string; created: string }) {
-  const { t } = useI18n();
+  const { t, fieldLabel } = useI18n();
   const [mode, setMode] = useState<Mode>("saved");
   return (
     <>
-      <fieldset className="panel">
-        <legend>{t("ocr.modeLegend")}</legend>
-        <div className="toggle">
-          <input type="radio" id="mode-saved" name="ocr-mode" checked={mode === "saved"} onChange={() => setMode("saved")} />
-          <label htmlFor="mode-saved">{t("ocr.modeSaved", { engine, date: created.slice(0, 10) })}</label>
-        </div>
-        <div className="toggle">
-          <input type="radio" id="mode-live" name="ocr-mode" checked={mode === "live"} onChange={() => setMode("live")} />
-          <label htmlFor="mode-live">{t("ocr.modeLive")}</label>
-        </div>
-      </fieldset>
       <ul className="cards">
         {items.map((it) => <li key={it.file} className="card"><ScanCard item={it} mode={mode} /></li>)}
       </ul>
+      <details className="expert">
+        <summary>{t("ui.experts")}: {t("ocr.modeLegend")}</summary>
+        <fieldset>
+          <legend>{t("ocr.modeLegend")}</legend>
+          <div className="toggle">
+            <input type="radio" id="mode-saved" name="ocr-mode" checked={mode === "saved"} onChange={() => setMode("saved")} />
+            <label htmlFor="mode-saved">{t("ocr.modeSaved", { engine, date: created.slice(0, 10) })}</label>
+          </div>
+          <div className="toggle">
+            <input type="radio" id="mode-live" name="ocr-mode" checked={mode === "live"} onChange={() => setMode("live")} />
+            <label htmlFor="mode-live">{t("ocr.modeLive")}</label>
+          </div>
+        </fieldset>
+      </details>
     </>
   );
 }
 
 function ScanCard({ item, mode }: { item: ScanItem; mode: Mode }) {
-  const { lang, t } = useI18n();
+  const { lang, t, fieldLabel } = useI18n();
   const router = useRouter();
   const [lines, setLines] = useState<OcrLine[]>(item.lines);
   const [busy, setBusy] = useState<string | null>(null);
@@ -105,19 +108,16 @@ function ScanCard({ item, mode }: { item: ScanItem; mode: Mode }) {
             <FieldReview docId={item.stored.id} fields={item.stored.fields} idPrefix={`ocr-${name}`} />
           ) : (
             <>
-              <table className="fields">
-                <caption>{t("ocr.readCaption")}</caption>
-                <thead><tr><th scope="col">{t("review.field")}</th><th scope="col">{t("ocr.read")}</th><th scope="col">{t("review.confidence")}</th></tr></thead>
-                <tbody>
-                  {Object.entries(read).map(([k, v]) => (
-                    <tr key={k}>
-                      <th scope="row">{fieldLabel(lang, k)}</th>
-                      <td><span className="original" lang={hasTelugu(v.value) ? "te" : undefined}>{v.value}</span> <span className="badge field-unconfirmed">{t("review.unconfirmed")}</span></td>
-                      <td>{v.confidence.toFixed(2)}{(hints.get(k) ?? []).map((h) => <div key={h} className="hint"><Reason text={h} lang={lang} /></div>)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <p className="note">{t("ocr.readCaption")}</p>
+              <ul className="cardlist field-boxes">
+                {Object.entries(read).map(([k, v]) => (
+                  <li key={k} className="field-box">
+                    <strong>{fieldLabel(k)}</strong>
+                    <p className="reading" lang={hasTelugu(v.value) ? "te" : undefined}>{v.value}</p>
+                    <p className="meta">{t("review.readerSure", { pct: Math.round(v.confidence * 100) })} {(hints.get(k) ?? []).map((h) => <span key={h} className="hint"><Reason text={h} lang={lang} /> </span>)}</p>
+                  </li>
+                ))}
+              </ul>
               <div className="row">
                 {mode === "live" && <button type="button" className="secondary" disabled={Boolean(busy)} onClick={runLive}>{t("ocr.runLive")}</button>}
                 <button type="button" disabled={Boolean(busy)} onClick={store}>{t("ocr.store")}</button>

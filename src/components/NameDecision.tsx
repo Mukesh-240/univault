@@ -29,6 +29,8 @@ export function NameDecision({ a, b, decision, label }: { a: string; b: string; 
       {decision && <p className="decision-current">{t(`names.decision.${decision}`)}</p>}
       <button type="button" disabled={busy} onClick={() => decide("confirmed_same_person")}>{t("names.confirm")}</button>
       <button type="button" className="secondary" disabled={busy} onClick={() => decide("rejected")}>{t("names.reject")}</button>
+      {/* "Not sure" records nothing: no decision is made until the person is ready. */}
+      <button type="button" className="text" onClick={() => announce(t("names.notSureMsg"))}>{t("names.notSure")}</button>
     </div>
   );
 }

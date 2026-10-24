@@ -1,18 +1,22 @@
 "use client";
 /**
- * NOTIFICATION BELL — tells the owner when someone opens a share for the first time, opens it from a
- * NEW device, tries a killed/expired link, or types a wrong recipient ID/code; and when the issuer
- * changed a record an active share uses. Not on every ordinary view (that would be noise).
+ * ALERTS BELL — tells the owner when someone opens a share for the first time, opens it from a NEW
+ * device, tries a stopped/expired link, or types a wrong recipient ID/code; and when the issuer changed
+ * a record an active share uses. Not on every ordinary view (that would be noise).
  *
  * How it hears about them: it asks GET /api/notifications every 5 seconds (works everywhere), and when a
  * live Supabase database is configured it ALSO listens to Supabase Realtime on access_log, so new
- * attempts appear immediately. New items are announced in the live region.
+ * attempts appear immediately. New items are announced in the live region. The full list, in plain
+ * sentences with a "Stop this link" button, is on the Alerts page.
  */
+import { Bell } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { showTime } from "@/lib/i18n";
+import { showTime } from "@/lib/i18n-core";
 import { get } from "./api";
 import { useI18n } from "./I18n";
 import { announce } from "./Live";
+import { Popover } from "./Popover";
 
 const POLL_MS = 5000;
 const SEEN_KEY = "uv-bell-seen";
@@ -61,24 +65,22 @@ export function NotificationBell() {
     ? t("notify.issuer_change", { title: String(n.detail.title ?? ""), n: Array.isArray(n.detail.share_ids) ? n.detail.share_ids.length : 0 })
     : t(`notify.${n.kind}`, { code: n.recipientCode ?? "", purpose: n.purpose ?? "" });
   const unseen = items.filter((n) => n.at > seen).length;
-  const toggle = () => {
-    setOpen(!open);
-    if (!open && items[0]) { setSeen(items[0].at); try { localStorage.setItem(SEEN_KEY, items[0].at); } catch { /* ignore */ } }
+  const onToggle = (o: boolean) => {
+    setOpen(o);
+    if (o && items[0]) { setSeen(items[0].at); try { localStorage.setItem(SEEN_KEY, items[0].at); } catch { /* ignore */ } }
   };
 
   return (
-    <div className="bell">
-      <button type="button" className="bell-btn" aria-expanded={open} aria-controls="bell-panel" onClick={toggle}>
-        {t("bell.label")}{unseen ? <span className="bell-count"> {t("bell.count", { n: unseen })}</span> : null}
-      </button>
-      {open && (
-        <div id="bell-panel" className="bell-panel" role="region" aria-label={t("bell.label")}>
-          {items.length === 0 ? <p>{t("bell.empty")}</p> : (
-            <ul>{items.map((n) => <li key={n.id}><span className="meta">{showTime(n.at)}</span><br />{text(n)}</li>)}</ul>
-          )}
-          <p className="meta">{LIVE ? t("bell.realtime") : t("bell.polling")}</p>
-        </div>
+    <Popover
+      panelId="bell-panel"
+      panelLabel={t("bell.label")}
+      onToggle={onToggle}
+      label={<><Bell size={22} aria-hidden="true" />{t("bell.label")}{unseen && !open ? <span className="bell-count">{t("bell.count", { n: unseen })}</span> : null}</>}
+    >
+      {items.length === 0 ? <p>{t("bell.empty")}</p> : (
+        <ul>{items.slice(0, 6).map((n) => <li key={n.id}><span className="meta">{showTime(n.at)}</span><br />{text(n)}</li>)}</ul>
       )}
-    </div>
+      <Link href="/alerts" className="btn secondary">{t("bell.seeAll")}</Link>
+    </Popover>
   );
 }

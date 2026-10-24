@@ -38,6 +38,45 @@ export function hit(key: string, limit: Limit, now = Date.now()): { ok: true } |
   return { ok: true };
 }
 
+// ─────────────────────────── Failure lock (used by the simulated sign-in) ───────────────────────────
+//
+// "5 wrong tries lock it for 15 minutes." Same honest limit as above: the counters are in this server
+// instance's memory, so another serverless instance counts on its own. (The share links' own lock is
+// different: it is stored in the database, see shares.ts.)
+
+interface Lock { fails: number; since: number; lockedUntil: number }
+const locks = (): Map<string, Lock> => {
+  const g = globalThis as unknown as { __univaultLocks?: Map<string, Lock> };
+  return (g.__univaultLocks ??= new Map());
+};
+
+/** Is this key locked right now? */
+export function lockState(key: string, now = Date.now()): { locked: false } | { locked: true; retryAfterS: number } {
+  const l = locks().get(key);
+  return l && l.lockedUntil > now ? { locked: true, retryAfterS: Math.ceil((l.lockedUntil - now) / 1000) } : { locked: false };
+}
+
+/**
+ * Count one failure. The `max`-th failure inside `lockMs` locks the key for `lockMs`.
+ * Failures older than `lockMs` are forgotten.
+ */
+export function recordFailure(key: string, opts: { max: number; lockMs: number }, now = Date.now()): { locked: boolean; retryAfterS: number; left: number } {
+  const all = locks();
+  if (all.size > SWEEP_AT) for (const [k, v] of all) if (v.lockedUntil <= now && now - v.since > opts.lockMs) all.delete(k);
+  const cur = all.get(key);
+  const l: Lock = cur && cur.lockedUntil <= now && now - cur.since <= opts.lockMs ? cur : { fails: 0, since: now, lockedUntil: 0 };
+  l.fails++;
+  if (l.fails >= opts.max) { l.lockedUntil = now + opts.lockMs; l.fails = 0; all.set(key, l); return { locked: true, retryAfterS: Math.ceil(opts.lockMs / 1000), left: 0 }; }
+  all.set(key, l);
+  return { locked: false, retryAfterS: 0, left: opts.max - l.fails };
+}
+
+/** The sign-in rule: 5 wrong codes lock that demo number for 15 minutes. */
+export const SIGNIN_LOCK = { max: 5, lockMs: 15 * 60_000 };
+
+/** A success starts the count again. */
+export const clearFailures = (key: string) => { locks().delete(key); };
+
 /**
  * The visitor's address. Vercel puts the real client address first in x-forwarded-for (and overwrites
  * whatever the client sent). Self-hosted without a proxy, that header can be faked: the per-link limit

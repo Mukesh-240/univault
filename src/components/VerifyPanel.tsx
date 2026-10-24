@@ -14,7 +14,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { VerifyOutcome } from "@/lib/verify";
-import { fieldLabel, showTime } from "@/lib/i18n";
+import { showTime } from "@/lib/i18n-core";
 import { post } from "./api";
 import { StateBadge } from "./Badges";
 import { Explain } from "./Explain";
@@ -24,7 +24,7 @@ import { announce } from "./Live";
 interface Props { docId: string; title: string; initial?: VerifyOutcome }
 
 export function VerifyPanel({ docId, title, initial }: Props) {
-  const { lang, t } = useI18n();
+  const { lang, t, fieldLabel } = useI18n();
   const router = useRouter();
   const [outcome, setOutcome] = useState<VerifyOutcome | undefined>(initial);
   const [busy, setBusy] = useState(false);
@@ -42,7 +42,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
     setBusy(false);
     if (r.offline) { setProblem(t("api.offline")); announce(t("api.offline")); return; }
     if (!r.ok) {
-      const extra = r.data.unconfirmed?.length ? ` (${r.data.unconfirmed.map((f) => fieldLabel(lang, f)).join(", ")})` : "";
+      const extra = r.data.unconfirmed?.length ? ` (${r.data.unconfirmed.map((f) => fieldLabel(f)).join(", ")})` : "";
       const msg = r.status === 409 ? `${t("verify.confirmFirst")}${extra}` : r.data.error ?? t("api.failed");
       setProblem(msg);
       announce(msg);
@@ -70,23 +70,28 @@ export function VerifyPanel({ docId, title, initial }: Props) {
       </p>
       {o?.state === "tamper_flagged" && o.mismatchedFields.length > 0 && (
         <div className="callout neutral">
-          <p>{t("verify.neutral", { fields: o.mismatchedFields.map((f) => fieldLabel(lang, f)).join(", ") })}</p>
+          <p>{t("verify.neutral", { fields: o.mismatchedFields.map((f) => fieldLabel(f)).join(", ") })}</p>
           <ul className="diff-fields" aria-label={t("verify.differingFields")}>
-            {o.mismatchedFields.map((f) => <li key={f}><code>{fieldLabel(lang, f)}</code></li>)}
+            {o.mismatchedFields.map((f) => <li key={f}><code>{fieldLabel(f)}</code></li>)}
           </ul>
         </div>
       )}
       {o?.signatureValid === false && <p className="callout neutral">{t("verify.forged")}</p>}
       {o?.issuerUpdate && (
         <p className="callout neutral">{t("verify.issuerUpdate", { mine: o.issuerUpdate.matchesVersion, latest: o.issuerUpdate.latestVersion,
-          fields: o.issuerUpdate.changedFields.map((f) => fieldLabel(lang, f)).join(", ") })}</p>
+          fields: o.issuerUpdate.changedFields.map((f) => fieldLabel(f)).join(", ") })}</p>
       )}
       {unreachable && o.retry && (
         <p className="callout neutral">{o.retry.exhausted ? t("verify.retriesDone") : o.retry.nextRetryAt
           ? t("verify.nextRetry", { time: showTime(o.retry.nextRetryAt), n: o.retry.attemptsMade + 1 }) : null}</p>
       )}
       {problem && <p className="callout warn">{problem}</p>}
-      {o && <Explain explanation={o.explanation} kind="verification" targetId={docId} hideReason={o.state === "tamper_flagged" && o.mismatchedFields.length > 0} />}
+      {o && (
+        <details className="expert">
+          <summary>{t("ui.experts")}</summary>
+          <Explain explanation={o.explanation} kind="verification" targetId={docId} hideReason={o.state === "tamper_flagged" && o.mismatchedFields.length > 0} />
+        </details>
+      )}
       <div className="row">
         <button type="button" disabled={busy} onClick={() => run()} aria-describedby={`vt-${docId}`}>
           {busy ? t("verify.busy") : !o ? t("verify.run") : o.state === "unverifiable" ? t("verify.retryNow") : t("verify.again")}

@@ -76,8 +76,8 @@ export default async function OcrPage() {
       <p className="note">{t("ocr.unconfirmed")}</p>
       <OcrWorkbench items={items} engine={fixtures.engine} created={fixtures.created} />
 
-      <section className="panel" aria-labelledby="ocr-eval-h">
-        <h2 id="ocr-eval-h">{t("ocr.evalTitle")}</h2>
+      <details className="expert">
+        <summary>{t("ui.experts")}: {t("ocr.evalTitle")}</summary>
         <p className="note">{t("ocr.evalNote")}</p>
         <table>
           <caption>{t("ocr.accuracyCaption")}</caption>
@@ -113,7 +113,7 @@ export default async function OcrPage() {
           </tbody>
         </table>
         <p className="note">{t("ocr.calibNote")}</p>
-      </section>
+      </details>
     </>
   );
 }

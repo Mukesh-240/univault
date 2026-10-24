@@ -31,15 +31,18 @@ export default async function NamesPage() {
     const label = `${a.title} / ${b.title}`;
     return (
       <li key={`${p.a}|${p.b}`} className="card pair">
-        <h2 className="h3">{t("names.rank", { n: rank })}: {t(`verdict.${p.verdict}`)} · <span className="score">{t("conf.score", { value: p.score.toFixed(2) })}</span></h2>
-        <div className="names-compare">
-          <Name doc={a} field={p.fieldA} />
-          <span aria-hidden="true">↔</span>
-          <Name doc={b} field={p.fieldB} />
+        <h2 className="h3">{t("names.question")}</h2>
+        <div className="name-cards">
+          <div className="name-card"><p className="meta">{t("names.on", { title: a.title })}</p><p className="the-name"><Name doc={a} field={p.fieldA} /></p></div>
+          <div className="name-card"><p className="meta">{t("names.on", { title: b.title })}</p><p className="the-name"><Name doc={b} field={p.fieldB} /></p></div>
         </div>
-        <p className="meta">{a.title} · {b.title}</p>
-        <Explain explanation={p.explanation} kind="name_match" targetId={`${p.a}|${p.b}`} docs={titles} />
+        <p className="meta">{t("names.rank", { n: rank })}: {t(`verdict.${p.verdict}`)}</p>
         <NameDecision a={p.a} b={p.b} decision={p.decision} label={label} />
+        <details className="expert">
+          <summary>{t("ui.experts")}</summary>
+          <p className="score">{t("conf.score", { value: p.score.toFixed(2) })}</p>
+          <Explain explanation={p.explanation} kind="name_match" targetId={`${p.a}|${p.b}`} docs={titles} />
+        </details>
       </li>
     );
   };
