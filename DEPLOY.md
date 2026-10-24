@@ -1,5 +1,10 @@
 # Deploying UNIVAULT on Vercel
 
+**Live:** https://univault-zeta.vercel.app (project `univault`, deployed 2026-10-24 from the CLI with `npx vercel deploy --prod`).
+The GitHub repo is not connected to the Vercel project yet (the Vercel GitHub app has no access to
+`Mukesh-240/univault`), so a push does **not** redeploy: run `npx vercel deploy --prod --yes` from the repo root,
+or connect the repo under Project Settings → Git. `.vercelignore` keeps `.env*` (except `.env.example`) out of CLI uploads.
+
 This guide imports the GitHub repo into Vercel and connects it to the Supabase project that already holds the seeded demo data. It contains variable **names only**. Secret values never go in this file or in git.
 
 ## 1. Environment variables

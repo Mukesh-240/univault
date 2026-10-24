@@ -11,3 +11,7 @@ synthetic/out/labels/labels-heldout.json
 *.traineddata
 e2e-results
 test-results
+
+.vercel
+.env*
+!.env.example

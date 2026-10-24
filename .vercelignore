@@ -1,0 +1,15 @@
+# CLI deploys (vercel deploy) upload this folder; keep the upload identical to what git tracks.
+# Never upload secrets: .env.local and any other .env file except the names-only example.
+.env*
+!.env.example
+.vercel
+node_modules
+.next
+*.tsbuildinfo
+synthetic/out/data/dataset-dev.json
+synthetic/out/data/dataset-heldout.json
+synthetic/out/labels/labels-dev.json
+synthetic/out/labels/labels-heldout.json
+*.traineddata
+e2e-results
+test-results

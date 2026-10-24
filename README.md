@@ -10,7 +10,7 @@
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase&logoColor=white)
 ![synthetic data](https://img.shields.io/badge/data-100%25%20synthetic-F4A53B)
 
-**Live demo: [VERCEL URL TO BE ADDED]**
+**Live demo: [https://univault-zeta.vercel.app](https://univault-zeta.vercel.app)** (synthetic data only; region Mumbai `bom1`)
 
 > Every person, document, issuer and recipient here is **synthetic**. The issuer is a **simulation**.
 > The hashes and signatures are real cryptography, but no government or university system is connected.

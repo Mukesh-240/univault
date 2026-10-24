@@ -1,5 +1,5 @@
 # UNIVAULT HANDOFF
-Last updated: 2026-10-24 (Phase 6 committed) · Commit: 4b60328 (phase 6) + this handoff commit · Phase: 6 done, waiting for Vercel URL
+Last updated: 2026-10-24 (Phase 6 committed) · Commit: 4b60328 (phase 6) + this handoff commit · Phase: 6 done, LIVE on Vercel
 
 ## 1. What this is (3 lines max)
 UNIVAULT for IMPACTX 2026 Challenge 02. The promise: "Prove you're ready. Share only what's needed. Take it back."
@@ -34,18 +34,19 @@ Env var names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ISS
   - Rate limits: `src/lib/rate-limit.ts`, 60/min per IP and 20/min per link, on `/s/[token]` (GET+POST) and `/s/[token]/download`; 429 + Retry-After + plain en/te message. In-memory PER INSTANCE (stated in README + threat model).
   - Lockout: 5 wrong/reused codes in a row → a `locked` access_log row → 15 min of 429 for every attempt incl. the right code; owner notification `share_locked`. Derived from the DB, so it holds across instances. Tests `tests/lockout.test.ts` + e2e in `e2e/share.e2e.ts`.
   - Perf: Noto Telugu font is now only on Telugu pages, not preloaded, and installed Telugu fonts (Nirmala UI, Kohinoor Telugu) come first. Fixed a `/api/notifications` fetch loop (useI18n returned a new t() each render). English vault on Slow 3G: 12.0 s / 405 KB → 7.2 s / 169 KB, first paint 4.5 s. Telugu vault on the test machine: 7.2 s / 183 KB (system font present).
+- Live smoke test (2026-10-24, https://univault-zeta.vercel.app): health 200 db up; vault 200 (11 cards, no offline banner); POST /api/verify 200 verified (signature true); share preview 200 → confirm 201 → gate 200 → code 200 → wrong code 403 → right code 200 watermarked; owner got wrong_code_attempt + first_open for that share; cron without/with wrong secret 401; CSP, XFO DENY, Referrer no-referrer, nosniff, HSTS present; /threat-model 200, /policy 200. Smoke left one active share (purpose = first recipient's org, 1-day expiry) on the live DB.
 - Verification run (2026-10-24, live DB): tsc clean; `npm test` 183 passed (20 files, live-DB tests ran); Playwright 37 passed; axe 30 runs (15 pages × en/te) 0 violations; eval dev P 100% / R 97.8% / 0 FA, held-out P 100% / R 96.6% / 0 FA, showcase 17/17; `npm audit` 0; clean build without `.env.local` green.
 ### Not met / not built
 - Slow 3G vault < 6 s to the load event: NOT met (7.2 s). The React+Next runtime is ~102 KB, which is about the floor. Next lever: send only the active locale dictionary to the client (~17 KB net, about 0.35 s). Devices without a Telugu system font also download 124.6 KB of font on Telugu pages.
 - Overrides and disputes are recorded but do not change decisions.
-- Vercel deploy (the user imports it) and the smoke test against the URL.
+- Auto-deploy from GitHub: the Vercel project is not connected to the repo (Vercel GitHub app lacks access). Deploy with `npx vercel deploy --prod --yes`.
 
 ## 4. Next 5 actions
-1. Wait for the user to import the repo on Vercel (`DEPLOY.md`, now 8 env vars incl. `CRON_SECRET`) and send the URL.
-2. Smoke test the URL: `/api/health` (expect `db:"up"`), the vault page, one `POST /api/verify`, one share flow (preview → confirm → `/s/<token>` gate → code → open → kill), and `GET /api/cron/recheck` without auth (expect 401). Report any failures.
-3. Replace `[VERCEL URL TO BE ADDED]` in README.md with the URL. Commit "docs: live demo URL", push, update CHANGELOG + this file.
-4. If the user agrees: reset the live demo data (`DEPLOY.md` §4, owner SQL), then `npm run seed` and `npm run db:check`. Do not run e2e against the live DB afterwards (it creates shares, including one locked share).
-5. Optional perf: per-language dictionary on the client (see §3 "Not met").
+1. Wait for the user's go-ahead, then reset the live demo data (`DEPLOY.md` §4, owner SQL), `npm run seed`, `npm run db:check`. Do not run e2e against the live DB afterwards (it creates shares, including one locked share).
+2. After the reset, re-run the live smoke test (scratch script pattern: health, vault, verify, share flow with wrong + right code, cron 401, headers, /threat-model, /policy) against https://univault-zeta.vercel.app.
+3. Optional: connect the GitHub repo in Vercel (Project Settings → Git) so pushes auto-deploy.
+4. Optional perf: per-language dictionary on the client (see §3 "Not met").
+5. Check the first scheduled cron run (03:00 UTC) in Vercel → Project → Logs (`scheduled recheck done`).
 
 ## 5. Decisions made
 - 2026-10-24: The offline in-memory store is allowed in dev only, or with `UNIVAULT_OFFLINE_DEMO=1`. Production without a key shows "Database not configured". Reason: never silently fake a DB.
@@ -100,7 +101,7 @@ Env var names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ISS
 ## 9. External state
 - GitHub: https://github.com/Mukesh-240/univault (branch `main`).
 - Supabase project ref `opgoukjysnsfzzjnfhxa`. Migrations 001, 002 and 003 are applied (confirmed by `db:check` and the live tests). Seeded once, on 2026-10-24. No new migration in Phase 6.
-- Vercel: not yet imported. URL: none yet.
+- Vercel: project `univault` (team `zevel`), linked via `.vercel/` (gitignored). Production URL: https://univault-zeta.vercel.app. 8 env vars set for Production + Preview from `.env.local` (CRON_SECRET generated fresh, stored only in Vercel). `UNIVAULT_OFFLINE_DEMO` not set. Deployment protection is off for the production alias (`/s/test` returns the app's own 403 page).
 
 ## 10. Open questions for the user
 - Reset the live demo data (`DEPLOY.md` §4) before judging?
