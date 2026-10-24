@@ -1310,5 +1310,16 @@
  "stepper.open.2.next": "A one-time code is made for you (shown on screen).",
  "stepper.open.3.next": "If the code is right, the shared items open.",
  "stepper.open.4.next": "The owner can stop this link at any time.",
- "elig.trailDone": "Sent. The receiver sees only these answers."
+ "elig.trailDone": "Sent. The receiver sees only these answers.",
+ "stepper.erase.1": "Read the limits",
+ "stepper.erase.2": "Confirm",
+ "stepper.erase.3": "Done",
+ "stepper.erase.1.here": "Erasing removes the content for good. Read what it can and cannot do.",
+ "stepper.erase.1.next": "You tick that you understand, then confirm.",
+ "stepper.erase.3.here": "The content is gone. The steps that ran are listed below.",
+ "stepper.names.1": "Compare",
+ "stepper.names.2": "Your answer",
+ "stepper.names.1.here": "UNIVAULT shows two names and how close they are. It never decides for you.",
+ "stepper.names.1.next": "Your answer is recorded; nothing is merged.",
+ "stepper.names.2.here": "Your answer is recorded below. You can change it later."
 }

@@ -10,6 +10,7 @@
 import Link from "next/link";
 import { Explain } from "@/components/Explain";
 import { NameDecision } from "@/components/NameDecision";
+import { Stepper } from "@/components/Steps";
 import { hasTelugu } from "@/lib/i18n";
 import { getI18n } from "@/lib/i18n-server";
 import { candidatePairs, type CandidatePair } from "@/lib/resolution";
@@ -57,6 +58,7 @@ export default async function NamesPage({ searchParams }: { searchParams: Promis
       <h1>{t("names.title")}</h1>
       <p className="lead">{t("names.intro")}</p>
       <p className="note">{t("names.never")}</p>
+      <Stepper steps={["stepper.names.1", "stepper.names.2"]} current={1} here="stepper.names.1.here" next="stepper.names.1.next" />
       {ranked.length === 0 ? <p>{t("names.none")}</p> : (
         <>
           <p className="meta">{t("names.showing", { shown, total: ranked.length })}</p>

@@ -26,8 +26,8 @@ export async function POST(req: Request) {
   if (!parsed.success) return badRequest(parsed.error);
   const { document_id } = parsed.data;
   try {
-    const doc = await supabase.from("documents").select("id, owner, document_payloads(document_id)").eq("id", document_id).single();
-    const d = doc.data as { owner: string; document_payloads: unknown | null } | null;
+    const doc = await supabase.from("documents").select("id, owner, sha256, document_payloads(document_id)").eq("id", document_id).single();
+    const d = doc.data as { owner: string; sha256: string; document_payloads: unknown | null } | null;
     if (doc.error || !d || d.owner !== DEMO_OWNER) return NextResponse.json({ error: "Document not found." }, { status: 404 });
     if (!d.document_payloads) return NextResponse.json({ error: "This document was already erased." }, { status: 409 });
 
@@ -40,8 +40,9 @@ export async function POST(req: Request) {
     if (del.error) throw new Error(del.error.message);
     const ev = await supabase.from("document_events").insert({ document_id, state: "erased", detail: { revoked_shares: revoked.length } });
     if (ev.error) throw new Error(ev.error.message);
-    await append(supabase, "document.erased", { document_id, revoked_shares: revoked });
-    return NextResponse.json({ erased: true, revoked_shares: revoked, kept: ["fingerprint", "document type", "event times"] });
+    const line = await append(supabase, "document.erased", { document_id, revoked_shares: revoked });
+    // sha256 (the kept fingerprint) and the ledger line feed the on-screen step trail.
+    return NextResponse.json({ erased: true, revoked_shares: revoked, kept: ["fingerprint", "document type", "event times"], sha256: d.sha256, ledger_seq: line.seq });
   } catch (e) {
     log("error", "erase failed", { message: e instanceof Error ? e.message : "unknown" });
     return serverError("erase this document");

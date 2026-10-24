@@ -15,6 +15,8 @@ import { hasTelugu } from "@/lib/i18n-core";
 import { post } from "./api";
 import { useI18n } from "./I18n";
 import { announce } from "./Live";
+import { Stepper, StepTrail } from "./Steps";
+import { fixTrail } from "@/lib/trail";
 import { Reason } from "./Reason";
 import { Chip } from "./StatusChip";
 
@@ -26,6 +28,7 @@ export function FieldReview({ docId, fields, idPrefix }: { docId: string; fields
   const [busy, setBusy] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [last, setLast] = useState<{ field: string; confidence?: number; action: "confirmed" | "corrected" } | null>(null);
 
   const save = async (f: ReviewField, value: string) => {
     setBusy(f.name);
@@ -35,7 +38,7 @@ export function FieldReview({ docId, fields, idPrefix }: { docId: string; fields
     const msg = r.offline ? t("api.offline") : !r.ok ? t("api.failed")
       : value === f.original ? t("review.confirmedMsg", { field: label }) : t("review.correctedMsg", { field: label });
     announce(msg);
-    if (r.ok) { setEditing(null); router.refresh(); }
+    if (r.ok) { setEditing(null); setLast({ field: f.name, confidence: f.confidence, action: value === f.original ? "confirmed" : "corrected" }); router.refresh(); }
   };
 
   const startFix = (f: ReviewField, inputId: string) => {
@@ -45,6 +48,9 @@ export function FieldReview({ docId, fields, idPrefix }: { docId: string; fields
   };
 
   return (
+    <>
+    <Stepper steps={["stepper.fix.1", "stepper.fix.2"]} current={last ? 2 : 1} here="stepper.fix.1.here" next="stepper.fix.1.next" />
+    {last && <StepTrail steps={fixTrail(last)} id={`${idPrefix}-trail-h`} />}
     <ul className="cardlist field-boxes" aria-label={t("review.caption")}>
       {fields.map((f) => {
         const inputId = `${idPrefix}-${f.name}`;
@@ -81,5 +87,6 @@ export function FieldReview({ docId, fields, idPrefix }: { docId: string; fields
         );
       })}
     </ul>
+    </>
   );
 }
