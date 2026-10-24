@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const r = await runVerification(supabase, document_id, serverKey("ISSUER_PUBLIC_KEY"),
       first_failure_at ? { firstFailureAt: first_failure_at, attemptsMade: attempts_made ?? 0 } : undefined);
     if (!r.ok) return NextResponse.json({ error: r.error, ...(r.unconfirmed ? { unconfirmed: r.unconfirmed } : {}) }, { status: r.status });
-    return NextResponse.json(r.outcome);
+    return NextResponse.json({ ...r.outcome, ledger_seq: r.ledgerSeq });
   } catch (e) {
     log("error", "verify failed", { message: e instanceof Error ? e.message : "unknown" });
     return serverError("verify this document");

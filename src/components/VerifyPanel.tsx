@@ -21,6 +21,8 @@ import { Explain } from "./Explain";
 import { useI18n } from "./I18n";
 import { announce } from "./Live";
 import { SealMoment } from "./SealMoment";
+import { Stepper, StepTrail, UnderTheHood } from "./Steps";
+import { verifyTrail } from "@/lib/trail";
 
 interface Props { docId: string; title: string; initial?: VerifyOutcome }
 
@@ -28,6 +30,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
   const { lang, t, fieldLabel } = useI18n();
   const router = useRouter();
   const [outcome, setOutcome] = useState<VerifyOutcome | undefined>(initial);
+  const [ledgerSeq, setLedgerSeq] = useState<number | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [seal, setSeal] = useState(false);
@@ -40,7 +43,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
     setBusy(true);
     setProblem(null);
     announce(t("verify.checking", { title }));
-    const r = await post<VerifyOutcome & { error?: string; unconfirmed?: string[] }>("/api/verify", { document_id: docId, ...(retry ?? {}) });
+    const r = await post<VerifyOutcome & { error?: string; unconfirmed?: string[]; ledger_seq?: number }>("/api/verify", { document_id: docId, ...(retry ?? {}) });
     setBusy(false);
     if (r.offline) { setProblem(t("api.offline")); announce(t("api.offline")); return; }
     if (!r.ok) {
@@ -52,6 +55,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
     }
     const o = r.data;
     setOutcome(o);
+    setLedgerSeq(o.ledger_seq);
     if (o.state === "verified") setSeal(true); // the scan-and-stamp moment
     announce(t("verify.result", { title, state: t(`state.${o.state}`) }));
     router.refresh();
@@ -67,6 +71,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
   const unreachable = o?.state === "unverifiable" && o.retry;
   return (
     <div className="verify-panel">
+      <Stepper steps={["stepper.verify.1", "stepper.verify.2"]} current={o ? 2 : 1} here={o ? "stepper.verify.2.here" : "stepper.verify.1.here"} next={o ? undefined : "stepper.verify.1.next"} />
       {seal && <SealMoment onDone={() => setSeal(false)} />}
       <p className="verify-state">
         {o ? <StateBadge state={o.state} t={t} /> : <StateBadge state="not_checked" t={t} />}
@@ -90,6 +95,8 @@ export function VerifyPanel({ docId, title, initial }: Props) {
           ? t("verify.nextRetry", { time: showTime(o.retry.nextRetryAt), n: o.retry.attemptsMade + 1 }) : null}</p>
       )}
       {problem && <p className="callout warn">{problem}</p>}
+      {o && <StepTrail steps={verifyTrail(o, ledgerSeq)} id={`verify-trail-${docId}`} />}
+      {o && <UnderTheHood items={["sha256", "ed25519", "ledger"]} />}
       {o && (
         <details className="expert">
           <summary>{t("ui.experts")}</summary>

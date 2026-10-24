@@ -16,7 +16,7 @@ import { decideVerification, fieldsToVerify, lookupWithTimeout, type VerifyOutco
 type Db = Pick<SupabaseClient, "from" | "rpc">;
 
 export type VerifyRun =
-  | { ok: true; outcome: VerifyOutcome }
+  | { ok: true; outcome: VerifyOutcome; ledgerSeq?: number }
   | { ok: false; status: number; error: string; unconfirmed?: string[] };
 
 export async function runVerification(db: Db, documentId: string, issuerPubB64: string,
@@ -46,9 +46,10 @@ export async function runVerification(db: Db, documentId: string, issuerPubB64: 
   const outcome = decideVerification(toCheck.fields, toCheck.kind, reply, issuerPubB64, new Date(), retry, payload.content.salts);
   const ev = await db.from("document_events").insert({ document_id: documentId, state: outcome.state, detail: { outcome, registry_version: outcome.registryVersion ?? null, method: outcome.method } });
   if (ev.error) throw new Error(ev.error.message);
-  await append(db, "document.verification", {
+  const line = await append(db, "document.verification", {
     document_id: documentId, state: outcome.state, method: outcome.method, registry_version: outcome.registryVersion ?? null,
     signature_valid: outcome.signatureValid ?? null, checked_at: outcome.checkedAt, issuer_update: Boolean(outcome.issuerUpdate),
   });
-  return { ok: true, outcome: { ...outcome, explanation: { ...outcome.explanation, documentIds: [documentId] } } };
+  // ledgerSeq only tells the screen which ledger line was written (for its step trail); it changes no decision.
+  return { ok: true, ledgerSeq: line.seq, outcome: { ...outcome, explanation: { ...outcome.explanation, documentIds: [documentId] } } };
 }
