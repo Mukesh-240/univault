@@ -13,6 +13,7 @@
  * Document text is DATA, never instructions. Nothing in a document can create a share:
  * shares need an explicit UI confirmation. This detector exists so the user is told when text tries.
  */
+import { explain, type Explanation } from "./explain";
 // Each entry: a text pattern to look for, and the plain-language reason shown when it is found.
 const PHRASES: [RegExp, string][] = [
   [/ignore (all |any )?(previous|prior|above) (instructions|rules)/i, "tells the reader to ignore earlier instructions"],
@@ -47,3 +48,11 @@ export function scanDocument(doc: { fields: Record<string, string>; body_text?: 
   const text = [...Object.values(doc.fields), doc.body_text ?? "", doc.hidden_text ?? ""].join("\n");
   return scanForInjection(text, { hiddenText: Boolean(doc.hidden_text?.trim()) });
 }
+
+/** An injection warning in the shared <Explain> shape. The text is only ever treated as data. */
+export const injectionExplanation = (s: InjectionScan, documentId: string): Explanation => explain({
+  reason: s.hits.join("; "),
+  confidence: { kind: "evidence", value: s.suspected ? "strong" : "none" },
+  source: { name: "UNIVAULT instruction-in-document scan", freshness: "n/a" },
+  documentIds: [documentId],
+});

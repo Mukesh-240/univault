@@ -2,7 +2,8 @@
  * SERVER HELPERS — small shared pieces for the API routes (server-side only).
  *
  *   serverKey()      reads a signing key from .env.local and fails loudly if it is missing.
- *   loadDemoVault()  loads the demo vault and re-labels any verification older than 24 h as stale.
+ *   loadDemoVault()  loads the demo vault and re-labels any verification older than 24 h as stale
+ *                    (or, under the "stale data" fault, any made before that fault was switched on).
  *   DEMO_OWNER       this prototype has no login; every route works on the one demo vault
  *                    (stated as a demo-mode limit in the threat model).
  *   badRequest()     a uniform "your request was malformed" answer that never echoes the input.
@@ -10,13 +11,14 @@
 import { NextResponse } from "next/server";
 import type { ZodError } from "zod";
 import { todayIso } from "./dates";
+import { freshnessClock } from "./faults";
 import { supabase } from "./supabase";
 import { loadVault, type EngineContext } from "./vault";
 import { withFreshness } from "./verify";
 
 export const DEMO_OWNER = "demo";
 
-type KeyName = "ISSUER_PUBLIC_KEY" | "VAULT_PRIVATE_KEY" | "VAULT_PUBLIC_KEY";
+type KeyName = "ISSUER_PRIVATE_KEY" | "ISSUER_PUBLIC_KEY" | "VAULT_PRIVATE_KEY" | "VAULT_PUBLIC_KEY"; // ISSUER_PRIVATE_KEY: only the SIMULATED issuer (fault panel) signs with it
 export function serverKey(name: KeyName): string {
   const v = process.env[name];
   if (!v) throw new Error(`${name} is not set (server-only key; see UNIVAULT_SPEC.md section 12).`);
@@ -26,7 +28,7 @@ export function serverKey(name: KeyName): string {
 export async function loadDemoVault(now = new Date()): Promise<EngineContext> {
   const ctx = await loadVault(supabase, DEMO_OWNER, todayIso(now));
   const verification: EngineContext["verification"] = {};
-  for (const [id, v] of Object.entries(ctx.verification)) verification[id] = v ? withFreshness(v, now) : v;
+  for (const [id, v] of Object.entries(ctx.verification)) verification[id] = v ? withFreshness(v, freshnessClock(v.checkedAt, now)) : v;
   return { ...ctx, verification };
 }
 

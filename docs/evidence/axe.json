@@ -1,0 +1,146 @@
+[
+ {
+  "page": "/",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/readiness",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/names",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/ocr",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/verify",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/assistant",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/faults",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/s/preview?purpose=scholarship",
+  "lang": "en",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/readiness",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/names",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/ocr",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/verify",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/assistant",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/faults",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ },
+ {
+  "page": "/s/preview?purpose=scholarship",
+  "lang": "te",
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "rules": []
+ }
+]

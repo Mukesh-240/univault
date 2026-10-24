@@ -1,0 +1,281 @@
+{
+ "note": "Telugu renderings of the engines' English reason sentences. pattern -> te template; $1.. = captured text, $L1 = a '; '-separated list translated item by item, $R1 = captured text translated again. Presentation only: never used in decisions.",
+ "patterns": [
+  {
+   "pattern": "^Expired (\\d+) days? ago \\(valid until (\\S+)\\)\\.$",
+   "te": "గడువు $1 రోజుల క్రితం ముగిసింది ($2 వరకు చెల్లుబాటు)."
+  },
+  {
+   "pattern": "^Valid until today \\((\\S+)\\)\\.$",
+   "te": "ఈ రోజు ($1) వరకు చెల్లుతుంది."
+  },
+  {
+   "pattern": "^Valid until (\\S+) \\((\\d+) days? left\\)\\.$",
+   "te": "$1 వరకు చెల్లుతుంది ($2 రోజులు మిగిలి ఉన్నాయి)."
+  },
+  {
+   "pattern": "^No expiry date on this document\\.$",
+   "te": "ఈ పత్రంపై గడువు తేదీ లేదు."
+  },
+  {
+   "pattern": "^The dates were read by OCR and are not confirmed yet\\.$",
+   "te": "తేదీలను OCR చదివింది; ఇంకా నిర్ధారించలేదు."
+  },
+  {
+   "pattern": "^Can't read the expiry date \"(.*)\"\\.$",
+   "te": "గడువు తేదీ \"$1\" చదవలేకపోయాం."
+  },
+  {
+   "pattern": "^Not valid yet: the issue date (\\S+) is after today \\((\\S+)\\)\\.$",
+   "te": "ఇంకా చెల్లదు: జారీ తేదీ $1 ఈ రోజు ($2) తర్వాత ఉంది."
+  },
+  {
+   "pattern": "^No (.+) in the vault\\.$",
+   "te": "వాల్ట్‌లో $1 లేదు."
+  },
+  {
+   "pattern": "^(\\d+) found\\.$",
+   "te": "$1 కనుగొనబడింది."
+  },
+  {
+   "pattern": "^Not checked with the issuer yet\\.$",
+   "te": "ఇంకా జారీదారుతో తనిఖీ చేయలేదు."
+  },
+  {
+   "pattern": "^Fewer than two documents with a name to compare\\.$",
+   "te": "పోల్చడానికి పేరు ఉన్న పత్రాలు రెండు కంటే తక్కువ ఉన్నాయి."
+  },
+  {
+   "pattern": "^You confirmed these are the same person\\.$",
+   "te": "ఇవి ఒకే వ్యక్తివని మీరు నిర్ధారించారు."
+  },
+  {
+   "pattern": "^You marked these as different people\\.$",
+   "te": "ఇవి వేర్వేరు వ్యక్తులవని మీరు గుర్తించారు."
+  },
+  {
+   "pattern": "^A name was read by OCR and is not confirmed yet\\.$",
+   "te": "ఒక పేరును OCR చదివింది; ఇంకా నిర్ధారించలేదు."
+  },
+  {
+   "pattern": "^Names are identical\\.$",
+   "te": "పేర్లు సరిగ్గా ఒకటే."
+  },
+  {
+   "pattern": "^Names look like different people: (.+)\\.$",
+   "te": "పేర్లు వేర్వేరు వ్యక్తులవిగా కనిపిస్తున్నాయి: $L1."
+  },
+  {
+   "pattern": "^Probably the same person \\(([\\d.]+)\\): (.+)\\.$",
+   "te": "బహుశా ఒకే వ్యక్తి ($1): $L2."
+  },
+  {
+   "pattern": "^Please confirm the link\\.$",
+   "te": "దయచేసి లింక్‌ను నిర్ధారించండి."
+  },
+  {
+   "pattern": "^Digital original: nothing to confirm\\.$",
+   "te": "డిజిటల్ అసలు పత్రం: నిర్ధారించాల్సింది ఏమీ లేదు."
+  },
+  {
+   "pattern": "^You confirmed every field read from this scan\\.$",
+   "te": "ఈ స్కాన్ నుండి చదివిన ప్రతి వివరాన్ని మీరు నిర్ధారించారు."
+  },
+  {
+   "pattern": "^(\\d+) field\\(s\\) read by OCR are not confirmed yet; please check these first: (.+)\\.$",
+   "te": "OCR చదివిన $1 వివరాలు ఇంకా నిర్ధారించలేదు; ముందుగా వీటిని చూడండి: $2."
+  },
+  {
+   "pattern": "^(\\d+) field\\(s\\) read by OCR are not confirmed yet\\.$",
+   "te": "OCR చదివిన $1 వివరాలు ఇంకా నిర్ధారించలేదు."
+  },
+  {
+   "pattern": "^No date of birth on this document\\.$",
+   "te": "ఈ పత్రంపై పుట్టిన తేదీ లేదు."
+  },
+  {
+   "pattern": "^The date of birth was read by OCR and is not confirmed yet\\.$",
+   "te": "పుట్టిన తేదీని OCR చదివింది; ఇంకా నిర్ధారించలేదు."
+  },
+  {
+   "pattern": "^Can't read the date of birth \"(.*)\"\\.$",
+   "te": "పుట్టిన తేదీ \"$1\" చదవలేకపోయాం."
+  },
+  {
+   "pattern": "^Age (\\d+) today \\(born (\\S+)\\)\\.$",
+   "te": "ఈ రోజు వయస్సు $1 (పుట్టిన తేదీ $2)."
+  },
+  {
+   "pattern": "^Age (\\d+) today \\(born (\\S+)\\); needs to be at least (\\d+)\\.$",
+   "te": "ఈ రోజు వయస్సు $1 (పుట్టిన తేదీ $2); కనీసం $3 ఉండాలి."
+  },
+  {
+   "pattern": "^(.+) \\(stale: last verified (\\d+) h ago; will be re-checked before any share\\)$",
+   "te": "$R1 (పాతది: చివరిసారి $2 గంటల క్రితం ధృవీకరించబడింది; ఏదైనా షేర్‌కు ముందు మళ్లీ తనిఖీ చేయబడుతుంది)"
+  },
+  {
+   "pattern": "^Unverified: issuer unreachable at (\\d\\d:\\d\\d) UTC, retrying\\.$",
+   "te": "ధృవీకరించబడలేదు: $1 UTC కి జారీదారు అందుబాటులో లేరు, మళ్లీ ప్రయత్నిస్తున్నాం."
+  },
+  {
+   "pattern": "^Unverified: issuer unreachable at (\\d\\d:\\d\\d) UTC\\. Automatic retries finished; use \"Retry now\"\\.$",
+   "te": "ధృవీకరించబడలేదు: $1 UTC కి జారీదారు అందుబాటులో లేరు. ఆటోమేటిక్ ప్రయత్నాలు ముగిశాయి; \"ఇప్పుడే మళ్లీ ప్రయత్నించండి\" నొక్కండి."
+  },
+  {
+   "pattern": "^No matching record found at the issuer for this serial number\\.$",
+   "te": "ఈ సీరియల్ నంబర్‌కు జారీదారు వద్ద సరిపోలే రికార్డు లేదు."
+  },
+  {
+   "pattern": "^The issuer's reply failed its signature check, so it was not trusted\\.$",
+   "te": "జారీదారు సమాధానం సంతకం తనిఖీలో విఫలమైంది, కాబట్టి దానిని నమ్మలేదు."
+  },
+  {
+   "pattern": "^The issuer has revoked this record\\.$",
+   "te": "జారీదారు ఈ రికార్డును రద్దు చేశారు."
+  },
+  {
+   "pattern": "^The issuer replaced this record with (.+)\\.$",
+   "te": "జారీదారు ఈ రికార్డును $1 తో మార్చారు."
+  },
+  {
+   "pattern": "^The issuer replaced this record\\.$",
+   "te": "జారీదారు ఈ రికార్డును మార్చారు."
+  },
+  {
+   "pattern": "^Byte-for-byte match with the issuer's record\\.$",
+   "te": "జారీదారు రికార్డుతో ప్రతి బైట్ సరిపోలింది."
+  },
+  {
+   "pattern": "^Content matches the issuer's record on (\\d+) of (\\d+) fields \\(checked from a scan; weaker evidence than a file match\\)\\.$",
+   "te": "విషయం జారీదారు రికార్డుతో $2 లో $1 వివరాల్లో సరిపోలింది (స్కాన్ నుండి తనిఖీ; ఫైల్ సరిపోలిక కంటే బలహీనమైన ఆధారం)."
+  },
+  {
+   "pattern": "^All (\\d+) field values match the issuer's record, but this copy is not byte-identical \\(spacing or formatting differs\\); weaker evidence than a file match\\.$",
+   "te": "మొత్తం $1 వివరాలు జారీదారు రికార్డుతో సరిపోలాయి, కానీ ఈ ప్రతి బైట్‌కు బైట్ ఒకటి కాదు (ఖాళీలు లేదా ఫార్మాట్ తేడా); ఫైల్ సరిపోలిక కంటే బలహీనమైన ఆధారం."
+  },
+  {
+   "pattern": "^This copy doesn't match the issuer's record in: (.+)\\. This can happen with a scanning or typing mistake; please check it against your original\\.$",
+   "te": "ఈ ప్రతి జారీదారు రికార్డుతో ఈ వివరాల్లో సరిపోలడం లేదు: $1. ఇది స్కానింగ్ లేదా టైపింగ్ పొరపాటు వల్ల కావచ్చు; దయచేసి మీ అసలు పత్రంతో పోల్చి చూడండి."
+  },
+  {
+   "pattern": "^The issuer has published an updated record \\(version (\\d+)\\)\\. Your copy matches the earlier version (\\d+); changed: (.+)\\. Please get the updated document\\.$",
+   "te": "జారీదారు నవీకరించిన రికార్డును (వెర్షన్ $1) ప్రచురించారు. మీ ప్రతి పాత వెర్షన్ $2 తో సరిపోలుతుంది; మారినవి: $3. దయచేసి నవీకరించిన పత్రాన్ని పొందండి."
+  },
+  {
+   "pattern": "^\"(.+)\" matches exactly$",
+   "te": "\"$1\" సరిగ్గా సరిపోలింది"
+  },
+  {
+   "pattern": "^initial \"(.+)\" could stand for \"(.+)\"$",
+   "te": "పొడి అక్షరం \"$1\" అంటే \"$2\" కావచ్చు"
+  },
+  {
+   "pattern": "^\"(.+)\" and \"(.+)\" sound the same \\(spelling or script variant\\)$",
+   "te": "\"$1\" మరియు \"$2\" ఒకేలా పలుకుతాయి (స్పెల్లింగ్ లేదా లిపి తేడా)"
+  },
+  {
+   "pattern": "^\"(.+)\" is similar to \"(.+)\" \\(([\\d.]+)\\)$",
+   "te": "\"$1\" అనేది \"$2\" ను పోలి ఉంది ($3)"
+  },
+  {
+   "pattern": "^\"(.+)\" has no counterpart$",
+   "te": "\"$1\" కు జత లేదు"
+  },
+  {
+   "pattern": "^\"(.+)\" only appears in one name$",
+   "te": "\"$1\" ఒక పేరులో మాత్రమే ఉంది"
+  },
+  {
+   "pattern": "^same words in a different order$",
+   "te": "అవే పదాలు వేరే క్రమంలో"
+  },
+  {
+   "pattern": "^\"(.+)\" and \"(.+)\" are different name parts$",
+   "te": "\"$1\" మరియు \"$2\" వేర్వేరు పేరు భాగాలు"
+  },
+  {
+   "pattern": "^low reading confidence \\(([\\d.]+)\\)$",
+   "te": "చదివిన నమ్మకం తక్కువ ($1)"
+  },
+  {
+   "pattern": "^a letter appears where a digit is expected \\(common OCR confusion\\)$",
+   "te": "అంకె ఉండాల్సిన చోట అక్షరం ఉంది (సాధారణ OCR పొరపాటు)"
+  },
+  {
+   "pattern": "^These two documents have identical content\\.$",
+   "te": "ఈ రెండు పత్రాల విషయం సరిగ్గా ఒకటే."
+  },
+  {
+   "pattern": "^Same serial number and the same values: this looks like a scan of the same paper\\.$",
+   "te": "ఒకే సీరియల్ నంబర్, అవే విలువలు: ఇది అదే కాగితం స్కాన్‌లా ఉంది."
+  },
+  {
+   "pattern": "^Same values, written slightly differently \\(capitalisation or date style\\)\\.$",
+   "te": "అవే విలువలు, కొంచెం వేరేగా రాసినవి (పెద్ద అక్షరాలు లేదా తేదీ శైలి)."
+  },
+  {
+   "pattern": "^Both documents carry the same serial number, but some values differ\\.$",
+   "te": "రెండు పత్రాలకూ ఒకే సీరియల్ నంబర్ ఉంది, కానీ కొన్ని విలువలు వేరు."
+  },
+  {
+   "pattern": "^One may contain a scanning or typing mistake\\.$",
+   "te": "ఒకదానిలో స్కానింగ్ లేదా టైపింగ్ పొరపాటు ఉండవచ్చు."
+  },
+  {
+   "pattern": "^Documents show different dates of birth: (.+)\\.$",
+   "te": "పత్రాల్లో వేర్వేరు పుట్టిన తేదీలు ఉన్నాయి: $1."
+  },
+  {
+   "pattern": "^Same date of birth on every document \\(different print styles are fine\\)\\.$",
+   "te": "ప్రతి పత్రంలో ఒకే పుట్టిన తేదీ (ముద్రణ శైలి తేడా పర్వాలేదు)."
+  },
+  {
+   "pattern": "^Only one date of birth on file\\.$",
+   "te": "ఒకే పుట్టిన తేదీ నమోదై ఉంది."
+  },
+  {
+   "pattern": "^A date of birth could not be read with certainty\\.$",
+   "te": "ఒక పుట్టిన తేదీని ఖచ్చితంగా చదవలేకపోయాం."
+  },
+  {
+   "pattern": "^tells the reader to ignore earlier instructions$",
+   "te": "ముందటి సూచనలను పట్టించుకోవద్దని చెబుతోంది"
+  },
+  {
+   "pattern": "^asks to share every document$",
+   "te": "ప్రతి పత్రాన్నీ షేర్ చేయమని అడుగుతోంది"
+  },
+  {
+   "pattern": "^addresses an AI assistant directly$",
+   "te": "నేరుగా AI సహాయకుడిని ఉద్దేశించి మాట్లాడుతోంది"
+  },
+  {
+   "pattern": "^asks to hide actions from the user$",
+   "te": "వినియోగదారుకు తెలియకుండా దాచమని అడుగుతోంది"
+  },
+  {
+   "pattern": "^asks to bypass confirmation$",
+   "te": "నిర్ధారణను దాటవేయమని అడుగుతోంది"
+  },
+  {
+   "pattern": "^This text was treated as data and ignored\\. Nothing was shared\\.$",
+   "te": "ఈ వచనాన్ని డేటాగా మాత్రమే పరిగణించి పట్టించుకోలేదు. ఏదీ షేర్ కాలేదు."
+  },
+  {
+   "pattern": "^Every (.+) rule passes\\.$",
+   "te": "$1 యొక్క ప్రతి నియమం నెరవేరింది."
+  },
+  {
+   "pattern": "^contains invisible characters$",
+   "te": "కనిపించని అక్షరాలు ఉన్నాయి"
+  },
+  {
+   "pattern": "^contains text hidden from the page view$",
+   "te": "పేజీలో కనిపించకుండా దాచిన వచనం ఉంది"
+  },
+  {
+   "pattern": "^Demo rules, not official requirements.$",
+   "te": "డెమో నియమాలు, అధికారిక అవసరాలు కావు."
+  }
+ ]
+}

@@ -31,9 +31,10 @@ import { fieldValue, type EngineContext, type VaultDoc } from "./vault";
 // ─────────────────────────── Rule pack format (checked when loaded) ───────────────────────────
 
 export const PREDICATES = ["doc_exists", "verified", "not_expired", "name_consistent", "scan_confirmed", "age_at_least"] as const;
-const RuleSpec = z.object({ id: z.string(), label: z.string(), predicate: z.enum(PREDICATES), args: z.record(z.string(), z.unknown()) });
+// label_te / title_te / disclaimer_te: optional Telugu text for the screen (a translation, never logic).
+const RuleSpec = z.object({ id: z.string(), label: z.string(), label_te: z.string().optional(), predicate: z.enum(PREDICATES), args: z.record(z.string(), z.unknown()) });
 export const RulePack = z.object({
-  id: z.string(), purpose: z.string(), title: z.string(), disclaimer: z.string(), source: z.string(), lastReviewed: z.string(),
+  id: z.string(), purpose: z.string(), title: z.string(), title_te: z.string().optional(), disclaimer: z.string(), disclaimer_te: z.string().optional(), source: z.string(), lastReviewed: z.string(),
   rules: z.array(RuleSpec).min(1),
   allowed_fields: z.array(z.string()),
   alternatives: z.record(z.string(), z.string()).default({}),

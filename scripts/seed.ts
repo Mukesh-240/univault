@@ -16,9 +16,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { ingestDocument } from "../src/lib/ingest";
-import { append, verify } from "../src/lib/ledger";
-import { signEntries, toRow } from "../src/lib/registry";
+import { seedDataset } from "../src/lib/seed";
 import type { Dataset } from "../synthetic/generate";
 
 const arg = (name: string) => { const i = process.argv.indexOf(`--${name}`); return i >= 0 ? process.argv[i + 1] : undefined; };
@@ -35,34 +33,8 @@ async function main() {
   const file = join(process.cwd(), "synthetic", "out", "data", `dataset-${set}.json`);
   const data = JSON.parse(readFileSync(file, "utf8")) as Dataset;
   console.info(`Seeding "${set}" (seed ${data.meta.seed}, reference date ${data.meta.reference_date}): ${data.documents.length} documents, ${data.registry.length} registry records`);
-
-  // 1. Simulated issuer registry — signed now; existing serial+version pairs are skipped.
-  const rows = signEntries(data.registry, issuerKey!).map(toRow);
-  const reg = await db.from("issuer_registry").upsert(rows, { onConflict: "serial,version", ignoreDuplicates: true });
-  if (reg.error) throw new Error(`registry insert failed: ${reg.error.message}`);
-  console.info(`1. registry: ${rows.length} signed entries offered (existing ones skipped)`);
-
-  // 2. Fictional recipients.
-  const rec = await db.from("recipients").upsert(
-    data.recipients.map((r) => ({ recipient_code: r.recipient_code, name: r.name, org: r.purpose, synthetic: true })),
-    { onConflict: "recipient_code", ignoreDuplicates: true });
-  if (rec.error) throw new Error(`recipients insert failed: ${rec.error.message}`);
-  console.info(`2. recipients: ${data.recipients.length} offered`);
-
-  // 3. Documents — only if this dataset is not loaded yet (documents can never be edited or removed).
-  const existing = await db.from("documents").select("id", { count: "exact", head: true }).eq("synthetic_origin->>dataset", set);
-  if (existing.error) throw new Error(`documents check failed: ${existing.error.message} (is migration 003 applied?)`);
-  let stored = 0;
-  if ((existing.count ?? 0) > 0) console.info(`3. documents: "${set}" already loaded (${existing.count}); skipped`);
-  else {
-    for (const doc of data.documents) { await ingestDocument(db, doc); stored++; if (stored % 100 === 0) console.info(`   ${stored}/${data.documents.length}`); }
-    console.info(`3. documents: ${stored} stored through ingestDocument()`);
-  }
-
-  // 4. Record the seed run, then re-verify the whole ledger.
-  await append(db, "seed.completed", { dataset: set, seed: data.meta.seed, documents_stored: stored, registry_offered: rows.length });
-  const check = await verify(db);
-  console.info("4. verify_ledger():", check);
-  if (!check.ok) throw new Error(`Ledger chain broken at line ${check.broken_at}`);
+  // The steps themselves live in src/lib/seed.ts (shared with the offline demo store).
+  const report = await seedDataset(db, data, issuerKey!, (m) => console.info(m));
+  console.info("Seeded:", JSON.stringify(report));
 }
 main().catch((e) => { console.error(String(e instanceof Error ? e.message : e)); process.exit(1); });

@@ -1,0 +1,66 @@
+/**
+ * NAME DETECTIVE — which documents name the same person?
+ *
+ * The matching engine compares every pair of documents (initials, word order, honorifics,
+ * Telugu <-> Latin spelling) and ranks them best match first, each with a score, a verdict and
+ * plain-language reasons. NOTHING is merged automatically: only the person's Confirm / Reject click
+ * records a decision. Unlikely pairs are folded away under "Other pairs" to keep the list short.
+ */
+import { Explain } from "@/components/Explain";
+import { NameDecision } from "@/components/NameDecision";
+import { hasTelugu } from "@/lib/i18n";
+import { getI18n } from "@/lib/i18n-server";
+import { candidatePairs, type CandidatePair } from "@/lib/resolution";
+import { loadDemoVault } from "@/lib/server";
+import type { VaultDoc } from "@/lib/vault";
+
+export const dynamic = "force-dynamic";
+
+export default async function NamesPage() {
+  const { t } = await getI18n();
+  const ctx = await loadDemoVault();
+  const byId = new Map(ctx.docs.map((d) => [d.id, d]));
+  const titles = Object.fromEntries(ctx.docs.map((d) => [d.id, d.title]));
+  const pairs = candidatePairs(ctx.docs, ctx.links);
+  const main = pairs.filter((p) => p.verdict !== "unlikely" || p.decision);
+  const rest = pairs.filter((p) => !main.includes(p));
+
+  const item = (p: CandidatePair, rank: number) => {
+    const a = byId.get(p.a)!, b = byId.get(p.b)!;
+    const label = `${a.title} / ${b.title}`;
+    return (
+      <li key={`${p.a}|${p.b}`} className="card pair">
+        <h2 className="h3">{t("names.rank", { n: rank })}: {t(`verdict.${p.verdict}`)} · <span className="score">{t("conf.score", { value: p.score.toFixed(2) })}</span></h2>
+        <div className="names-compare">
+          <Name doc={a} field={p.fieldA} />
+          <span aria-hidden="true">↔</span>
+          <Name doc={b} field={p.fieldB} />
+        </div>
+        <p className="meta">{a.title} · {b.title}</p>
+        <Explain explanation={p.explanation} kind="name_match" targetId={`${p.a}|${p.b}`} docs={titles} />
+        <NameDecision a={p.a} b={p.b} decision={p.decision} label={label} />
+      </li>
+    );
+  };
+
+  return (
+    <>
+      <h1>{t("names.title")}</h1>
+      <p className="lead">{t("names.intro")}</p>
+      <p className="note">{t("names.never")}</p>
+      {main.length === 0 ? <p>{t("names.none")}</p> : <ol className="cards">{main.map((p, i) => item(p, i + 1))}</ol>}
+      {rest.length > 0 && (
+        <details className="panel">
+          <summary>{t("names.others", { n: rest.length })}</summary>
+          <ol className="cards" start={main.length + 1}>{rest.map((p, i) => item(p, main.length + i + 1))}</ol>
+        </details>
+      )}
+    </>
+  );
+}
+
+/** One name as printed on its document (Telugu names are marked lang="te" so they render and read correctly). */
+function Name({ doc, field }: { doc: VaultDoc; field: string }) {
+  const v = doc.fields[field] ?? "";
+  return <strong lang={hasTelugu(v) ? "te" : undefined}>{v}</strong>;
+}

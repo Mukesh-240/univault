@@ -8,3 +8,6 @@ synthetic/out/data/dataset-dev.json
 synthetic/out/data/dataset-heldout.json
 synthetic/out/labels/labels-dev.json
 synthetic/out/labels/labels-heldout.json
+*.traineddata
+e2e-results
+test-results

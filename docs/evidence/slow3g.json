@@ -1,0 +1,21 @@
+{
+ "profile": {
+  "offline": false,
+  "latency": 2000,
+  "downloadThroughput": 50000,
+  "uploadThroughput": 50000
+ },
+ "preview": {
+  "path": "/s/preview?purpose=scholarship",
+  "loadMs": 2135,
+  "bytes": 3042,
+  "scripts": 0
+ },
+ "vault": {
+  "path": "/",
+  "loadMs": 10199,
+  "bytes": 309869,
+  "scripts": 8
+ },
+ "recordedAt": "2026-10-24T10:08:15.188Z"
+}

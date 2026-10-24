@@ -42,7 +42,7 @@ const SyntheticOrigin = z.object({
   version: z.string().min(1),                            // version of that program
   seed: z.number().int(),                                // the random seed (same seed = same data)
   recipe: z.string().min(1),                             // which scenario recipe produced it
-  dataset: z.enum(["dev", "heldout", "showcase"]),       // which generated set it belongs to
+  dataset: z.enum(["dev", "heldout", "showcase", "scans"]), // which generated set it belongs to ("scans" = the OCR test images)
   ref: z.string().optional(),                            // its reference inside that set
 });
 export type SyntheticOrigin = z.infer<typeof SyntheticOrigin>;

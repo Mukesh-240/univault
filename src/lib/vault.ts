@@ -101,3 +101,19 @@ export async function loadVault(db: Db, owner: string, today: string): Promise<E
 
   return { docs: vaultDocs, today, verification, confirmedFields, links: [...latest.values()] };
 }
+
+/** The three trust tiers shown on every document card (spec §2). */
+export type Tier = "issuer_verified" | "user_corrected" | "user_uploaded";
+
+/**
+ * Which tier a document is in RIGHT NOW, computed from what happened to it (never declared by data):
+ *   - issuer-verified: the latest verification says "verified" (stale still counts, but is labelled stale);
+ *   - user-corrected: the person changed at least one value (an assertion different from the original);
+ *   - user-uploaded: everything else.
+ */
+export function tierOf(doc: VaultDoc, ctx: Pick<EngineContext, "verification" | "confirmedFields">): Tier {
+  if (ctx.verification[doc.id]?.state === "verified") return "issuer_verified";
+  const asserted = ctx.confirmedFields[doc.id] ?? {};
+  if (Object.entries(asserted).some(([f, v]) => v !== doc.fields[f])) return "user_corrected";
+  return "user_uploaded";
+}

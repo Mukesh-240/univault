@@ -1,0 +1,174 @@
+{
+ "engine": "tesseract.js 6.0.1",
+ "languages": [
+  "eng",
+  "tel"
+ ],
+ "created": "2026-10-24T09:32:44.358Z",
+ "scans": [
+  {
+   "file": "scans/scan-1-clean.png",
+   "lines": [
+    {
+     "text": "Synthetic State University — Marksheet",
+     "confidence": 93
+    },
+    {
+     "text": "Name: Keerthi Ravi Bandaru",
+     "confidence": 92
+    },
+    {
+     "text": "Name (Telugu): కీర్తి రవి బండారు",
+     "confidence": 95
+    },
+    {
+     "text": "Registration No.: 1855091467",
+     "confidence": 81
+    },
+    {
+     "text": "Semester: 8",
+     "confidence": 96
+    },
+    {
+     "text": "Total marks: 540",
+     "confidence": 96
+    },
+    {
+     "text": "Result: PASS",
+     "confidence": 96
+    },
+    {
+     "text": "Serial: SSU-MS-371966",
+     "confidence": 91
+    },
+    {
+     "text": "SYNTHETIC - SIMULATED",
+     "confidence": 92
+    }
+   ]
+  },
+  {
+   "file": "scans/scan-2-blur.png",
+   "lines": [
+    {
+     "text": "Synthetic State University — Marksheet",
+     "confidence": 93
+    },
+    {
+     "text": "Name: Priya Venkata Tummala",
+     "confidence": 94
+    },
+    {
+     "text": "Name (Telugu): (DOD వెంకట తుమ్మల",
+     "confidence": 87
+    },
+    {
+     "text": "Registration No.: 215SU07886",
+     "confidence": 83
+    },
+    {
+     "text": "Semester: 8",
+     "confidence": 96
+    },
+    {
+     "text": "Total marks: 606",
+     "confidence": 96
+    },
+    {
+     "text": "Result: PASS",
+     "confidence": 96
+    },
+    {
+     "text": "Serial: SSU-MS-204487",
+     "confidence": 91
+    },
+    {
+     "text": "SYNTHETIC - SIMULATED",
+     "confidence": 92
+    }
+   ]
+  },
+  {
+   "file": "scans/scan-3-noise-skew.png",
+   "lines": [
+    {
+     "text": "Synthetic State University — Marksheet",
+     "confidence": 91
+    },
+    {
+     "text": "Name: Teja Mounika Nallamothu",
+     "confidence": 93
+    },
+    {
+     "text": "Name (Telugu): తేజ మౌనిక నల్లమోతు",
+     "confidence": 88
+    },
+    {
+     "text": "Registration No.: 1855642509",
+     "confidence": 81
+    },
+    {
+     "text": "Semester: 8",
+     "confidence": 95
+    },
+    {
+     "text": "Total marks: 536",
+     "confidence": 95
+    },
+    {
+     "text": "Result: PASS",
+     "confidence": 96
+    },
+    {
+     "text": "Serial: SSU-MS-516907",
+     "confidence": 90
+    },
+    {
+     "text": "SYNTHETIC , SIMULATED",
+     "confidence": 84
+    }
+   ]
+  },
+  {
+   "file": "scans/scan-4-lowcontrast-skew.png",
+   "lines": [
+    {
+     "text": "Synthetic State University — Marksheet",
+     "confidence": 93
+    },
+    {
+     "text": "Name: Divya Kiran Veeramachaneni",
+     "confidence": 95
+    },
+    {
+     "text": "Name (Telugu): దివ్య కిరణ్‌ వీరమాచనేని",
+     "confidence": 95
+    },
+    {
+     "text": "Registration No.: 2155U94034",
+     "confidence": 83
+    },
+    {
+     "text": "Semester: 8",
+     "confidence": 94
+    },
+    {
+     "text": "Total marks: 711",
+     "confidence": 95
+    },
+    {
+     "text": "Result: PASS",
+     "confidence": 96
+    },
+    {
+     "text": "Serial: SSU-MS-737220",
+     "confidence": 90
+    },
+    {
+     "text": "SYNTHETIC - SIMULATED",
+     "confidence": 91
+    }
+   ]
+  }
+ ]
+}

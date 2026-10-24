@@ -66,3 +66,11 @@ export function dobConsistency(docs: VaultDoc[], field = "dob"): DobCheck {
     ? { consistent: true, dates, reason: dates.length > 1 ? "Same date of birth on every document (different print styles are fine)." : "Only one date of birth on file." }
     : { consistent: false, dates, reason: `Documents show different dates of birth: ${[...distinct].join(", ")}.` };
 }
+
+/** The date-of-birth check in the shared <Explain> shape (so the screen can show it like every other result). */
+export const dobExplanation = (c: DobCheck): Explanation => explain({
+  reason: c.reason,
+  confidence: { kind: "tri", value: c.consistent === null ? "unknown" : c.consistent ? "pass" : "fail" },
+  source: { name: "UNIVAULT date-of-birth check", freshness: "n/a" },
+  documentIds: c.dates.map((d) => d.docId),
+});
