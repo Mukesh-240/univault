@@ -97,9 +97,9 @@ export function checkDownloadPass(serverSecretB64: string, tokenHash: string, pa
 
 export type Outcome = "allowed" | "code_issued" | "download" | "locked"
   | "denied:unknown_link" | "denied:revoked" | "denied:killed" | "denied:expired" | "denied:max_views"
-  | "denied:wrong_recipient" | "denied:wrong_code" | "denied:otp_reused" | "denied:view_only" | "denied:locked";
+  | "denied:wrong_recipient" | "denied:unintended_account" | "denied:wrong_code" | "denied:otp_reused" | "denied:view_only" | "denied:locked";
 export type NotifyKind = "first_open" | "new_device" | "wrong_recipient_attempt" | "wrong_code_attempt"
-  | "killed_link_attempt" | "revoked_link_attempt" | "expired_link_attempt" | "share_locked";
+  | "killed_link_attempt" | "unintended_account" | "revoked_link_attempt" | "expired_link_attempt" | "share_locked";
 
 /** What the database knows about one link. */
 export interface LinkFacts { shareRevoked: boolean; tokenKilled: boolean; expiresAt: string; maxViews?: number; recipientCode: string; policy: "view_only" | "download" }

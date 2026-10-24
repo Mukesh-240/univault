@@ -16,6 +16,7 @@
  */
 import { cookies, headers } from "next/headers";
 import { z } from "zod";
+import { currentSession, receiverCode } from "@/lib/auth-server";
 import { recipientView } from "@/lib/disclosure";
 import { isLang, LANG_COOKIE, preferredLang, translate, type Lang } from "@/lib/i18n";
 import { deniedHtml, gateHtml, viewHtml } from "@/lib/recipient-html";
@@ -91,6 +92,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
       await logAccess(supabase, { tokenId: found!.tokenId, shareId: found!.shareId, outcome: "denied:locked", deviceHash: hashDevice(v.device), notify: null });
       return lockedPage(v.lang, dev, until, now);
     }
+    // Forwarded link: a signed-in receiving account that is not the intended recipient is stopped at the door.
+    const account = receiverCode(await currentSession());
+    if (account && account.toUpperCase() !== found!.link.recipientCode.toUpperCase()) {
+      await logAccess(supabase, { tokenId: found!.tokenId, shareId: found!.shareId, outcome: "denied:unintended_account", deviceHash: hashDevice(v.device), notify: "unintended_account", attemptedBy: account });
+      return html(deniedHtml(v.lang, "denied:unintended_account"), 403, dev);
+    }
     return html(gateHtml(v.lang, `/s/${token}`), 200, dev);
   } catch (e) {
     log("error", "recipient gate failed", { message: e instanceof Error ? e.message : "unknown" });
@@ -118,6 +125,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
     // Locked after too many wrong codes: nothing else is checked, not even a correct code.
     const until = lockedUntil(found.past, now);
     if (until) { await logAccess(supabase, { ...base, outcome: "denied:locked", notify: null }); return lockedPage(v.lang, dev, until, now); }
+    // A FORWARDED link: someone signed in as a DIFFERENT receiving account (a different UV-ID) opens a link meant for
+    // another recipient. They are denied before any code is issued, and the log says exactly who tried what.
+    const account = receiverCode(await currentSession());
+    if (account && account.toUpperCase() !== found.link.recipientCode.toUpperCase() && linkStatus(found.link, now) === "active") {
+      await logAccess(supabase, { ...base, outcome: "denied:unintended_account", notify: "unintended_account", attemptedBy: account });
+      return html(deniedHtml(v.lang, "denied:unintended_account"), 403, dev);
+    }
     const refuse = async (outcome: string) => {
       if (outcome === "denied:expired" && !found.expiredLogged) await markExpired(supabase, found.shareId, found.tokenId);
       const wrongDetails = outcome === "denied:wrong_recipient" || outcome === "denied:wrong_code" || outcome === "denied:otp_reused";

@@ -13,6 +13,7 @@
  */
 import Link from "next/link";
 import { EraseDocument } from "@/components/EraseDocument";
+import { explain } from "@/lib/explain";
 import { Explain } from "@/components/Explain";
 import { FieldReview } from "@/components/FieldReview";
 import { TierBadge } from "@/components/Badges";
@@ -129,6 +130,12 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       {injection.suspected && (
         <div className="callout neutral" role="note">
           <p><strong>{t("vault.injectionTitle")}</strong> {t("vault.injectionNote")}</p>
+          <Explain kind="injection_flag" targetId={doc.id} docs={{ [doc.id]: doc.title }} explanation={explain({
+            reason: `The text ${injection.hits.join("; ")}. It is treated as data and nothing in it can create or change a share.`,
+            confidence: { kind: "evidence", value: "weaker" },
+            source: { name: "UNIVAULT instruction-text detector (fixed patterns)", version: 1, checkedAt: now.toISOString(), freshness: "fresh" },
+            documentIds: [doc.id],
+          })} />
         </div>
       )}
 

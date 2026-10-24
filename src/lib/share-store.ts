@@ -73,7 +73,7 @@ export async function createShare(db: Db, a: {
 export interface ShareView {
   id: string; recipientCode: string; recipientName: string; purpose: string; fields: string[]; expiresAt: string;
   policy: { mode: "view_only" | "download"; max_views?: number }; createdAt: string; state: ShareState; tokenId: string | null;
-  tokenKilled: boolean; snapshot: Snapshot; accesses: { outcome: string; at: string; session: string | null; notify: string | null; device: string | null }[];
+  tokenKilled: boolean; snapshot: Snapshot; accesses: { outcome: string; at: string; session: string | null; notify: string | null; by: string | null; device: string | null }[];
 }
 
 interface ShareRow { id: string; recipient: string; purpose: string; fields: string[]; expires_at: string; policy: ShareView["policy"]; created_at: string; verification_snapshot: Snapshot }
@@ -92,7 +92,7 @@ export async function loadShares(db: Db, owner: string | null, now = new Date(),
   const tokens = must(await db.from("share_tokens").select("id, share_id, recipient_label").in("share_id", ids), "tokens") as { id: string; share_id: string; recipient_label: string }[];
   const tids = tokens.map((t) => t.id);
   const tev = tids.length ? must(await db.from("token_events").select("token_id, state").in("token_id", tids).order("id"), "token events") as { token_id: string; state: string }[] : [];
-  const log = tids.length ? must(await db.from("access_log").select("token_id, outcome, client_hint, detail, created_at").in("token_id", tids).order("id"), "access log") as { token_id: string; outcome: string; client_hint: string | null; detail: { session?: string; notify?: string } | null; created_at: string }[] : [];
+  const log = tids.length ? must(await db.from("access_log").select("token_id, outcome, client_hint, detail, created_at").in("token_id", tids).order("id"), "access log") as { token_id: string; outcome: string; client_hint: string | null; detail: { session?: string; notify?: string; attempted_by?: string } | null; created_at: string }[] : [];
 
   return shares.map((s) => {
     const token = tokens.find((t) => t.share_id === s.id);
@@ -103,7 +103,7 @@ export async function loadShares(db: Db, owner: string | null, now = new Date(),
       id: s.id, recipientCode: s.recipient, recipientName: token?.recipient_label ?? s.recipient, purpose: s.purpose, fields: s.fields,
       expiresAt: s.expires_at, policy: s.policy, createdAt: s.created_at, state, tokenId: token?.id ?? null,
       tokenKilled: tev.some((e) => e.token_id === token?.id && e.state === "killed"), snapshot: s.verification_snapshot,
-      accesses: log.filter((l) => l.token_id === token?.id).map((l) => ({ outcome: l.outcome, at: l.created_at, session: l.detail?.session ?? null, notify: l.detail?.notify ?? null, device: l.client_hint ? l.client_hint.slice(0, 8) : null })),
+      accesses: log.filter((l) => l.token_id === token?.id).map((l) => ({ outcome: l.outcome, at: l.created_at, session: l.detail?.session ?? null, notify: l.detail?.notify ?? null, by: l.detail?.attempted_by ?? null, device: l.client_hint ? l.client_hint.slice(0, 8) : null })),
     };
   });
 }
@@ -128,10 +128,10 @@ export async function linkByTokenHash(db: Db, tokenHash: string): Promise<null |
 }
 
 /** Record one attempt: access_log row AND a ledger line (spec item 4). */
-export async function logAccess(db: Db, a: { tokenId: string | null; shareId: string | null; outcome: Outcome; deviceHash: string; session?: string; notify: NotifyKind | null; fingerprint?: string; codeHash?: string }) {
+export async function logAccess(db: Db, a: { tokenId: string | null; shareId: string | null; outcome: Outcome; deviceHash: string; session?: string; notify: NotifyKind | null; fingerprint?: string; codeHash?: string; attemptedBy?: string }) {
   // code_hash: the fingerprint of the one-time code sent (code_issued) or used (allowed) — never the code itself.
   must(await db.from("access_log").insert({ token_id: a.tokenId, outcome: a.outcome, client_hint: a.deviceHash,
-    detail: { share_id: a.shareId, session: a.session ?? null, notify: a.notify, fingerprint: a.fingerprint ?? null, code_hash: a.codeHash ?? null } }), "access log");
+    detail: { share_id: a.shareId, session: a.session ?? null, notify: a.notify, fingerprint: a.fingerprint ?? null, code_hash: a.codeHash ?? null, attempted_by: a.attemptedBy ?? null } }), "access log");
   await append(db, `access.${a.outcome.replace("denied:", "denied_")}`, { token_id: a.tokenId, share_id: a.shareId, session: a.session ?? null, notify: a.notify, fingerprint: a.fingerprint ?? null });
 }
 

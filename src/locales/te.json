@@ -992,5 +992,10 @@
  "sender.requests.flagged": "ఇది దాని ఉద్దేశ్యానికి అవసరమైన దానికంటే ఎక్కువ అడుగుతోంది.",
  "sender.requests.share": "ఇవి షేర్ చేయండి",
  "sender.reports.title": "మీకు తెలియజేసిన సమస్యలు",
- "sender.reports.item": "{name} సమస్యను తెలియజేశారు: {reason}"
+ "sender.reports.item": "{name} సమస్యను తెలియజేశారు: {reason}",
+ "outcome.denied:unintended_account": "నిరాకరించబడింది: వేరే ఖాతా ఈ లింక్‌ను ప్రయత్నించింది, ఇది మరొక స్వీకర్త కోసం ఉద్దేశించినది.",
+ "access.unintended": "{to} కోసం ఉద్దేశించిన లింక్‌ను {by} ప్రయత్నించింది.",
+ "alert.unintended_account": "{name}కు ఉన్న లింక్‌ను {time}కు {by} ప్రయత్నించింది. అది నిరాకరించబడింది.",
+ "notify.unintended_account": "{code} కోసం మీ {purpose} షేర్‌ను వేరే ఖాతా ప్రయత్నించింది. అది నిరాకరించబడింది.",
+ "notifyKind.unintended_account": "ఉద్దేశించని ఖాతా"
 }

@@ -992,5 +992,10 @@
  "sender.requests.flagged": "This asks for more than its purpose needs.",
  "sender.requests.share": "Share these",
  "sender.reports.title": "Problems reported to you",
- "sender.reports.item": "{name} reported a problem: {reason}"
+ "sender.reports.item": "{name} reported a problem: {reason}",
+ "outcome.denied:unintended_account": "Denied: a different account tried this link, which is meant for another recipient.",
+ "access.unintended": "{by} attempted a link meant for {to}.",
+ "alert.unintended_account": "{by} attempted the link to {name} at {time}. It was denied.",
+ "notify.unintended_account": "A different account tried your {purpose} share for {code}. It was denied.",
+ "notifyKind.unintended_account": "Unintended account"
 }

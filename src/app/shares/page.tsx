@@ -49,7 +49,7 @@ export default async function SharesPage() {
                         <thead><tr><th scope="col">{t("shares.when")}</th><th scope="col">{t("shares.outcome")}</th><th scope="col">{t("shares.session")}</th><th scope="col">{t("shares.device")}</th><th scope="col">{t("shares.notified")}</th></tr></thead>
                         <tbody>
                           {s.accesses.map((a, i) => (
-                            <tr key={i}><td>{showTime(a.at)}</td><td>{t(`outcome.${a.outcome}`)}</td><td>{a.session ?? "—"}</td><td><code>{a.device ?? "—"}</code></td><td>{a.notify ? t(`notifyKind.${a.notify}`) : "—"}</td></tr>
+                            <tr key={i}><td>{showTime(a.at)}</td><td>{a.outcome === "denied:unintended_account" ? t("access.unintended", { by: a.by ?? "?", to: s.recipientCode }) : t(`outcome.${a.outcome}`)}</td><td>{a.session ?? "—"}</td><td><code>{a.device ?? "—"}</code></td><td>{a.notify ? t(`notifyKind.${a.notify}`) : "—"}</td></tr>
                           ))}
                         </tbody>
                       </table>

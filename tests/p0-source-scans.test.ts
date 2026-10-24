@@ -77,3 +77,19 @@ describe("P0.10 every kind of event writes a ledger line", () => {
   ];
   for (const [name, re] of EVENTS) it(`${name} writes a ledger line`, () => expect(re.test(code), name).toBe(true));
 });
+
+describe("P0.4 the database key", () => {
+  it("the server can use a server-only service key, which is never a NEXT_PUBLIC value", () => {
+    const src = read(join(ROOT, "src", "lib", "supabase.ts"));
+    expect(src).toMatch(/SUPABASE_SERVICE_ROLE_KEY/);
+    expect(src).not.toMatch(/NEXT_PUBLIC_SUPABASE_SERVICE/);
+    const browser = SRC.filter((f) => f.endsWith(".tsx") && read(f).startsWith('"use client"')).filter((f) => read(f).includes("SERVICE_ROLE"));
+    expect(browser.map(rel)).toEqual([]);
+  });
+  it("the lock-down migration exists and removes the anon policies", () => {
+    const sql = read(join(ROOT, "docs", "sql", "004_lock_anon.sql"));
+    expect(sql).toMatch(/drop policy if exists/);
+    expect(sql).toMatch(/_read/);
+    expect(sql).toMatch(/payload_erase/);
+  });
+});

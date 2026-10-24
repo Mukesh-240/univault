@@ -80,8 +80,8 @@ export const THREATS: Threat[] = [
   },
   {
     key: "noLogin",
-    stops: "Stated limit. The demo uses one synthetic vault and the public database key. Row-level security lets that key only read and append, never change or delete history.",
-    notStopped: "The sign-in is simulated: any valid demo number (starts 0000) gets in, and everyone who signs in sees the same one synthetic vault. The 5-wrong-codes lock counts per server instance. A real deployment needs real identity and per-user row security.",
+    stops: "Stated limit. The database is reached with the PUBLIC anon key, and its policies let anyone who has that key (it is visible in the page source) READ every table directly, including document contents, share link fingerprints and recipient records, and erase document contents. Updates and deletes of history are blocked by database triggers, and the ledger would show the change.",
+    notStopped: "Until a server-only key is configured, the vault is not private from someone who queries the database directly. The sign-in is simulated, and every signed-in person sees the one synthetic vault. The fix is prepared (docs/sql/004_lock_anon.sql plus a SUPABASE_SERVICE_ROLE_KEY) and needs the owner to add the key.",
     evidence: ["docs/sql/001_core_schema.sql", "tests/live-db.test.ts"],
   },
   {

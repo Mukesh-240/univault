@@ -48,4 +48,11 @@ function notConfigured(): SupabaseClient {
   return { from: refuse, rpc: refuse } as unknown as SupabaseClient;
 }
 
-export const supabase: SupabaseClient = !OFFLINE ? createClient(url!, key!) : ALLOW_OFFLINE ? offline() : notConfigured();
+// SERVER-ONLY KEY (optional): when SUPABASE_SERVICE_ROLE_KEY is set, the server uses it instead of the public anon key,
+// so the database can be locked to the server (docs/sql/004_lock_anon.sql removes every anon policy). It is never a
+// NEXT_PUBLIC value, so it is never sent to a browser. Without it the demo falls back to the anon key and its limit
+// (anyone with the public key can read the tables; see the threat model).
+const SERVER_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const serverKey = SERVER_KEY && SERVER_KEY.length > 40 && !SERVER_KEY.startsWith("<") ? SERVER_KEY : key;
+
+export const supabase: SupabaseClient = !OFFLINE ? createClient(url!, serverKey!, { auth: { persistSession: false } }) : ALLOW_OFFLINE ? offline() : notConfigured();
