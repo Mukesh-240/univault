@@ -63,7 +63,8 @@ export interface ViewData {
 /** The recipient's view: only the shared items, watermarked. */
 export function viewHtml(v: ViewData, bg: string): string {
   const t = (k: string, vars?: Record<string, string | number>) => esc(translate(v.lang, k, vars));
-  const label = (item: string) => esc(fieldLabel(v.lang, item.split(".")[1] ?? item));
+  const docType = (type: string) => { const k = `doctype.${type}`; const s = translate(v.lang, k); return s === k ? type.replace(/_/g, " ") : s; };
+  const label = (item: string) => esc(`${docType(item.split(".")[0])} · ${fieldLabel(v.lang, item.split(".")[1] ?? item)}`);
   const rows = Object.entries(v.fields).map(([k, val]) => `<tr><th scope="row">${label(k)}</th><td>${esc(val)}</td></tr>`).join("");
   const atts = Object.entries(v.attestations).map(([k, val]) => `<li>${label(k)}: <strong>${t(val ? "preview.yes" : "preview.no")}</strong></li>`).join("");
   const ver = v.verified.map((d) => `<li>${esc(d.title)}: ${t(`state.${d.state}`)}</li>`).join("");
@@ -72,7 +73,7 @@ export function viewHtml(v: ViewData, bg: string): string {
   return page(v.lang, translate(v.lang, "view.title"), `<h1>${t("view.title")}</h1>
 <p>${t("view.for", { name: v.recipientName, purpose: v.purpose })}</p>
 <p class="n" aria-label="${t("view.watermarkLabel")}">${t("view.watermarkIs")}: <span data-watermark>${esc(v.watermark)}</span></p>
-<section class="c" aria-labelledby="f"><h2 id="f">${t("preview.fields")}</h2><table><tbody>${rows || `<tr><td>${t("preview.none")}</td></tr>`}</tbody></table></section>
+<section class="c" aria-labelledby="f"><h2 id="f">${t("view.fields")}</h2><table><tbody>${rows || `<tr><td>${t("preview.none")}</td></tr>`}</tbody></table></section>
 <section class="c" aria-labelledby="a"><h2 id="a">${t("preview.attestations")}</h2><ul>${atts || `<li>${t("preview.none")}</li>`}</ul><p class="n">${esc(v.statement)}</p></section>
 <section class="c" aria-labelledby="v"><h2 id="v">${t("view.verified")}</h2><ul>${ver || `<li>${t("preview.none")}</li>`}</ul></section>
 ${dl}<p class="n">${t("view.expires", { date: v.expiresAt.slice(0, 10) })} · ${t("preview.watermark")} ${t("preview.revocation")}</p>`, bg);

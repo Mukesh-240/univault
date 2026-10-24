@@ -28,7 +28,7 @@ interface Preview {
   recipient: { recipient_code: string; name: string };
   reverify: { id: string; title: string; state: string; reason: string }[];
   blocked: unknown[];
-  recipientView: { fields: Record<string, string>; attestations: Record<string, boolean>; statement: string };
+  recipientView: { fields: Record<string, string>; attestations: Record<string, boolean>; withheld: string[]; statement: string };
   overbroad: { flagged: boolean; minimal: string[]; explanation: Explanation };
   previewToken: string;
 }
@@ -167,6 +167,9 @@ export function ShareBuilder({ recipients, items, packs }: { recipients: Recipie
               {Object.entries(preview.recipientView.fields).map(([k, v]) => <tr key={k}><th scope="row">{docLabel(k.split(".")[0])} · {fieldLabel(lang, k.split(".")[1])}</th><td lang={hasTelugu(v) ? "te" : undefined}>{v}</td></tr>)}
               {Object.entries(preview.recipientView.attestations).map(([k, v]) => <tr key={k}><th scope="row">{fieldLabel(lang, k.split(".")[1])}</th><td>{t(v ? "preview.yes" : "preview.no")} ({t("share.attested")})</td></tr>)}
             </tbody></table>
+            {preview.recipientView.withheld.length > 0 && (
+              <p className="callout neutral">{t("share.withheld", { list: preview.recipientView.withheld.map((k) => `${docLabel(k.split(".")[0])} · ${fieldLabel(lang, k.split(".")[1])}`).join(", ") })}</p>
+            )}
             <p className="note">{t("preview.attestationNote")}</p>
             <p className="note">{t("share.summary", { days, policy: t(mode === "view_only" ? "share.viewOnly" : "share.download"), until: showTime(draft.expires_at) })}</p>
           </div>

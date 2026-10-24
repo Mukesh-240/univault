@@ -84,19 +84,22 @@ export function attestationsFor(ctx: EngineContext): Record<string, boolean> {
 /**
  * What the recipient will see for a list of approved items ("doc_type.field", or derived items
  * "id_card.id_number_last4", "id_card.over_18", "marksheet.passed"). Anything not approved is absent.
+ * A value read by OCR that the person has not confirmed yet is NEVER shared: it is listed in `withheld`.
  */
-export function recipientView(ctx: EngineContext, approved: string[]): { fields: Record<string, string>; attestations: Record<string, boolean>; statement: string } {
+export function recipientView(ctx: EngineContext, approved: string[]): { fields: Record<string, string>; attestations: Record<string, boolean>; withheld: string[]; statement: string } {
   const facts = attestationsFor(ctx);
   const fields: Record<string, string> = {};
   const attestations: Record<string, boolean> = {};
+  const withheld: string[] = [];
   for (const item of approved) {
     if (item in facts) { attestations[item] = facts[item]; continue; }
     const [type, field] = item.split(".");
     const doc = ctx.docs.find((d) => d.doc_type === type);
     if (!doc) continue;
-    if (field === "id_number_last4") { const v = fieldValue(doc, "id_number", ctx).value; if (v) fields[item] = `XXXX XXXX ${v.replace(/\D/g, "").slice(-4)}`; continue; }
-    const v = fieldValue(doc, field, ctx);
-    if (v.value !== undefined) fields[item] = v.value;
+    const v = fieldValue(doc, field === "id_number_last4" ? "id_number" : field, ctx);
+    if (v.value === undefined) continue;
+    if (!v.trusted) { withheld.push(item); continue; } // unconfirmed OCR reading: not shared
+    fields[item] = field === "id_number_last4" ? `XXXX XXXX ${v.value.replace(/\D/g, "").slice(-4)}` : v.value;
   }
-  return { fields, attestations, statement: ATTESTATION_STATEMENT };
+  return { fields, attestations, withheld, statement: ATTESTATION_STATEMENT };
 }

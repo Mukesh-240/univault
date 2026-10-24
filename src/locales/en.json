@@ -424,6 +424,8 @@
  "gate.deniedTitle": "Access denied",
  "gate.deniedNote": "If you think this is a mistake, ask the person who shared it with you.",
  "view.title": "Shared with you",
+ "view.fields": "Shared items",
+ "share.withheld": "Not shared because the scan's reading is not confirmed yet: {list}. Confirm them in the vault to include them.",
  "view.for": "For {name}, purpose: {purpose}. Only these items were shared.",
  "view.watermarkLabel": "Watermark on this page",
  "view.watermarkIs": "This page is watermarked",

@@ -21,6 +21,8 @@ import {
   canMove, checkDownloadPass, checkExpiry, decideCodeRequest, decideDownload, decideOpen, downloadPass, hashCode, hashDevice,
   matchLeak, shareToken, type LinkFacts, type PastAccess,
 } from "../src/lib/shares";
+import { recipientView } from "../src/lib/disclosure";
+import { contextFor, type VaultDoc } from "../src/lib/vault";
 import { watermarkLabel } from "../src/lib/watermark";
 
 const NOW = new Date("2026-10-24T10:00:00.000Z");
@@ -94,6 +96,15 @@ describe("share rules", () => {
     const text = watermarkLabel({ name: "Some Recipient", recipientCode: "UV-R-1042", time: "today", session: "BCDEFG" });
     expect(matchLeak(text, rows).matches).toEqual([rows[1]]);
     expect(matchLeak("nothing readable", rows).matches).toEqual([]);
+  });
+});
+
+describe("what a recipient sees", () => {
+  it("an unconfirmed OCR reading is never shared; once the person confirms it, it is", () => {
+    const scan: VaultDoc = { id: "m1", doc_type: "marksheet", title: "t", issuer: null, serial: null, capture: "scan", fields: { result: "PSS" } };
+    const ctx = contextFor([scan], "2026-10-24");
+    expect(recipientView(ctx, ["marksheet.result"])).toMatchObject({ fields: {}, withheld: ["marksheet.result"] });
+    expect(recipientView({ ...ctx, confirmedFields: { m1: { result: "PASS" } } }, ["marksheet.result"])).toMatchObject({ fields: { "marksheet.result": "PASS" }, withheld: [] });
   });
 });
 

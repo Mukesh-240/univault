@@ -86,7 +86,7 @@ export function VerifyPanel({ docId, title, initial }: Props) {
           ? t("verify.nextRetry", { time: showTime(o.retry.nextRetryAt), n: o.retry.attemptsMade + 1 }) : null}</p>
       )}
       {problem && <p className="callout warn">{problem}</p>}
-      {o && <Explain explanation={o.explanation} kind="verification" targetId={docId} />}
+      {o && <Explain explanation={o.explanation} kind="verification" targetId={docId} hideReason={o.state === "tamper_flagged" && o.mismatchedFields.length > 0} />}
       <div className="row">
         <button type="button" disabled={busy} onClick={() => run()} aria-describedby={`vt-${docId}`}>
           {busy ? t("verify.busy") : !o ? t("verify.run") : o.state === "unverifiable" ? t("verify.retryNow") : t("verify.again")}
