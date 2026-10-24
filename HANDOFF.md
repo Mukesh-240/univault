@@ -127,3 +127,6 @@ Env var names: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ISS
 ## 10. Open questions for the user
 - Reset the live demo data (`DEPLOY.md` §4) before judging?
 - Vercel URL, once imported (remember to set `CRON_SECRET`).
+
+## Known open test (end of Phase 9)
+Full e2e: 226 passed, 1 failed - `e2e/keyboard.e2e.ts` "scan and fix a field". Pressing Enter on the first "Yes, same person" button gives no "Saved:" toast. The same click with a mouse works (checked by hand: API 201, toast shown). The /names page now renders ~3,200 buttons because the shared demo sender has collected many documents from repeated test runs, which probably slows hydration. Added a `ready()` wait; it did not fix it. Not root-caused. Next step: trace the keyboard Enter on that page, or run against a trimmed demo dataset.

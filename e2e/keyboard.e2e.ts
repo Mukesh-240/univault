@@ -49,6 +49,7 @@ test("keyboard only: home -> am I ready? -> same person? yes -> scan and fix a f
   await tabTo(page, 'a[href="/names"]');
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/names$/);
+  await ready(page); // a long names list hydrates slowly; Enter before that does nothing
   await tabTo(page, ".decision button", "Yes, same person");
   await page.keyboard.press("Enter");
   await expect(live(page)).toContainText("Saved:");
