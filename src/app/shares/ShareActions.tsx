@@ -16,18 +16,35 @@ import { useI18n } from "@/components/I18n";
 import { announce } from "@/components/Live";
 import { post } from "@/components/api";
 import { ChainBreak } from "@/components/ChainBreak";
+import { Stepper, StepTrail } from "@/components/Steps";
 import { reducedMotion, wideScreen } from "@/lib/motion-effects";
+import { killTrail, type KillFacts, type LedgerRef } from "@/lib/trail";
+
+/** After a stop: where the person is (done) and the steps that really ran. */
+function KillDone({ facts }: { facts: KillFacts }) {
+  return (
+    <div className="kill-done">
+      <Stepper steps={["stepper.kill.1", "stepper.kill.2", "stepper.kill.3"]} current={3} here="stepper.kill.3.here" />
+      <StepTrail steps={killTrail(facts)} id={`kill-trail-${facts.scope}`} />
+    </div>
+  );
+}
 
 const RECHECK_EVERY_MS = 60_000;
 
-export function StopShare({ shareId, name, onDone }: { shareId: string; name: string; onDone?: (m: string) => void }) {
+export function StopShare({ shareId, name, onDone, onKilled }: { shareId: string; name: string; onDone?: (m: string) => void; onKilled?: (f: KillFacts) => void }) {
   const { t } = useI18n();
   const router = useRouter();
   const [breaking, setBreaking] = useState(false);
   const kill = async () => {
-    const r = await post<{ killed: string[] }>("/api/shares/kill", { share_id: shareId });
+    const r = await post<{ killed: string[]; ledger?: LedgerRef[] }>("/api/shares/kill", { share_id: shareId });
     const m = r.offline ? t("api.offline") : r.ok ? t("shares.killed") : t("api.failed");
     announce(m); onDone?.(m);
+    if (r.ok) {
+      // Proof, not a promise: ask the server what the link answers now (the same check as "Test this link now").
+      const test = await post<{ result: string }>("/api/shares/test", { share_id: shareId });
+      onKilled?.({ scope: "link", killed: r.data.killed.length, ledger: r.data.ledger, test: test.ok ? { outcome: test.data.result } : null });
+    }
     // Laptop: two chain links snap apart over the card, then the card shows it is stopped. Phone: it just updates.
     if (r.ok) { if (wideScreen() && !reducedMotion()) setBreaking(true); else router.refresh(); }
   };
@@ -37,6 +54,7 @@ export function StopShare({ shareId, name, onDone }: { shareId: string; name: st
 export function ShareActions({ shareId, active, name }: { shareId: string; active: boolean; name: string }) {
   const { t } = useI18n();
   const [msg, setMsg] = useState<string | null>(null);
+  const [facts, setFacts] = useState<KillFacts | null>(null);
   const say = (m: string) => { setMsg(m); announce(m); };
   const test = async () => {
     const r = await post<{ result: string }>("/api/shares/test", { share_id: shareId });
@@ -44,9 +62,10 @@ export function ShareActions({ shareId, active, name }: { shareId: string; activ
   };
   return (
     <div className="card-actions">
-      {active && <StopShare shareId={shareId} name={name} onDone={setMsg} />}
+      {active && <StopShare shareId={shareId} name={name} onDone={setMsg} onKilled={setFacts} />}
       <button type="button" className="text" onClick={test}>{t("shares.test")}</button>
       {msg && <span className="test-result" role="status">{msg}</span>}
+      {facts && <KillDone facts={facts} />}
     </div>
   );
 }
@@ -55,29 +74,32 @@ export function ShareActions({ shareId, active, name }: { shareId: string; activ
 export function StopUser({ code, name }: { code: string; name: string }) {
   const { t } = useI18n();
   const router = useRouter();
+  const [facts, setFacts] = useState<KillFacts | null>(null);
   const kill = async () => {
-    const r = await post<{ killed: string[] }>("/api/shares/kill", { recipient_code: code });
+    const r = await post<{ killed: string[]; ledger?: LedgerRef[] }>("/api/shares/kill", { recipient_code: code });
     const m = r.offline ? t("api.offline") : r.ok ? t("shares.killedUser", { n: r.data.killed.length, name }) : t("api.failed");
     announce(m);
-    if (r.ok) router.refresh();
+    if (r.ok) { setFacts({ scope: "user", killed: r.data.killed.length, ledger: r.data.ledger, test: null }); router.refresh(); }
   };
-  return <ConfirmButton className="secondary bad" label={t("shares.killUser", { name })} title={t("shares.confirmUser.title", { name })} body={t("shares.confirmUser.body", { name })} yes={t("shares.confirm.yes")} no={t("shares.confirm.no")} onConfirm={kill} />;
+  return <>{facts && <KillDone facts={facts} />}<ConfirmButton className="secondary bad" label={t("shares.killUser", { name })} title={t("shares.confirmUser.title", { name })} body={t("shares.confirmUser.body", { name })} yes={t("shares.confirm.yes")} no={t("shares.confirm.no")} onConfirm={kill} /></>;
 }
 
 export function KillAll({ disabled }: { disabled: boolean }) {
   const { t } = useI18n();
   const router = useRouter();
   const [msg, setMsg] = useState<string | null>(null);
+  const [facts, setFacts] = useState<KillFacts | null>(null);
   const kill = async () => {
-    const r = await post<{ killed: string[] }>("/api/shares/kill", { all: true });
+    const r = await post<{ killed: string[]; ledger?: LedgerRef[] }>("/api/shares/kill", { all: true });
     const m = r.offline ? t("api.offline") : r.ok ? t("shares.killedAll", { n: r.data.killed.length }) : t("api.failed");
     setMsg(m); announce(m);
-    if (r.ok) router.refresh();
+    if (r.ok) { setFacts({ scope: "all", killed: r.data.killed.length, ledger: r.data.ledger, test: null }); router.refresh(); }
   };
   return (
     <div className="stack-s">
       <ConfirmButton className="danger" disabled={disabled} label={t("shares.killAll")} title={t("shares.confirmAll.title")} body={t("shares.confirmAll.body")} yes={t("shares.confirmAll.yes")} no={t("shares.confirm.no")} onConfirm={kill} />
       {msg && <p className="test-result" role="status">{msg}</p>}
+      {facts && <KillDone facts={facts} />}
     </div>
   );
 }
