@@ -103,3 +103,25 @@ Grammar to check: endings glued to serial numbers or names written in English le
 | Kill user | Stop all sharing with {name} | {name}తో అన్ని షేరింగ్ ఆపండి | |
 | Neutral receiver notice | Access to this document was ended by the owner. | ఈ పత్రానికి యాక్సెస్‌ను యజమాని ముగించారు. | "యజమాని" (owner) used for the document owner; see the Phase 8 concern. |
 | Synthetic strip | Synthetic data · simulated issuers, identity check and one-time codes | కల్పిత డేటా · అనుకరణ జారీదారులు, గుర్తింపు తనిఖీ, వన్-టైమ్ కోడ్‌లు | |
+
+## Phase 10 additions (AI-written, not reviewed by a native speaker)
+
+About 250 new keys, all in `src/locales/te.json` beside English (parity test green). The ones a reviewer should read first:
+
+| Idea | English in the app | Telugu in the app | Concern |
+|---|---|---|---|
+| Stepper header | Step 2 of 4: | దశ 2 / 4: | Is "/" natural, or "4లో 2వ దశ"? |
+| What happens here / next | What happens here / What happens next | ఇక్కడ ఏమి జరుగుతుంది / తరువాత ఏమి జరుగుతుంది | Fine? |
+| Trail title | What the system just did, step by step | సిస్టమ్ ఇప్పుడే చేసినది, దశలవారీగా | "సిస్టమ్" is a loanword. |
+| Why we do this | Why we do this | మేము ఇది ఎందుకు చేస్తాం | Fine? |
+| Step status | Done / Skipped / Did not pass / Waiting | పూర్తయింది / వదిలివేయబడింది / సరిపోలలేదు / వేచి ఉంది | "Did not pass" must stay neutral, never accusing. |
+| Fingerprint | SHA-256 fingerprint | SHA-256 వేలిముద్ర | "వేలిముద్ర" (fingerprint) as a metaphor: clear? |
+| Salt | Salted field hash | సాల్ట్ కలిపిన ఫీల్డ్ హాష్ | Loanwords; plain meaning given beside it. |
+| Ledger line | ledger line 214 | లెడ్జర్ లైన్ 214 | Loanwords. |
+| ID or code wrong | The recipient ID or the one-time code was not right (we do not say which, to protect the link) | స్వీకర్త ID లేదా ఒక్కసారి కోడ్ సరైనది కాదు (లింక్‌ను కాపాడటానికి ఏది అని చెప్పము) | Must not hint which one was wrong. |
+| Cannot recall | Copies already downloaded cannot be recalled | ఇప్పటికే డౌన్‌లోడ్ చేసిన కాపీలను వెనక్కి తీసుకోలేము | Must not be softened. |
+| Nothing merged | Nothing was merged. The documents stay separate | ఏదీ కలపలేదు. పత్రాలు వేరుగానే ఉంటాయి | Fine? |
+| Text size | Normal / Larger / Largest text (16 / 18 / 20) | సాధారణ / పెద్ద / ఇంకా పెద్ద అక్షరాలు | Fine? |
+| Menu, Activity | Menu, Activity | మెనూ, కార్యకలాపం | Fine? |
+
+Grammar to check as before: endings glued to English-letter values (`{name} తో షేర్ చేయండి`, `{code} చేసిన ప్రవేశంతో`).
