@@ -55,3 +55,7 @@ Same rubric as Phase 8 (1 to 5: beauty, clarity for an older user, contrast, tru
 | | 2 | 3 | 3 | 5 | 4 | Weak: many identical "Ended by the owner" cards from test runs; "1 items"; purpose shown as a raw id |
 | Sign-in | 1 | 4 | 4 | 5 | 4 | Heading wrapped at 22ch |
 | | 2 | 4 | 5 | 5 | 5 | 32ch heading; stepper and a trail of what the server accepted |
+
+## Phase 11 direction (written before the redo)
+"Calm trust": one job per screen, one blue accent (the logo blue), generous white space, thin borders, soft shadows, Inter. Every screen starts with a title, one plain sentence saying what it is for, and ONE primary action. Anything a first-time user does not need in the first 10 seconds is behind a link, a menu or "Show more".
+No new colours: the teal/purple role colours and the gradient-in-a-box look are removed; the real logo file and wordmark stay.

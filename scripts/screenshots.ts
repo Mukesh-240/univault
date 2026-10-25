@@ -42,9 +42,7 @@ async function combo(browser: Browser, vp: (typeof VIEWS)[number], lang: "en" | 
   const sh = shot(s);
   await s.goto("/signin");
   await sh("signin-1-role");
-  await s.locator(".role-card.role-sender button").click();
-  await sh("signin-2-profile");
-  await s.locator(".profile-card").first().click();
+  await s.getByRole("button", { name: /^(Continue|కొనసాగించండి)$/ }).click();
   await s.locator("[data-otp]").waitFor();
   const code = (await s.locator("[data-otp]").innerText()).trim();
   for (let i = 0; i < 6; i++) await s.locator(".otp-boxes input").nth(i).fill(code[i]);

@@ -853,3 +853,63 @@ main { min-height: calc(100vh - 84px); }
 .up-row .row input { flex: 1; min-width: 0; }
 .up-text { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.875rem; max-height: 16rem; overflow: auto; background: var(--tint-50); padding: 8px 12px; border-radius: 8px; }
 label.btn { cursor: pointer; }
+
+/* ═════════ PHASE 11: SIGN-IN SPLIT SCREEN ═════════
+   Left: the brand on a calm navy-to-logo-blue panel. Right: a white panel, content in a 420px column.
+   No card inside a card, no glow, no role colours. Phones: a short brand strip, then the form. */
+.auth-main { padding: 0; min-height: 0; }
+.auth-main > * { animation: none; }
+.auth { display: grid; grid-template-columns: minmax(0, 1fr); min-height: calc(100vh - 28px); }
+.auth-brand { background: linear-gradient(160deg, #07245A 0%, #0B3A8C 55%, #1565D8 100%); color: #FFFFFF; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.auth-brand .wordmark { color: #FFFFFF; }
+.auth-lockup { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 1.125rem; }
+.auth-headline { font-size: 1.25rem; line-height: 1.3; font-weight: 600; margin: 0; max-width: 22ch; letter-spacing: -0.01em; }
+.auth-proofs { display: none; list-style: none; margin: 0; padding: 0; }
+.auth-proofs li { display: flex; gap: 12px; align-items: center; font-size: 1rem; margin-bottom: 12px; color: #E6EEFF; }
+.auth-proofs svg { flex: none; color: #9CCBFF; }
+.auth-note { display: none; margin: 0; font-size: 0.8125rem; color: #CFE0FF; max-width: 46ch; }
+.auth-panel { background: var(--card); display: grid; grid-template-rows: auto 1fr auto; padding: 8px 16px 16px; }
+.auth-top { display: flex; justify-content: flex-end; }
+.auth-top .seg { border: 1px solid var(--line); border-radius: 10px; display: inline-flex; overflow: hidden; }
+.auth-top .seg button { background: transparent; color: var(--navy); border: 0; border-radius: 0; min-width: 44px; font-size: 0.875rem; font-weight: 500; }
+.auth-top .seg button + button { border-left: 1px solid var(--line); }
+.auth-top .seg button[aria-pressed="true"] { background: var(--navy); color: #FFFFFF; }
+.auth-col { width: 100%; max-width: 420px; margin: 16px auto; align-self: center; }
+.auth-col h1 { font-size: 1.75rem; margin: 0 0 4px; }
+.auth-col > .meta { margin: 0 0 16px; }
+.auth-col h2 { font-size: 1.125rem; margin: 16px 0 8px; }
+.auth-col .stepper { background: transparent; border: 0; padding: 0; }
+.auth-foot { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; justify-content: center; font-size: 0.875rem; border-top: 1px solid var(--line); padding-top: 8px; }
+.auth-foot a { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); }
+.auth-foot button { background: transparent; color: var(--muted); border: 0; font-size: 0.875rem; font-weight: 500; min-height: 44px; padding: 0 8px; }
+.auth-foot button:hover:not(:disabled) { background: var(--tint-50); }
+.auth-foot .tool-label { display: inline; }
+.role-list { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.role-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; gap: 12px; align-items: center; min-height: 64px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; background: var(--card); }
+.role-row input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.role-row:hover { border-color: var(--action); }
+.role-row.on { border: 2px solid var(--action); background: var(--tint-50); padding: 9px 13px; }
+.role-row:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.role-ic { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--tint-50); color: var(--action); }
+.role-row.on .role-ic { background: var(--card); }
+.role-txt { display: grid; gap: 2px; min-width: 0; }
+.role-txt strong { font-weight: 600; }
+.role-check { color: var(--action); visibility: hidden; }
+.role-row.on .role-check { visibility: visible; }
+.as-line { margin: 4px 0; color: var(--navy-deep); font-weight: 500; }
+.as-list { border: 0; padding: 0; margin: 4px 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.as-list legend { font-weight: 500; padding: 0; margin-bottom: 4px; }
+.as-row { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 500; }
+@media (min-width: 64rem) {
+  .auth { grid-template-columns: 1fr 1fr; }
+  .auth-brand { padding: 40px 56px; grid-template-rows: auto 1fr auto; align-content: stretch; gap: 32px; }
+  .auth-headline { font-size: 2.5rem; line-height: 1.2; max-width: 16ch; align-self: end; }
+  .auth-proofs { display: block; align-self: start; }
+  .auth-note { display: block; }
+  .auth-panel { padding: 16px 40px 16px; }
+}
+@media (max-width: 63.99rem) { .auth-brand { min-height: 120px; } }
+@media (max-width: 63.99rem) { .auth-panel > .auth-col::after { content: none; } }
+/* Sign-in: the step list already names the current step, so its title line is for screen readers only. */
+.auth-col .stepper-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (min-width: 64rem) { .auth-headline { max-width: 19ch; } }

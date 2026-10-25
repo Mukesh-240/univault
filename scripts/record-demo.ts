@@ -54,8 +54,7 @@ async function main() {
 
   await clip(browser, "signin-hero", null, async (p) => {
     await p.goto("/signin"); await beat(p, 3800);
-    await p.locator(".role-card.role-sender button").click(); await beat(p);
-    await p.locator(".profile-card").first().click(); await p.locator("[data-otp]").waitFor(); await beat(p);
+    await p.getByRole("button", { name: "Continue", exact: true }).click(); await p.locator("[data-otp]").waitFor(); await beat(p);
     const code = (await p.locator("[data-otp]").innerText()).trim();
     for (let i = 0; i < 6; i++) { await p.locator(".otp-boxes input").nth(i).fill(code[i]); await p.waitForTimeout(160); }
     await p.locator("main button[type=submit]").click(); await p.locator(".record-card").waitFor(); await beat(p, 1400);

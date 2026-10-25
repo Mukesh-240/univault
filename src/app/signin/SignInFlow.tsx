@@ -1,17 +1,17 @@
 "use client";
 /**
- * SIGN-IN FLOW — pick a role, pick a demo profile, enter the simulated code, allow. One main task per screen.
+ * SIGN-IN FLOW — who you are, the simulated code, allow. Three steps in the same panel, with the Stepper.
  *
- *   Role     three big cards: "I issue documents", "I keep and share my documents", "I received or need a document".
- *   Profile  demo profiles for that role (initials, name, role tag, masked demo ID). "Use a different demo number"
- *            opens the number step instead (12 digits starting 0000, grouped in fours, check digit verified).
+ *   Role     one list of three radio rows (Student or citizen / Issuer / Receiver), then "Signing in as <name>" from
+ *            the demo cast (a choice when a role has several, e.g. VIT or Government), and ONE "Continue" button.
+ *            "Use a different demo number" opens the number step (12 digits starting 0000, check digit verified).
  *   Code     the SIMULATED code is shown in a "Demo" pill (no SMS is sent); six big boxes (pasting works).
  *            5 wrong codes lock that number for 15 minutes (the server counts).
  *   Consent  says exactly what is shared (name, date of birth if there is one, masked ID). Allow starts the session.
  * The server does every real check (src/app/api/auth/*); this file only displays and sends. The full number is sent
  * only to our own server and is never stored or logged.
  */
-import { FilePlus2, FolderLock, Inbox, type LucideIcon } from "lucide-react";
+import { Check, FilePlus2, FolderLock, Inbox, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { post } from "@/components/api";
 import { useI18n } from "@/components/I18n";
@@ -21,25 +21,25 @@ import { signInTrail } from "@/lib/trail";
 import { announce } from "@/components/Live";
 import { format, validate, generate, NUMBER_LENGTH, digitsOnly, type Problem } from "@/lib/synthetic-aadhaar";
 
-type Step = "role" | "profile" | "number" | "code" | "consent";
+type Step = "role" | "number" | "code" | "consent";
 type Role = "issuer" | "sender" | "receiver";
 export interface ClientProfile { role: Role; ref: string; name: string; number: string; masked: string; uvId: string; type: string; category: string | null }
 interface Record_ { name: string | null; dob: string | null; idMasked: string | null }
 interface Chosen { role: Role; ref?: string; name?: string }
 
-const ROLE_CARDS: { role: Role; Icon: LucideIcon }[] = [
-  { role: "issuer", Icon: FilePlus2 }, { role: "sender", Icon: FolderLock }, { role: "receiver", Icon: Inbox },
+const ROLES: { role: Role; Icon: LucideIcon }[] = [
+  { role: "sender", Icon: FolderLock }, { role: "issuer", Icon: FilePlus2 }, { role: "receiver", Icon: Inbox },
 ];
-/** Which of the 3 progress steps a screen is (the role cards come before the steps). */
-const PROGRESS: Record<Step, number> = { role: 0, profile: 1, number: 1, code: 2, consent: 3 };
+/** Which of the 3 steps a screen is. */
+const PROGRESS: Record<Step, number> = { role: 1, number: 1, code: 2, consent: 3 };
 const CODE_LENGTH = 6;
-const ORDER: Step[] = ["role", "profile", "number", "code", "consent"];
-const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
+const ORDER: Step[] = ["role", "number", "code", "consent"];
 
 export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfile[]; initialNumber: string }) {
   const { t } = useI18n();
   const [step, setStep] = useState<Step>("role");
   const [who, setWho] = useState<Chosen>({ role: "sender" });
+  const [pickedRef, setPickedRef] = useState<string | null>(null);
   const [number, setNumber] = useState(format(initialNumber));
   const [numberDigits, setNumberDigits] = useState("");
   const [code, setCode] = useState("");
@@ -108,7 +108,7 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
     setBusy(false);
     if (r.offline) return fail(t("api.offline"));
     if (!r.ok || !r.data.record) {
-      if (r.data.problem === "expired") setStep("profile");
+      if (r.data.problem === "expired") setStep("role");
       return fail(serverMessage(r.data));
     }
     setRecord(r.data.record); setStep("consent");
@@ -117,7 +117,7 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
   const allow = async () => {
     setBusy(true); setMessage(null);
     const r = await post<{ problem?: string; home?: string }>("/api/auth/allow", {});
-    if (!r.ok) { setBusy(false); if (r.data.problem === "expired") setStep("profile"); return r.offline ? fail(t("api.offline")) : fail(serverMessage(r.data)); }
+    if (!r.ok) { setBusy(false); if (r.data.problem === "expired") setStep("role"); return r.offline ? fail(t("api.offline")) : fail(serverMessage(r.data)); }
     window.location.assign(r.data.home ?? "/"); // a full load, so the server draws the signed-in pages
   };
 
@@ -139,56 +139,42 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
   const onKey = (i: number, e: React.KeyboardEvent) => { if (e.key === "Backspace" && !digits[i] && i > 0) boxes.current[i - 1]?.focus(); };
 
   const mine = profiles.filter((p) => p.role === who.role);
+  const chosenProfile = mine.find((p) => p.ref === pickedRef) ?? mine[0];
   const progress = PROGRESS[step];
   const pill = t("signin.demoPill", { code: "\u0001" }).split("\u0001");
-  const title = step === "role" ? t("signin.role.title") : step === "profile" ? t("signin.step.profile") : t(`signin.step${step === "number" ? 1 : step === "code" ? 2 : 3}.title`);
+  const title = step === "role" ? t("stepper.signin.1") : t(`signin.step${step === "number" ? 1 : step === "code" ? 2 : 3}.title`);
 
   return (
     <section aria-labelledby="step-h" data-step={step} ref={root}>
-      {progress > 0 && <Stepper steps={["stepper.signin.1", "stepper.signin.2", "stepper.signin.3"]} current={progress} here={`stepper.signin.${progress}.here`} next={`stepper.signin.${progress}.next`} />}
+      {<Stepper steps={["stepper.signin.1", "stepper.signin.2", "stepper.signin.3"]} current={progress} here={`stepper.signin.${progress}.here`} next={`stepper.signin.${progress}.next`} />}
       <h2 id="step-h" ref={heading} tabIndex={-1}>{title}</h2>
 
       {step === "role" && (
-        <div className="role-cards">
-          {ROLE_CARDS.map(({ role, Icon }) => (
-            <article key={role} className={`role-card role-${role}`}>
-              <span className="role-icon" aria-hidden="true"><Icon size={34} /></span>
-              <h3>{t(`signin.role.${role}.title`)}</h3>
-              <p>{t(`signin.role.${role}.body`)}</p>
-              <button type="button" onClick={() => { setWho({ role }); setStep("profile"); setMessage(null); }}>{t(`signin.role.${role}.btn`)}</button>
-            </article>
-          ))}
-        </div>
-      )}
-
-      {step === "profile" && (
-        <div className="stack">
-          <p className="note">{t("signin.profile.sub")}</p>
-          {message && <p className="callout warn" role="alert">{message}</p>}
-          {mine.length === 0 ? <p className="callout neutral" role="status">{t("signin.profile.empty")}</p> : (
-            <ul className="profile-cards">
+        <form className="stack-s" onSubmit={(e) => { e.preventDefault(); if (chosenProfile) pickProfile(chosenProfile); }}>
+          <fieldset className="role-list">
+            <legend className="sr-only">{t("stepper.signin.1")}</legend>
+            {ROLES.map(({ role, Icon }) => (
+              <label key={role} className={`role-row${who.role === role ? " on" : ""}`}>
+                <input type="radio" name="role" value={role} checked={who.role === role} onChange={() => { setWho({ role }); setPickedRef(null); setMessage(null); }} />
+                <span className="role-ic" aria-hidden="true"><Icon size={22} /></span>
+                <span className="role-txt"><strong>{t(`signin.role.${role}.title`)}</strong><span className="meta">{t(`signin.role.${role}.body`)}</span></span>
+                <Check size={20} className="role-check" aria-hidden="true" />
+              </label>
+            ))}
+          </fieldset>
+          {mine.length > 1 ? (
+            <fieldset className="as-list">
+              <legend>{t("signin.asPick")}</legend>
               {mine.map((p) => (
-                <li key={p.ref}>
-                  <button type="button" className={`profile-card role-${p.role}`} disabled={busy} onClick={() => pickProfile(p)}>
-                    <span className="avatar" aria-hidden="true">{initials(p.name)}</span>
-                    <span className="profile-text">
-                      <strong>{p.name}</strong>
-                      <span className="chip role-chip">{t(`signin.role.${p.role}.tag`)}</span>
-                      <span className="meta">{t(`acct.type.${p.type}`)}{p.category ? ` · ${t(`acct.cat.${p.category}`)}` : ""}</span>
-                      <span className="tabular meta">{p.uvId} · {p.masked}</span>
-                      <span className="meta">{t("acct.simulated")}</span>
-                      <span className="use">{busy ? t("share.working") : t("signin.profile.use")}</span>
-                    </span>
-                  </button>
-                </li>
+                <label key={p.ref} className="as-row"><input type="radio" name="as" checked={chosenProfile?.ref === p.ref} onChange={() => setPickedRef(p.ref)} /> {p.name}</label>
               ))}
-            </ul>
-          )}
-          <div className="row">
-            <button type="button" className="text" onClick={() => { setStep("number"); setMessage(null); }}>{t("signin.other")}</button>
-            <button type="button" className="text" onClick={() => { setStep("role"); setMessage(null); }}>{t("ui.back")}</button>
-          </div>
-        </div>
+            </fieldset>
+          ) : chosenProfile ? <p className="as-line">{t("signin.as", { name: chosenProfile.name })}</p>
+            : <p className="callout neutral" role="status">{t("signin.profile.empty")}</p>}
+          {message && <p className="callout warn" role="alert">{message}</p>}
+          <button type="submit" className="block" disabled={busy || !chosenProfile}>{busy ? t("share.working") : t("signin.continue")}</button>
+          <button type="button" className="text" onClick={() => { setStep("number"); setMessage(null); }}>{t("signin.other")}</button>
+        </form>
       )}
 
       {step === "number" && (
@@ -206,7 +192,7 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
           </div>
           {message && <p className="callout warn" role="alert">{message}</p>}
           <button type="submit" disabled={busy}>{busy ? t("share.working") : t("signin.sendCode")}</button>
-          <div className="row"><button type="button" className="text" onClick={() => { setStep("profile"); setMessage(null); }}>{t("ui.back")}</button></div>
+          <div className="row"><button type="button" className="text" onClick={() => { setStep("role"); setMessage(null); }}>{t("ui.back")}</button></div>
         </form>
       )}
 
@@ -229,7 +215,7 @@ export function SignInFlow({ profiles, initialNumber }: { profiles: ClientProfil
           {message && <p className="callout warn" role="alert">{message}</p>}
           <button type="submit" disabled={busy}>{busy ? t("share.working") : t("signin.checkCode")}</button>
           <div className="row">
-            <button type="button" className="text" onClick={() => { setStep("profile"); setMessage(null); }}>{t("ui.back")}</button>
+            <button type="button" className="text" onClick={() => { setStep("role"); setMessage(null); }}>{t("ui.back")}</button>
             <button type="button" className="text" onClick={() => sendCode(numberDigits)} disabled={busy}>{t("signin.newCode")}</button>
           </div>
           {/* Reaching this screen means the server accepted the demo number: the trail shows that. */}

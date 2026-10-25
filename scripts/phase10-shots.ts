@@ -12,7 +12,7 @@ import { generate } from "../src/lib/synthetic-aadhaar";
 
 const BASE = process.env.BASE ?? "http://localhost:3400";
 const TAG = process.env.TAG ?? "after";
-const OUT = `docs/screenshots/phase10/${TAG}`;
+const OUT = `docs/screenshots/${process.env.PHASE ?? "phase10"}/${TAG}`;
 const WIDTHS = (process.env.WIDTHS ?? "1440,768,390").split(",").map(Number);
 const LANGS = (process.env.LANGS ?? "en,te").split(",") as ("en" | "te")[];
 const ONLY = process.env.ONLY?.split(","); // e.g. ONLY=home,share to photograph a few pages

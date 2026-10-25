@@ -21,10 +21,9 @@ const signedOut = { cookies: [], origins: [] };
 async function typeCode(page: Page, code: string, label: (n: number) => string) {
   for (let i = 1; i <= 6; i++) await page.getByLabel(label(i)).fill(code[i - 1]);
 }
-/** Role cards -> "Continue as sender" -> "Use a different demo number": the typed-number step. */
+/** Role list -> "Use a different demo number": the typed-number step. */
 async function toNumberStep(page: Page) {
   await page.goto("/signin");
-  await page.getByRole("button", { name: "Continue as sender" }).click();
   await page.getByRole("button", { name: "Use a different demo number" }).click();
 }
 const digit = (n: number) => `Digit ${n} of 6`;
@@ -37,7 +36,7 @@ test.describe("signed out", () => {
   test("pages go to /signin, APIs answer 401, the trust pages stay open", async ({ page, request }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/signin$/);
-    await expect(page.locator("h1")).toContainText("Your documents");
+    await expect(page.locator("h1")).toContainText("Sign in to the demo");
     expect((await request.get("/api/notifications")).status()).toBe(401);
     expect((await request.post("/api/upload", { data: {} })).status()).toBe(401);
     expect((await request.get("/api/health")).status()).toBe(200);
@@ -49,11 +48,10 @@ test.describe("signed out", () => {
   test("English: three steps, then Home greets by name; Profile shows only the masked number; Sign out", async ({ page }) => {
     await page.goto("/signin");
     await expect(page.getByText("Demo only: all data is synthetic and the sign-in is simulated.")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Who are you today?" })).toBeVisible();
-    await page.getByRole("button", { name: "Continue as sender" }).click();
-    await expect(page.getByRole("heading", { name: "Choose a demo profile" })).toBeVisible();
-    const number = (await page.locator(".profile-card .tabular").first().innerText()).trim().slice(-4);
-    await page.locator(".profile-card").first().click();
+    await expect(page.getByRole("heading", { name: "Who you are" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: /Student or citizen/ })).toBeChecked();
+    await expect(page.locator(".as-line")).toContainText("Signing in as Mahesh Mekhala");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
 
     await expect(page.getByRole("heading", { name: "Enter the code" })).toBeVisible();
     await expect(page.getByText("Demo: no SMS is sent.")).toBeVisible();
@@ -63,13 +61,13 @@ test.describe("signed out", () => {
     await page.getByRole("button", { name: "Check the code" }).click();
 
     await expect(page.getByRole("heading", { name: "Allow UNIVAULT to see" })).toBeVisible();
-    await expect(page.locator(".record-card")).toContainText(`XXXX XXXX ${number}`);
+    await expect(page.locator(".record-card")).toContainText("Mahesh Mekhala");
     await page.getByRole("button", { name: "Allow" }).click();
 
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator("h1")).toContainText("Namaste, ");
     await page.getByRole("button", { name: "Profile" }).click();
-    await expect(page.locator(".pop")).toContainText(`XXXX XXXX ${number}`);
+    await expect(page.locator(".pop")).toContainText(/XXXX XXXX \d{4}/);
     await page.getByRole("button", { name: "Sign out" }).click();
     await expect(page).toHaveURL(/\/signin$/);
     await page.goto("/shares");
@@ -118,12 +116,10 @@ test.describe("signed out", () => {
     await context.addCookies([{ name: "uv_lang", value: "te", url: baseURL! }]);
     await page.goto("/signin");
     await expect(page.locator("html")).toHaveAttribute("lang", "te");
-    await expect(page.locator("h1")).toHaveText(te["signin.hero.title"]);
+    await expect(page.locator("h1")).toHaveText(te["signin.panel.title"]);
     await expect(page.getByText(te["signin.footer"])).toBeVisible();
-    await expect(page.getByRole("heading", { name: te["signin.role.title"] })).toBeVisible();
-    await page.getByRole("button", { name: te["signin.role.sender.btn"] }).click();
-    await expect(page.getByRole("heading", { name: te["signin.step.profile"] })).toBeVisible();
-    await page.locator(".profile-card").first().click();
+    await expect(page.getByRole("heading", { name: te["stepper.signin.1"] })).toBeVisible();
+    await page.getByRole("button", { name: te["signin.continue"], exact: true }).click();
     await expect(page.getByRole("heading", { name: te["signin.step2.title"] })).toBeVisible();
     const code = (await page.locator("[data-otp]").innerText()).trim();
     await typeCode(page, code, (n) => te["signin.digit"].replace("{n}", String(n)).replace("{total}", "6"));
@@ -139,7 +135,7 @@ test.describe("signed out", () => {
     const p = await ctx.newPage();
     await p.goto("/signin");
     await expect(p.locator("html")).toHaveAttribute("lang", "te");
-    await expect(p.locator("h1")).toHaveText(te["signin.hero.title"]);
+    await expect(p.locator("h1")).toHaveText(te["signin.panel.title"]);
     await ctx.close();
   });
 

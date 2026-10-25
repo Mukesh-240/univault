@@ -138,9 +138,8 @@ test.describe("signed out", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
   test("sign-in: the stepper and the trail of what the server has accepted so far", async ({ page }) => {
     await page.goto("/signin");
-    await page.locator(".role-card.role-sender button").click();
     await expect(page.locator(".stepper-title")).toContainText("Step 1 of 3");
-    await page.locator(".profile-card").first().click();
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await page.locator("[data-otp]").waitFor();
     await expect(page.locator(".stepper-title")).toContainText("Step 2 of 3");
     await expect(trail(page)).toContainText("Checked the demo number's format");

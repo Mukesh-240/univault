@@ -65,6 +65,14 @@ export function Chrome({ user, size, contrast, offline, children }: {
   const full = Boolean(user) && !path.startsWith("/signin");
   const role: Role = user?.role ?? "sender";
   const menu = MENUS[role];
+  // The sign-in page draws its own split screen (brand + form, with its own small footer): only the strip here.
+  if (path.startsWith("/signin")) return (
+    <>
+      <a href="#main" className="skip-link">{t("a11y.skip")}</a>
+      <p className="synthetic-strip" role="note">{t("strip.text")}{offline ? ` · ${t("banner.offlineStore")}` : ""}</p>
+      <main id="main" tabIndex={-1} className="auth-main">{children}</main>
+    </>
+  );
   return (
     <>
       <a href="#main" className="skip-link">{t("a11y.skip")}</a>
