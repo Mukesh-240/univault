@@ -20,6 +20,9 @@ import { open, SESSION_COOKIE, type Role, type SessionPayload } from "@/lib/sess
 const NOT_CONFIGURED = "Database not configured: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, then redeploy.";
 
 const MAX_BODY_BYTES = 256 * 1024;
+/** The two upload routes carry a file (a PDF or a smaller-made photo, at most 700 KB, sent as text-safe base64). */
+const UPLOAD_BODY_BYTES = 1024 * 1024;
+const UPLOAD_ROUTES = ["/api/upload/read", "/api/upload/document"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -37,8 +40,9 @@ export async function middleware(req: NextRequest) {
     if (!req.headers.has("content-length") || !Number.isFinite(size)) {
       return NextResponse.json({ error: "Please send the size of the request (Content-Length)." }, { status: 411 });
     }
-    if (size > MAX_BODY_BYTES) {
-      return NextResponse.json({ error: `The request is too large (limit ${MAX_BODY_BYTES / 1024} KB). Nothing was stored.` }, { status: 413 });
+    const limit = UPLOAD_ROUTES.includes(pathname) ? UPLOAD_BODY_BYTES : MAX_BODY_BYTES;
+    if (size > limit) {
+      return NextResponse.json({ error: `The request is too large (limit ${limit / 1024} KB). Nothing was stored.` }, { status: 413 });
     }
   }
   const secret = process.env.VAULT_PRIVATE_KEY;

@@ -120,6 +120,8 @@ test("eligibility: the receiver's stepper, then the owner's trail with each crit
   await r.getByRole("button", { name: "Send eligibility request" }).click();
   await expect(r.locator("#main").getByText(/Request sent\./)).toBeVisible();
   await s.goto("/alerts");
+  // The student is told: the request is in Alerts (and in the bell).
+  await expect(s.locator("#main")).toContainText("asked you to answer an eligibility check");
   const card = s.locator("li.card").filter({ hasText: "criteria for" }).first();
   await expect(card.locator(".stepper-title")).toContainText("Step 2 of 3");
   await card.locator("input[type=checkbox]").first().check();

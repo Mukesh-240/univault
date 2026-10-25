@@ -74,6 +74,9 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   const ago = agoKey(agoParts(v?.checkedAt, now));
   const scan = doc.capture === "scan";
   const scanFile = meta.synthetic_origin?.dataset === "scans" ? meta.synthetic_origin.ref : undefined;
+  // A file the student uploaded (PDF or photo) is kept with the content; show a link to open it again.
+  const pay = await supabase.from("document_payloads").select("content").eq("document_id", doc.id);
+  const hasOriginal = Boolean(((pay.data?.[0] as { content?: { original_file?: unknown } } | undefined)?.content)?.original_file);
   const hints = new Map(reviewHints(doc).map((h) => [h.field, h.why]));
   const injection = scanDocument(doc);
   const sig = v?.signatureValid === undefined ? t("doc.expert.sigNone") : v.signatureValid ? t("doc.expert.sigOk") : t("doc.expert.sigBad");
@@ -84,6 +87,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       <div className="page-head">
         <div className="icon-title"><DocIcon type={doc.doc_type} size={40} /><h1 lang={hasTelugu(doc.title) ? "te" : undefined}>{doc.title}</h1></div>
         <p className="meta">{doc.issuer ?? t("vault.noIssuer")}</p>
+        {hasOriginal && <p><a href={`/api/documents/${doc.id}/file`} target="_blank" rel="noopener" className="btn secondary btn-small">{t("up.original")}</a></p>}
       </div>
 
       <div className="doc-layout">

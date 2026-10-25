@@ -71,6 +71,9 @@ test("keyboard only: home -> am I ready? -> same person? yes -> scan and fix a f
   // A link pressed with Enter changes the address before the new page is drawn: wait for the scan cards before
   // deciding whether the scan is already stored (counting too early made this test look for an "Add" button that
   // is not there when the shared demo vault already holds the scan).
+  // The built-in sample scans are folded away ("for testing"): open that section with the keyboard first.
+  await tabTo(page, "#sample-scans > summary");
+  await page.keyboard.press("Enter");
   await page.locator("main li.card").first().waitFor();
   if (!(await page.locator(input).count())) {
     await tabTo(page, "button", "Add to my documents");

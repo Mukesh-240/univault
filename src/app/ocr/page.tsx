@@ -21,6 +21,7 @@ import { reviewHints } from "@/lib/ocr";
 import { DEMO_OWNER, loadDemoVault } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
 import { OcrWorkbench, type ScanItem } from "./OcrWorkbench";
+import { Uploader } from "@/components/Uploader";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -71,10 +72,16 @@ export default async function OcrPage() {
 
   return (
     <>
-      <h1>{t("ocr.title")}</h1>
-      <p className="lead">{t("ocr.intro")}</p>
-      <p className="note">{t("ocr.unconfirmed")}</p>
-      <OcrWorkbench items={items} engine={fixtures.engine} created={fixtures.created} />
+      <h1>{t("up.photoTitle")}</h1>
+      <p className="lead">{t("up.photoIntro")}</p>
+      <Uploader />
+
+      {/* The old built-in sample scans (another, made-up person's papers) are only for testing the text reader. */}
+      <details className="expert" id="sample-scans">
+        <summary>{t("up.samples")}</summary>
+        <p className="note">{t("ocr.intro")} {t("ocr.unconfirmed")}</p>
+        <OcrWorkbench items={items} engine={fixtures.engine} created={fixtures.created} />
+      </details>
 
       <details className="expert">
         <summary>{t("ui.experts")}: {t("ocr.evalTitle")}</summary>

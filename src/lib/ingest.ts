@@ -73,6 +73,9 @@ export const DocumentInput = z.object({
   // The issuer per-field random salts, delivered with an issuer-made document (stored with the content, never in the hash,
   // never shown to a recipient). Without them a salted registry record cannot be compared field by field.
   salts: z.record(z.string().max(60), z.string().regex(/^[0-9a-f]{32}$/)).optional(),
+  // The original file the person uploaded (a PDF or a photo, base64), kept with the erasable content so they can open
+  // it again. It is not part of the fingerprint (the fingerprint covers the details read from it).
+  original_file: z.object({ mime: z.enum(["application/pdf", "image/jpeg", "image/png"]), b64: z.string().max(1_000_000) }).optional(),
   synthetic: z.boolean(),                                   // label only: is this demo data?
   synthetic_origin: SyntheticOrigin.nullable().optional(),  // label only: where the demo data came from
 });
@@ -121,7 +124,7 @@ export async function ingestDocument(db: Db, raw: unknown): Promise<IngestResult
   // ponytail: no cross-table transaction with the anon key; if this fails, an immutable cover record
   // remains without content, and the vault should show it as "upload incomplete". Upgrade path: a
   // single database function that does steps 3–5 in one transaction.
-  const pay = await db.from("document_payloads").insert({ document_id: id, content: { ...payloadOf(d), ...(d.salts ? { salts: d.salts } : {}) }, ocr_confidence: d.ocr_confidence ?? null });
+  const pay = await db.from("document_payloads").insert({ document_id: id, content: { ...payloadOf(d), ...(d.salts ? { salts: d.salts } : {}), ...(d.original_file ? { original_file: d.original_file } : {}) }, ocr_confidence: d.ocr_confidence ?? null });
   if (pay.error) {
     log("error", "ingest: payload insert failed", { id, code: pay.error.code });
     throw new Error(`payload insert failed: ${pay.error.message}`);

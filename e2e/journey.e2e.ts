@@ -59,6 +59,7 @@ test("journey: upload -> OCR fix -> verify -> readiness -> names -> share -> rec
   const scan = truth.scans[0];
   const input = page.locator(`[id="ocr-${scan.file.replace("scans/", "")}-reg_no"]`);
   await go(page, "/ocr");
+  await page.locator("#sample-scans > summary").click(); // the built-in sample scans are folded away under "for testing"
   if (!(await input.count())) {
     await page.getByRole("button", { name: "Add to my documents" }).first().click();
     await expect(live(page)).toContainText("Added to your documents", { timeout: 30_000 });

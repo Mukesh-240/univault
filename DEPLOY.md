@@ -40,7 +40,7 @@ New key pair needed? Generate one with the one-line command in `UNIVAULT_SPEC.md
 - The vault page lists the synthetic documents, with no "Offline demo store" banner.
 - Send the URL back so the smoke test can run (health, vault page, one verify call, one share flow).
 
-## 4. Optional: reset the demo data before judging
+## 4. Empty the demo database (owner action)
 
 The live database is append-only, so test runs leave their shares, notifications and erased test documents behind. (The browser tests themselves only erase a throwaway document they upload.) To start the demo from a clean showcase:
 
@@ -54,7 +54,8 @@ The live database is append-only, so test runs leave their shares, notifications
    update public.issuer_config set is_down = false, updated_at = now() where id = 1;
    ```
 
-2. Locally, run `npm run seed` and then `npm run db:check`.
+2. Nothing else is needed: the database is now empty. The demo cast (VIT, Government, Mahesh Mekhala, Google) is in `src/config/demo-cast.json`; Google is added to the recipients table by itself on the first sign-in (or run `npm run seed`, which now adds only the cast, never documents). The vault fills only with what VIT or the Government issue, or what the student uploads. (`npm run seed -- --set showcase` still loads the old synthetic dataset, for testing only.)
+3. The browser tests no longer touch this database: `playwright.config.ts` starts the test server with `UNIVAULT_FORCE_OFFLINE=1` (the in-memory store).
 
 This step permanently deletes the demo history. Only run it on the demo project.
 
