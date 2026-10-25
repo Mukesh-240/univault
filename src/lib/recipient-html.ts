@@ -29,7 +29,7 @@ button{font:inherit;font-weight:600;background:#1565D8;color:#fff;border:1px sol
 code,[data-otp]{font-family:ui-monospace,Consolas,monospace;font-weight:500}
 .st{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;color:#4A5B78}.st .now{color:#07245A;font-weight:600}.st .done{color:#0F7B4F}
 .tr{list-style:none;margin:0;padding:0}.tr li{padding:6px 0;border-top:1px solid #D5E1F2}.tr li:first-child{border-top:0}.tr .k{font-weight:600}.tr .done .k{color:#0F7B4F}.tr .failed .k{color:#B3261E}.tr .waiting .k{color:#8A5200}.tr .skipped .k{color:#475569}
-.tr details{font-size:14px;color:#4A5B78}
+.tr details{font-size:14px;color:#4A5B78}#tr-h{font-size:18px;margin:0 0 8px}
 a{color:#0B3A8C}:focus-visible{outline:3px solid #1565D8;outline-offset:2px;box-shadow:0 0 0 6px #fff}`;
 
 /** "Where am I" (four gate steps) and "what just happened" (the real steps of this attempt), as plain HTML. */

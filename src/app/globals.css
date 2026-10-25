@@ -840,3 +840,8 @@ details.expert { border: 1px solid var(--line); border-radius: 12px; margin-top:
 .under-hood dd { margin: 0; color: var(--muted); font-size: 0.875rem; }
 .mono { font-family: var(--font-mono); font-weight: 500; }
 html[data-contrast="high"] .trail, html[data-contrast="high"] .stepper { border: 2px solid #000; }
+/* Self-critique round 1: person cards read left to right; the stepper's two lines flow as sentences. */
+.profile-card { justify-content: flex-start; }
+.stepper-what div { display: block; }
+.stepper-what dt, .stepper-what dd { display: inline; }
+.stepper-what dt::after { content: ": "; }
