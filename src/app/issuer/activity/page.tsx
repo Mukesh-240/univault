@@ -5,6 +5,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { issuerActivity } from "@/lib/issuer-portal";
 import { supabase } from "@/lib/supabase";
 import { ActivityList } from "../ActivityList";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,7 +16,7 @@ export default async function ActivityPage() {
   const items = await issuerActivity(supabase, issuer, 50);
   return (
     <>
-      <h1>{t("nav.issuer.side.activity")}</h1>
+      <PageHead title={t("nav.issuer.side.activity")} purpose={t("p11.purpose.issuerActivity")} />
       <ActivityList items={items.map((a) => ({ ...a, when: showTime(a.at), type: a.docType ? docTypeLabel(lang, a.docType) : "" }))} />
     </>
   );

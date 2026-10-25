@@ -11,6 +11,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { listIssued, type IssuedRow } from "@/lib/issuer-portal";
 import { supabase } from "@/lib/supabase";
 import { RevokeButton } from "./RevokeButton";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -34,8 +35,7 @@ export default async function IssuedPage({ searchParams }: { searchParams: Promi
     && (!q || r.serial.toLowerCase().includes(q) || docTypeLabel(lang, r.docType).toLowerCase().includes(q)));
   return (
     <>
-      <h1>{t("issuer.issued.title")}</h1>
-      <p className="lead">{t("issuer.issued.intro")}</p>
+      <PageHead title={t("issuer.issued.title")} purpose={t("issuer.issued.intro")} action={{ href: "/issuer/issue", label: t("issuer.btn.issue") }} />
       <form className="filter-form" method="get" action="/issuer/issued">
         <div className="field">
           <label htmlFor="iq">{t("home.search")}</label>

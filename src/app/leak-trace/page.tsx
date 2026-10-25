@@ -4,6 +4,7 @@
  */
 import { getI18n } from "@/lib/i18n-server";
 import { LeakTrace } from "./LeakTrace";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -12,8 +13,7 @@ export default async function LeakTracePage() {
   const { t } = await getI18n();
   return (
     <>
-      <h1>{t("leak.title")}</h1>
-      <p className="lead">{t("leak.intro")}</p>
+      <PageHead title={t("leak.title")} purpose={t("leak.intro")} links={[{ href: "/ledger", label: t("nav.ledger") }, { href: "/shares", label: t("nav2.access") }]} />
       <p className="note">{t("preview.watermark")}</p>
       <LeakTrace />
     </>

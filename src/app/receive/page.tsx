@@ -13,6 +13,7 @@ import { personRecord } from "@/lib/person";
 import { loadDemoVault } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
 import { RequestCards } from "./RequestCards";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -34,11 +35,8 @@ export default async function ReceiveHome() {
   const holder = personRecord(vault.docs).name ?? "";
   return (
     <>
-      <section className="hero role-receiver">
-        <h1>{t("recv.title")}</h1>
-        <p className="lead">{t("recv.sub")}</p>
-        <div className="row"><Link href="/receive/ask" className="btn"><Send size={22} aria-hidden="true" /> {t("recv.ask.btn")}</Link><Link href="/receive/eligibility" className="btn secondary">{t("recv.eligibility.btn")}</Link></div>
-      </section>
+      <PageHead title={t("recv.title")} purpose={t("recv.sub")} action={{ href: "/receive/ask", label: t("recv.ask.btn"), icon: <Send size={18} aria-hidden="true" /> }}
+        links={[{ href: "/receive/eligibility", label: t("recv.eligibility.btn") }, { href: "/receive/requests", label: t("nav.recv.side.requests") }]} />
       <section aria-labelledby="sh-h" className="stack-s">
         <h2 id="sh-h">{t("recv.shared.title")}</h2>
         {shares.length === 0 ? (

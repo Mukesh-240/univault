@@ -6,6 +6,7 @@
  * cookie to e2e-results/auth.json. playwright.config.ts hands that file to every test. The sign-in tests
  * themselves start with no cookies (see e2e/signin.e2e.ts) and go through the real screens.
  */
+import { readFileSync, writeFileSync } from "node:fs";
 import { request, type FullConfig } from "@playwright/test";
 import { generate } from "../src/lib/synthetic-aadhaar";
 
@@ -24,7 +25,12 @@ async function signIn(baseURL: string | undefined, role: "issuer" | "sender" | "
   if (!checked.ok()) throw new Error(`sign-in (${role}): code check failed (${checked.status()})`);
   const allowed = await api.post("/api/auth/allow", { data: {} });
   if (!allowed.ok()) throw new Error(`sign-in (${role}): allow failed (${allowed.status()})`);
+  // Tests start with the first-run tour already dismissed (e2e/phase11.e2e.ts tests the tour itself).
   await api.storageState({ path: file });
+  const state = JSON.parse(readFileSync(file, "utf8")) as { cookies: Record<string, unknown>[] };
+  const site = new URL(baseURL ?? "http://localhost:3100");
+  state.cookies.push({ name: "uv_tour", value: "done", domain: site.hostname, path: "/", expires: -1, httpOnly: false, secure: false, sameSite: "Lax" });
+  writeFileSync(file, JSON.stringify(state));
   await api.dispose();
 }
 

@@ -104,3 +104,34 @@ export function filterDocs(docs: VaultDoc[], ctx: Pick<EngineContext, "verificat
     return !q || `${d.title} ${d.issuer ?? ""} ${d.doc_type.replace(/_/g, " ")}`.toLowerCase().includes(q);
   });
 }
+
+// ─────────────────────────── Home: "Needs your attention" ───────────────────────────
+
+/** One row of the Home attention card: one TITLE (never repeated), how many copies have it, and the worst status. */
+export interface AttentionRow { title: string; docId: string; status: Exclude<Status, "verified">; copies: number; open: number }
+const SEVERITY: Record<Status, number> = { rejected: 3, attention: 2, unchecked: 1, verified: 0 };
+
+/**
+ * The documents that need a look, grouped by title so the same title is never listed twice ("Degree certificate:
+ * 3 copies, 1 not checked"), worst first (not accepted, then needs attention, then not checked), at most `max` rows.
+ * `total` is how many documents need a look in all.
+ */
+export function attentionRows(docs: Pick<VaultDoc, "id" | "title">[], ctx: Pick<EngineContext, "verification">, max = 3): { rows: AttentionRow[]; total: number } {
+  const groups = new Map<string, { docs: { id: string; status: Status }[] }>();
+  for (const d of docs) {
+    const g = groups.get(d.title) ?? { docs: [] };
+    g.docs.push({ id: d.id, status: statusOfDoc(d, ctx) });
+    groups.set(d.title, g);
+  }
+  const rows: AttentionRow[] = [];
+  let total = 0;
+  for (const [title, g] of groups) {
+    const open = g.docs.filter((x) => x.status !== "verified");
+    total += open.length;
+    if (!open.length) continue;
+    const worst = open.reduce((a, b) => (SEVERITY[b.status] > SEVERITY[a.status] ? b : a));
+    rows.push({ title, docId: worst.id, status: worst.status as AttentionRow["status"], copies: g.docs.length, open: open.length });
+  }
+  rows.sort((a, b) => SEVERITY[b.status] - SEVERITY[a.status] || a.title.localeCompare(b.title));
+  return { rows: rows.slice(0, max), total };
+}

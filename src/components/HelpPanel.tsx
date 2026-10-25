@@ -14,7 +14,7 @@ import { useI18n } from "./I18n";
 
 const SEEN = "uv_help_seen";
 
-export function HelpPanel() {
+export function HelpPanel({ inMenu = false }: { inMenu?: boolean }) {
   const { t } = useI18n();
   const screen = helpScreenFor(usePathname());
   const dialog = useRef<HTMLDialogElement>(null);
@@ -24,8 +24,8 @@ export function HelpPanel() {
   }, []);
   return (
     <>
-      <button type="button" className={small ? "help-btn small" : "help-btn"} onClick={() => dialog.current?.showModal()}>
-        <CircleHelp size={20} aria-hidden="true" /> <span className={small ? "sr-only" : undefined}>{t("ui.help")}</span>
+      <button type="button" className={inMenu ? "text help-btn" : small ? "help-btn small" : "help-btn"} onClick={() => dialog.current?.showModal()}>
+        <CircleHelp size={20} aria-hidden="true" /> <span className={small && !inMenu ? "sr-only" : undefined}>{t("ui.help")}</span>
       </button>
       <dialog ref={dialog} aria-labelledby="help-title">
         <h2 id="help-title">{t(`help.${screen}.title`)}</h2>

@@ -1,0 +1,11 @@
+{
+  "_about": "The demo script for judges, for /demo. Each step: an id (its words are demo.step.<id> / .why in the locale files), the role to sign in as, and the exact screen the Go button opens. No results are written here: every screen shows what really happens.",
+  "steps": [
+    { "id": "issue", "role": "issuer", "href": "/issuer/issue" },
+    { "id": "check", "role": "sender", "href": "/verify" },
+    { "id": "upload", "role": "sender", "href": "/add" },
+    { "id": "ask", "role": "receiver", "href": "/receive/eligibility" },
+    { "id": "answer", "role": "sender", "href": "/alerts" },
+    { "id": "stop", "role": "sender", "href": "/shares" }
+  ]
+}

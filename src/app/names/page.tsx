@@ -16,6 +16,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { candidatePairs, type CandidatePair } from "@/lib/resolution";
 import { loadDemoVault } from "@/lib/server";
 import type { VaultDoc } from "@/lib/vault";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -55,8 +56,7 @@ export default async function NamesPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <h1>{t("names.title")}</h1>
-      <p className="lead">{t("names.intro")}</p>
+      <PageHead title={t("names.title")} purpose={t("names.intro")} links={[{ href: "/documents", label: t("nav2.docs") }]} />
       <p className="note">{t("names.never")}</p>
       <Stepper steps={["stepper.names.1", "stepper.names.2"]} current={1} here="stepper.names.1.here" next="stepper.names.1.next" />
       {ranked.length === 0 ? <p>{t("names.none")}</p> : (

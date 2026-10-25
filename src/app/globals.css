@@ -913,3 +913,76 @@ label.btn { cursor: pointer; }
 /* Sign-in: the step list already names the current step, so its title line is for screen readers only. */
 .auth-col .stepper-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (min-width: 64rem) { .auth-headline { max-width: 19ch; } }
+
+/* ═════════ PHASE 11: CALM TRUST — home, menus, page heads, features, demo, tour ═════════
+   One blue accent (no role colours), one job per screen, title + one sentence + one primary action. */
+:root { --role-issuer: var(--action); --role-receiver: var(--action); --role-sender: var(--action); }
+.hero.role-issuer, .hero.role-receiver { border-top: 1px solid var(--line); }
+main { max-width: 1100px; }
+.page-head2 { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.page-head2-txt { min-width: 0; flex: 1 1 24rem; }
+.page-head2 h1 { margin: 0 0 4px; }
+.page-purpose { margin: 0; color: var(--muted); max-width: 64ch; }
+.page-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; }
+.page-links a { display: inline-flex; align-items: center; min-height: 32px; font-weight: 500; }
+
+.home2-head { margin-bottom: 8px; }
+.home2-head .greeting { font-size: 1.5rem; }
+.tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+.tile { display: flex; gap: 12px; align-items: flex-start; height: 100%; padding: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); color: var(--text); text-decoration: none; transition: border-color .15s ease, box-shadow .15s ease; }
+.tile:hover { border-color: var(--action); box-shadow: var(--shadow-lift); }
+.tile-ic { flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--tint-50); color: var(--action); }
+.tile-txt { display: grid; gap: 2px; }
+.tile-txt strong { font-weight: 600; color: var(--navy-deep); }
+.tile-txt span { color: var(--muted); font-size: 0.9375rem; }
+.home2-grid { display: grid; gap: 16px; margin-top: 24px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 64rem) { .home2-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; } }
+.home2-grid > .card { margin: 0; }
+.attn-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.attn-list li { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); }
+.attn-list li:first-child { border-top: 0; }
+.attn-txt { display: grid; gap: 2px; min-width: 0; flex: 1 1 14rem; }
+.all-clear { display: flex; gap: 8px; align-items: center; margin: 0; color: var(--ok); font-weight: 500; }
+.ready-one select { min-height: 40px; max-width: 14rem; }
+.ready-body { display: flex; gap: 16px; align-items: center; }
+.ready-body .ring { width: 4rem; height: 4rem; }
+.ready-body .big { margin: 0 0 4px; font-weight: 500; }
+.doc-list.compact .doc-row { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.6fr) minmax(0, 1.2fr); }
+@media (max-width: 48rem) { .doc-list.compact .doc-row { grid-template-columns: minmax(0, 1fr); } .doc-list.compact .doc-row > * { grid-column: 1; } }
+.home2-foot { margin-top: 24px; }
+.filter-bar input[type="search"] { flex: 1 1 14rem; width: auto; min-width: 0; }
+.filter-bar select { min-height: 44px; }
+
+.side-group { margin: 24px 0 4px; padding: 0 12px; font-size: 0.8125rem; font-weight: 600; color: var(--muted); text-transform: none; }
+.sidenav .side-trust a { min-height: 36px; font-size: 0.875rem; font-weight: 400; color: var(--muted); }
+.sidenav .side-trust { gap: 0 !important; }
+
+.avatar-menu h2 { margin: 0 0 4px; }
+.avatar-menu .menu-links { list-style: none; margin: 8px 0; padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 0; }
+.avatar-menu .menu-links a, .avatar-menu .menu-links button { display: flex; align-items: center; gap: 8px; min-height: 44px; width: 100%; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: var(--text); text-decoration: none; font-weight: 500; justify-content: flex-start; }
+.avatar-menu .menu-links a:hover, .avatar-menu .menu-links button:hover:not(:disabled) { background: var(--tint-50); }
+.avatar-menu .menu-lang { display: none; margin: 8px 0; }
+@media (max-width: 40rem) { .avatar-menu .menu-lang { display: block; } .tools > .tool-lang { display: none; } }
+.tools > .tool-profile { display: block !important; }
+
+.feature-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); }
+.feature { display: grid; gap: 6px; align-content: start; margin: 0; }
+.feature h3 { margin: 4px 0 0; font-size: 1rem; }
+.feature p { margin: 0; }
+.feature-top { display: flex; justify-content: space-between; align-items: center; }
+.feature .btn { justify-self: start; margin-top: 4px; }
+
+.demo-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.demo-step { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px 16px; align-items: center; margin: 0; }
+.demo-n { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--action); color: #FFFFFF; font-weight: 600; }
+.demo-txt h2 { margin: 0 0 2px; }
+.demo-txt p { margin: 0; }
+@media (max-width: 40rem) { .demo-step { grid-template-columns: 36px minmax(0, 1fr); } .demo-step .btn { grid-column: 1 / -1; justify-self: start; } }
+
+.tour { position: fixed; z-index: 32; left: 16px; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); max-width: 30rem; margin-inline: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lift); padding: 16px; }
+.tour h2 { margin: 0 0 8px; }
+.tour .stepper { border: 0; padding: 0; margin: 0 0 8px; }
+.tour .row { margin: 0; }
+.tour-spacer { flex: 1; }
+@media (min-width: 64rem) { .tour { left: auto; right: 24px; bottom: 24px; margin: 0; } }
+/* The tour (z 32) sits below the header layer (z 35), so an open header menu is always above it. */

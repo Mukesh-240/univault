@@ -11,7 +11,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { AUTH_FILE, ISSUER_AUTH, RECEIVER_AUTH } from "./global-setup";
 
 // "/doc" stands for one real document page (its id is looked up on Home).
-const PAGES = ["/signin", "/", "/doc", "/readiness", "/share", "/shares", "/alerts", "/more", "/add", "/add/file", "/ocr", "/names", "/verify", "/ledger",
+const PAGES = ["/signin", "/", "/documents", "/features", "/demo", "/doc", "/readiness", "/share", "/shares", "/alerts", "/more", "/add", "/add/file", "/ocr", "/names", "/verify", "/ledger",
   "/leak-trace", "/assistant", "/faults", "/threat-model", "/policy", "/s/preview?purpose=scholarship", "/s/not-a-real-link"];
 // The other two roles have their own pages; each is scanned signed in as that role.
 const ISSUER_PAGES = ["/issuer", "/issuer/issue", "/issuer/issued", "/issuer/activity", "/issuer/more"];

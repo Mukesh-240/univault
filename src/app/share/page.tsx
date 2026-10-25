@@ -9,6 +9,7 @@ import { loadPacks } from "@/lib/rules";
 import { loadDemoVault } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
 import { ShareBuilder } from "./ShareBuilder";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,8 +30,7 @@ export default async function SharePage({ searchParams }: { searchParams: Promis
     .filter((i) => ctx.docs.some((d) => d.doc_type === i.split(".")[0])).sort();
   return (
     <>
-      <h1>{t("share.title")}</h1>
-      <p className="lead">{t("share.intro")}</p>
+      <PageHead title={t("share.title")} purpose={t("share.intro")} links={[{ href: "/alerts", label: t("nav2.share") }, { href: "/shares", label: t("nav2.access") }]} />
       <ShareBuilder recipients={recipients} items={items} to={to} ask={ask} from={from && /^[a-z_]+$/.test(from) ? from : undefined}
         packs={packs.map((p) => ({ purpose: p.purpose, title: lang === "te" && p.title_te ? p.title_te : p.title, allowed: p.allowed_fields }))} />
     </>

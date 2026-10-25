@@ -13,6 +13,7 @@ import { DEMO_OWNER } from "@/lib/server";
 import { loadShares } from "@/lib/share-store";
 import { supabase } from "@/lib/supabase";
 import { Recheck, ShareActions, StopUser } from "./ShareActions";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -24,8 +25,7 @@ export default async function SharesPage() {
   const shares = await loadShares(supabase, DEMO_OWNER);
   return (
     <>
-      <h1>{t("shares.title")}</h1>
-      <p className="lead">{t("shares.intro")}</p>
+      <PageHead title={t("shares.title")} purpose={t("shares.intro")} action={{ href: "/share", label: t("home2.tile.share") }} links={[{ href: "/leak-trace", label: t("nav.leak") }]} />
       <p><Link href="/share" className="btn">{t("shares.new")}</Link></p>
       {shares.length === 0 ? <p className="card">{t("shares.none")}</p> : (
         <ul className="cards">

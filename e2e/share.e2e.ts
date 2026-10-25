@@ -124,7 +124,7 @@ test("share -> gate + watermark -> second device -> stranger denied -> leak trac
   await page.getByLabel("I understand these limits").check();
   await page.getByRole("button", { name: `Erase "${title}" permanently` }).click();
   await expect(page.locator("#live-region")).toContainText("erased");
-  await page.goto("/");
+  await page.goto("/documents");
   await page.locator("details.expert", { hasText: "Checks across your documents" }).locator("summary").click();
   await expect(page.getByRole("heading", { name: "Erased documents" })).toBeVisible();
 

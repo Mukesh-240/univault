@@ -7,6 +7,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { latestEntry, typesFor } from "@/lib/issuer-portal";
 import { supabase } from "@/lib/supabase";
 import { IssueWizard } from "./IssueWizard";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -23,7 +24,7 @@ export default async function IssuePage({ searchParams }: { searchParams: Promis
   }
   return (
     <>
-      <h1>{t("issuer.btn.issue")}</h1>
+      <PageHead title={t("issuer.btn.issue")} purpose={t("p11.purpose.issue")} />
       <IssueWizard issuerName={issuer} types={await typesFor(supabase, issuer)} supersedes={supersedes} />
     </>
   );

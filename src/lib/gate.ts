@@ -21,8 +21,10 @@ import type { Role } from "./session";
 
 const PUBLIC_EXACT = ["/signin", "/api/health", "/threat-model", "/policy"];
 const PUBLIC_PREFIX = ["/s/", "/api/cron/", "/api/auth/"];
-/** Open to any signed-in role (the explainer page the guard sends people to). */
-const SHARED_EXACT = ["/area"];
+/** Open to any signed-in role: the explainer page the guard sends people to, "What UNIVAULT can do" and the demo
+ *  guide (they hold no personal data and every role needs them). */
+const SHARED_EXACT = ["/area", "/features", "/demo"];
+export const isSharedPath = (pathname: string) => SHARED_EXACT.includes(pathname);
 
 export type Gate = "allow" | "signin" | "unauthorized" | "home" | "forbidden" | "redirect";
 export type Area = "issuer" | "receive" | "sender";

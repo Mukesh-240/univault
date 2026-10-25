@@ -10,6 +10,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { issuerActivity, listIssued } from "@/lib/issuer-portal";
 import { supabase } from "@/lib/supabase";
 import { ActivityList } from "./ActivityList";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -26,12 +27,8 @@ export default async function IssuerHome() {
   ];
   return (
     <>
-      <section className="hero role-issuer">
-        <h1>{t("issuer.welcome", { name: issuer })}</h1>
-        <p><span className="chip unk">{t("banner.simulatedIssuer")}</span></p>
-        <p className="lead">{t("issuer.sub")}</p>
-        <Link href="/issuer/issue" className="btn"><FilePlus2 size={22} aria-hidden="true" /> {t("issuer.btn.issue")}</Link>
-      </section>
+      <PageHead title={t("issuer.welcome", { name: issuer })} purpose={t("issuer.sub")} action={{ href: "/issuer/issue", label: t("issuer.btn.issue"), icon: <FilePlus2 size={18} aria-hidden="true" /> }} />
+      <p><span className="chip unk">{t("banner.simulatedIssuer")}</span></p>
       <section aria-label={t("issuer.title")} className="stat-grid">
         {stats.map((s) => (
           <article key={s.key} className={`card stat stat-${s.tone}`}>

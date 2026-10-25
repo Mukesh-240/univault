@@ -6,6 +6,7 @@
 import { getI18n } from "@/lib/i18n-server";
 import { loadDemoVault } from "@/lib/server";
 import { FaultPanel } from "./FaultPanel";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -16,8 +17,7 @@ export default async function FaultsPage() {
   const docs = ctx.docs.filter((d) => d.serial).map((d) => ({ id: d.id, title: d.title, fields: Object.keys(d.fields) }));
   return (
     <>
-      <h1>{t("faults.title")}</h1>
-      <p className="lead">{t("faults.intro")}</p>
+      <PageHead title={t("faults.title")} purpose={t("faults.intro")} links={[{ href: "/ledger", label: t("nav2.proof") }]} />
       <FaultPanel docs={docs} />
     </>
   );

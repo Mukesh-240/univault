@@ -1,0 +1,26 @@
+{
+  "_about": "What UNIVAULT can do, for /features. Each feature: an id (its words are features.<id>.title / .line in the locale files), the screen 'Try it' opens, the role that screen belongs to, and an HONEST status taken from docs/GAP_AUDIT.md (built / partial / missing). Do not overstate: change a status here only when the audit changes.",
+  "groups": [
+    { "id": "keep", "features": [
+      { "id": "add", "href": "/add", "role": "sender", "status": "built", "icon": "FilePlus2" },
+      { "id": "verify", "href": "/verify", "role": "sender", "status": "built", "icon": "BadgeCheck" },
+      { "id": "names", "href": "/names", "role": "sender", "status": "built", "icon": "Users" },
+      { "id": "ocr", "href": "/ocr", "role": "sender", "status": "built", "icon": "ScanLine" },
+      { "id": "ready", "href": "/readiness", "role": "sender", "status": "built", "icon": "ListChecks" },
+      { "id": "copy", "href": "/features", "role": "sender", "status": "missing", "icon": "Copy" }
+    ]},
+    { "id": "share", "features": [
+      { "id": "wizard", "href": "/share", "role": "sender", "status": "partial", "icon": "Send" },
+      { "id": "link", "href": "/shares", "role": "sender", "status": "built", "icon": "KeyRound" },
+      { "id": "request", "href": "/receive/eligibility", "role": "receiver", "status": "built", "icon": "Inbox" },
+      { "id": "watermark", "href": "/leak-trace", "role": "sender", "status": "built", "icon": "Stamp" }
+    ]},
+    { "id": "control", "features": [
+      { "id": "stop", "href": "/shares", "role": "sender", "status": "built", "icon": "Ban" },
+      { "id": "access", "href": "/shares", "role": "sender", "status": "built", "icon": "ShieldCheck" },
+      { "id": "leak", "href": "/leak-trace", "role": "sender", "status": "built", "icon": "Search" },
+      { "id": "erase", "href": "/documents", "role": "sender", "status": "built", "icon": "Eraser" },
+      { "id": "ledger", "href": "/ledger", "role": "sender", "status": "built", "icon": "History" }
+    ]}
+  ]
+}

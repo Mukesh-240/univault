@@ -15,6 +15,7 @@ import { StopShare } from "../shares/ShareActions";
 import { eligibilityRequests, packFor } from "@/lib/eligibility";
 import { loadPacks } from "@/lib/rules";
 import { DeclineRequest, EligibilityAnswer } from "./AlertForms";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -32,8 +33,7 @@ export default async function AlertsPage() {
   const nameOf = new Map(((names.data ?? []) as { recipient_code: string; name: string }[]).map((r) => [r.recipient_code, r.name]));
   return (
     <>
-      <h1>{t("alerts.title")}</h1>
-      <p className="lead">{t("alerts.intro")}</p>
+      <PageHead title={t("alerts.title")} purpose={t("alerts.intro")} action={{ href: "/share", label: t("home2.tile.share") }} links={[{ href: "/shares", label: t("nav2.access") }]} />
       <section aria-labelledby="req-h" className="stack-s" style={{ marginBottom: "var(--s4)" }}>
         <h2 id="req-h">{t("sender.requests.title")}</h2>
         {requests.length === 0 ? <p className="card">{t("sender.requests.none")}</p> : (

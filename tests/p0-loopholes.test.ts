@@ -14,7 +14,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 import { checkConfirmation, previewToken, type ShareDraft } from "../src/lib/consent";
-import { gateFor, isPublicPath } from "../src/lib/gate";
+import { gateFor, isPublicPath, isSharedPath } from "../src/lib/gate";
 import { cookieOptions, open, seal, type SessionPayload } from "../src/lib/session";
 import { decideCodeRequest, decideOpen, hashCode, type LinkFacts } from "../src/lib/shares";
 
@@ -37,7 +37,7 @@ describe("P0.1 every route and page is guarded by its area", () => {
   });
   it("an issuer reaches only the issuer area; a receiver only the receiving area; a sender everything except the issuer area", () => {
     for (const p of [...ROUTES, ...PAGES]) {
-      if (isPublicPath(p) || p === "/area") continue;
+      if (isPublicPath(p) || isSharedPath(p)) continue;
       const inIssuer = p.startsWith("/issuer") || p.startsWith("/api/issuer-portal");
       const inReceive = p.startsWith("/receive") || p.startsWith("/api/receive");
       const ok = (role: "issuer" | "receiver" | "sender") => ["allow", "redirect"].includes(gateFor(p, role));

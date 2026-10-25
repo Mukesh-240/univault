@@ -7,6 +7,7 @@ import { requestsFor } from "@/lib/receiver-portal";
 import { loadDemoVault } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
 import { RequestCards } from "../RequestCards";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,7 +19,7 @@ export default async function RequestsPage() {
   const holder = personRecord((await loadDemoVault()).docs).name ?? "";
   return (
     <>
-      <h1>{t("recv.requests.title")}</h1>
+      <PageHead title={t("recv.requests.title")} purpose={t("p11.purpose.requests")} action={{ href: "/receive/ask", label: t("recv.ask.btn") }} />
       <RequestCards rows={rows.map((r) => ({ ...r, when: showTime(r.at), holder }))} />
     </>
   );

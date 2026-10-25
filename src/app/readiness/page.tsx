@@ -19,6 +19,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { evaluatePack, loadPacks } from "@/lib/rules";
 import { loadDemoVault } from "@/lib/server";
 import { fixFor } from "@/lib/ui-logic";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -34,8 +35,7 @@ export default async function ReadinessPage() {
 
   return (
     <>
-      <h1>{t("ready.title")}</h1>
-      <p className="lead">{t("ready.intro", { today: ctx.today })}</p>
+      <PageHead title={t("ready.title")} purpose={t("ready.intro", { today: ctx.today })} action={{ href: "/add", label: t("home.addTitle") }} />
       {loadPacks().map((pack) => {
         const r = evaluatePack(pack, ctx);
         const done = r.results.filter((x) => x.status === "pass").length;

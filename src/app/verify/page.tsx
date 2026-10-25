@@ -8,6 +8,7 @@
 import { VerifyPanel } from "@/components/VerifyPanel";
 import { getI18n } from "@/lib/i18n-server";
 import { loadDemoVault } from "@/lib/server";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,8 +19,7 @@ export default async function VerifyPage() {
   const withSerial = ctx.docs.filter((d) => d.serial);
   return (
     <>
-      <h1>{t("verify.title")}</h1>
-      <p className="lead">{t("verify.intro")}</p>
+      <PageHead title={t("verify.title")} purpose={t("verify.intro")} links={[{ href: "/documents", label: t("nav2.docs") }]} />
       <p className="note">{t("verify.simulated")}</p>
       <ul className="cards">
         {withSerial.map((d) => (

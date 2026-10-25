@@ -11,6 +11,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { serverKey } from "@/lib/server";
 import { supabase } from "@/lib/supabase";
 import { EligibilityForm } from "./EligibilityForm";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,8 +30,7 @@ export default async function EligibilityPage() {
   const byId = new Map(answers.filter(Boolean).map((a) => [a!.id, a!.res]));
   return (
     <>
-      <h1>{t("elig.title")}</h1>
-      <p className="lead">{t("elig.intro")}</p>
+      <PageHead title={t("elig.title")} purpose={t("elig.intro")} links={[{ href: "/receive/requests", label: t("nav.recv.side.requests") }]} />
       <p className="callout neutral" role="note">{t("elig.nodocs")}</p>
       <EligibilityForm criteria={(pack?.rules ?? []).map((r) => (lang === "te" && r.label_te ? r.label_te : r.label))} />
       <section className="stack-s" style={{ marginTop: "var(--s4)" }}>

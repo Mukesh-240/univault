@@ -56,11 +56,11 @@ test("keyboard only: home -> am I ready? -> same person? yes -> scan and fix a f
   await expect(page.locator(".decision-current").first()).toHaveText("Your answer: same person");
 
   // -> Scan and fix; add the first scan if needed, then fix one field.
-  // "Scan and fix" lives under More. The side menu comes BEFORE the page in the reading order, so go back with
-  // Shift+Tab to "More" (as a keyboard user would), then Tab to "Scan and fix" on the More page.
-  await tabTo(page, 'a[href="/more"]', undefined, "Shift+Tab");
+  // "Scan and fix" lives under My documents. The side menu comes BEFORE the page in the reading order, so go back with
+  // Shift+Tab to "My documents" (as a keyboard user would), then Tab to "Scan and fix" in that page's links.
+  await tabTo(page, 'nav.sidenav a[href="/documents"]', undefined, "Shift+Tab");
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/more$/);
+  await expect(page).toHaveURL(/\/documents$/);
   await ready(page);
   await tabTo(page, 'main a[href="/ocr"]');
   await page.keyboard.press("Enter");

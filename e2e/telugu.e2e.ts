@@ -15,13 +15,14 @@ test("Telugu switch works on the main flow", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("lang", "te");
   await expect(page.locator("h1")).toContainText(te["home.greetingNoName"]);
   await expect(page.locator(".synthetic-strip")).toContainText(te["strip.text"]);
+  await page.getByRole("button", { name: te["ui.profile"] }).click();
   await expect(page.getByRole("button", { name: te["ui.help"] })).toBeVisible();
 
   for (const [path, key] of [["/readiness", "ready.title"], ["/names", "names.title"], ["/verify", "verify.title"], ["/shares", "shares.title"], ["/alerts", "alerts.title"]] as const) {
     await page.goto(path);
     await expect(page.locator("html")).toHaveAttribute("lang", "te");
     await expect(page.locator("h1")).toHaveText(te[key]);
-    await expect(page.getByRole("navigation", { name: te["nav.label"] })).toContainText(te["nav.side.home"]);
+    await expect(page.getByRole("navigation", { name: te["nav.label"] }).first()).toContainText(te["nav2.docs"]);
   }
   // Readiness reasons come from the engines in English and are shown in Telugu.
   await page.goto("/readiness");

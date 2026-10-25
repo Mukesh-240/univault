@@ -155,7 +155,8 @@ test.describe("signed in", () => {
   test("Text size A++ and High contrast change the page and are remembered", async ({ page }) => {
     await page.goto("/");
     expect(await page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize))).toBe(16);
-    await page.getByRole("button", { name: /Text size/ }).click();
+    // Text size and High contrast live in the avatar (Profile) menu.
+    await page.getByRole("button", { name: "Profile" }).click();
     await page.getByRole("button", { name: "Largest text (20)" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-size", "20");
     expect(await page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize))).toBe(20);
@@ -183,16 +184,17 @@ test.describe("signed in", () => {
 
   test("the five tabs and the menu exist; help opens for the screen", async ({ page }) => {
     await page.goto("/shares");
+    await page.getByRole("button", { name: "Profile" }).click();
     await page.getByRole("button", { name: "Need help?" }).click();
     await expect(page.getByRole("dialog").getByRole("heading", { name: "Help: my shares" })).toBeVisible();
     await page.keyboard.press("Escape");
-    for (const [path, h1] of [["/alerts", "Alerts"], ["/more", "More"], ["/add", "Add a document"]] as const) {
+    for (const [path, h1] of [["/alerts", "Alerts"], ["/documents", "My documents"], ["/add", "Add a document"], ["/features", "What UNIVAULT can do"], ["/demo", "Demo guide"]] as const) {
       await page.goto(path);
       await expect(page.locator("h1")).toHaveText(h1);
     }
     await page.setViewportSize({ width: 390, height: 800 });
     await page.goto("/");
     const tabs = page.getByRole("navigation", { name: "Main menu" }).getByRole("link");
-    await expect(tabs).toHaveText(["Home", "Ready?", "Shares", "Alerts", "More"]);
+    await expect(tabs).toHaveText(["Home", "Documents", "Ready?", "Share", "Access"]);
   });
 });

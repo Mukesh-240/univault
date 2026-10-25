@@ -8,6 +8,7 @@ import { getI18n } from "@/lib/i18n-server";
 import { showTime } from "@/lib/i18n";
 import { verify } from "@/lib/ledger";
 import { supabase } from "@/lib/supabase";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -33,8 +34,7 @@ export default async function LedgerPage() {
   const lines = (rows.data ?? []) as { seq: number; kind: string; payload: Record<string, unknown>; hash: string; created_at: string }[];
   return (
     <>
-      <h1>{t("ledgerPage.title")}</h1>
-      <p className="lead">{t("ledgerPage.intro")}</p>
+      <PageHead title={t("ledgerPage.title")} purpose={t("ledgerPage.intro")} links={[{ href: "/leak-trace", label: t("nav.leak") }, { href: "/faults", label: t("nav.faults") }, { href: "/assistant", label: t("nav.assistant") }]} />
       <section className="panel" aria-labelledby="lv-h">
         <h2 id="lv-h" className="h3">{t("ledger.title")}</h2>
         <p>{check.ok ? t("ledger.ok", { n: check.total }) : t("ledger.broken", { line: String(check.broken_at) })}</p>

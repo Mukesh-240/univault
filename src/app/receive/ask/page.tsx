@@ -8,6 +8,7 @@ import { currentSession, receiverCode } from "@/lib/auth-server";
 import { getI18n } from "@/lib/i18n-server";
 import { loadPacks } from "@/lib/rules";
 import { AskForm } from "./AskForm";
+import { PageHead } from "@/components/PageHead";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -19,7 +20,7 @@ export default async function AskPage() {
   const items = [...new Set(loadPacks().flatMap((p) => p.allowed_fields))].sort();
   return (
     <>
-      <h1>{t("recv.ask.title")}</h1>
+      <PageHead title={t("recv.ask.title")} purpose={t("p11.purpose.ask")} links={[{ href: "/receive/eligibility", label: t("recv.eligibility.btn") }]} />
       <AskForm items={items} />
     </>
   );
