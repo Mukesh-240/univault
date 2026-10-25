@@ -59,3 +59,19 @@ Same rubric as Phase 8 (1 to 5: beauty, clarity for an older user, contrast, tru
 ## Phase 11 direction (written before the redo)
 "Calm trust": one job per screen, one blue accent (the logo blue), generous white space, thin borders, soft shadows, Inter. Every screen starts with a title, one plain sentence saying what it is for, and ONE primary action. Anything a first-time user does not need in the first 10 seconds is behind a link, a menu or "Show more".
 No new colours: the teal/purple role colours and the gradient-in-a-box look are removed; the real logo file and wordmark stay.
+
+## Phase 11 critique rounds (self-assessed, honest note)
+Same rubric (1 to 5: beauty, first-time clarity, contrast, trust), scored by ONE agent (the author) from `docs/screenshots/phase11/before` (live Phase 10/11-start site) and `after` (this build, in-memory test store), plus objective checks (axe 0 at 16/18/20 px and high contrast, 360 px overflow, keyboard walks). The "can the owner say what each screen is for in 5 seconds" test was NOT run with a person: it needs the owner. Telugu wording is not scored (no native review).
+
+| Page | Round | Beauty | First-time clarity | Contrast | Trust | What changed / what is still weak |
+|---|---|---|---|---|---|---|
+| Sign-in | 1 | 4 | 4 | 5 | 4 | Split screen, one role list, one Continue; "Who you are" said three times |
+| | 2 | 5 | 5 | 5 | 5 | Stepper title for screen readers only; headline fits two lines |
+| Home | 1 | 4 | 3 | 5 | 4 | Tiles + grouped attention; the readiness card showed raw word keys (`home.ready.n`) |
+| | 2 | 4 | 5 | 5 | 4 | Sentences built on the server; new `tests/client-keys.test.ts` stops raw keys coming back. Weak: with test data every document is "Not checked yet", so the attention card is always full |
+| Header + menus | 1 | 4 | 4 | 5 | 4 | Avatar menu; the first-run tour covered the menu's Sign out |
+| | 2 | 4 | 5 | 5 | 4 | Tour moved below the header layer |
+| /features | 1 | 4 | 5 | 5 | 5 | Honest Built / Partly / Not built chips; "Use it as: Sender" was jargon |
+| | 2 | 4 | 5 | 5 | 5 | "Student" |
+| /demo | 1 | 4 | 5 | 5 | 5 | axe 2.5.3 failure on "Sign in as …" buttons |
+| | 2 | 4 | 5 | 5 | 5 | Accessible name starts with the visible words |

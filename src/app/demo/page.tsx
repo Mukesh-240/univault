@@ -31,8 +31,12 @@ export default async function DemoPage() {
                 <p className="meta">{t(`demo.step.${s.id}.why`)}</p>
                 <p className="meta">{t("demo.as", { role: t(`signin.role.${s.role}.tag`), who: WHO[s.role] })}{here ? "" : ` · ${t("demo.switch")}`}</p>
               </div>
-              <Link href={here ? s.href : "/signin"} className={here ? "btn btn-small" : "btn secondary btn-small"} data-step={s.id} data-href={s.href}
-                aria-label={`${t("demo.go")}: ${t(`demo.step.${s.id}`)}`}>{here ? t("demo.go") : t("demo.signInAs", { role: t(`signin.role.${s.role}.tag`) })}</Link>
+              {(() => {
+                // The accessible name starts with the visible words (WCAG 2.5.3), then says which step it is for.
+                const label = here ? t("demo.go") : t("demo.signInAs", { role: t(`signin.role.${s.role}.tag`) });
+                return <Link href={here ? s.href : "/signin"} className={here ? "btn btn-small" : "btn secondary btn-small"} data-step={s.id} data-href={s.href}
+                  aria-label={`${label}: ${t(`demo.step.${s.id}`)}`}>{label}</Link>;
+              })()}
             </li>
           );
         })}

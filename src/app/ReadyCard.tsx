@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useI18n } from "@/components/I18n";
 import { ReadyRing } from "@/components/ReadyRing";
 
-export interface PackSummary { id: string; title: string; total: number; done: number; open: number }
+export interface PackSummary { id: string; title: string; total: number; done: number; open: number; sentence: string; cta: string; sr: string }
 
 export function ReadyCard({ packs }: { packs: PackSummary[] }) {
   const { t } = useI18n();
@@ -26,10 +26,10 @@ export function ReadyCard({ packs }: { packs: PackSummary[] }) {
         </select>
       </div>
       <div className="ready-body">
-        <ReadyRing done={p.done} total={p.total} label={t("home.ring.sr", { pack: p.title, done: p.done, total: p.total })} tone={p.open === 0 ? "ok" : "warn"} />
+        <ReadyRing done={p.done} total={p.total} label={p.sr} tone={p.open === 0 ? "ok" : "warn"} />
         <div>
-          <p className="big">{p.open === 0 ? t("home.ready.ok", { pack: p.title }) : p.open === 1 ? t("home.ready.one", { pack: p.title }) : t("home.ready.n", { pack: p.title, n: p.open })}</p>
-          <Link href={`/readiness#pack-${p.id}`} className="text-link">{p.open === 0 ? t("home.ready.btnOk") : t("home.ready.btn")}</Link>
+          <p className="big">{p.sentence}</p>
+          <Link href={`/readiness#pack-${p.id}`} className="text-link">{p.cta}</Link>
         </div>
       </div>
     </section>

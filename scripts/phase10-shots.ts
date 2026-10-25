@@ -19,6 +19,9 @@ const ONLY = process.env.ONLY?.split(","); // e.g. ONLY=home,share to photograph
 const PAGES: { role: "sender" | "issuer" | "receiver" | null; path: string; name: string }[] = [
   { role: null, path: "/signin", name: "signin" },
   { role: "sender", path: "/", name: "home" },
+  { role: "sender", path: "/documents", name: "documents" },
+  { role: "sender", path: "/features", name: "features" },
+  { role: "sender", path: "/demo", name: "demo" },
   { role: "sender", path: "/readiness", name: "ready" },
   { role: "sender", path: "/share", name: "share" },
   { role: "sender", path: "/shares", name: "my-shares" },
@@ -47,11 +50,22 @@ async function main() {
   for (const w of WIDTHS) for (const lang of LANGS) {
     for (const p of PAGES.filter((x) => !ONLY || ONLY.includes(x.name))) {
       const ctx = await browser.newContext({ viewport: { width: w, height: w > 800 ? 900 : 844 }, reducedMotion: "reduce" });
-      await ctx.addCookies([...(p.role ? jars[p.role] : []), { name: "uv_lang", value: lang, url: BASE }]);
+      await ctx.addCookies([...(p.role ? jars[p.role] : []), { name: "uv_lang", value: lang, url: BASE }, { name: "uv_tour", value: "done", url: BASE }]);
       const page = await ctx.newPage();
       await page.goto(BASE + p.path, { waitUntil: "networkidle" }).catch(() => undefined);
       await page.waitForTimeout(600);
       await page.screenshot({ path: `${OUT}/${p.name}-${w}-${lang}.jpg`, type: "jpeg", quality: 78 });
+      // Sign-in: also photograph steps 2 (the code) and 3 (consent) in the same panel.
+      if (p.name === "signin") {
+        await page.locator(".auth-col form button[type=submit]").click().catch(() => undefined);
+        await page.locator("[data-otp]").waitFor({ timeout: 10000 }).catch(() => undefined);
+        await page.screenshot({ path: `${OUT}/signin-2-${w}-${lang}.jpg`, type: "jpeg", quality: 78 });
+        const code = (await page.locator("[data-otp]").innerText().catch(() => "")).trim();
+        for (let i = 0; i < code.length; i++) await page.locator(".otp-boxes input").nth(i).fill(code[i]);
+        await page.locator(".auth-col form button[type=submit]").click().catch(() => undefined);
+        await page.locator(".record-card").waitFor({ timeout: 10000 }).catch(() => undefined);
+        await page.screenshot({ path: `${OUT}/signin-3-${w}-${lang}.jpg`, type: "jpeg", quality: 78 });
+      }
       await ctx.close();
     }
   }

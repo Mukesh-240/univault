@@ -773,7 +773,7 @@
  "signin.role.receiver.body": "Ask for documents and check them",
  "signin.role.receiver.btn": "Continue as receiver",
  "signin.role.issuer.tag": "Issuer",
- "signin.role.sender.tag": "Sender",
+ "signin.role.sender.tag": "Student",
  "signin.role.receiver.tag": "Receiver",
  "signin.step.profile": "Choose a demo profile",
  "signin.profile.sub": "These are made-up people and organisations. Pick one to try UNIVAULT.",

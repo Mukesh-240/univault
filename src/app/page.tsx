@@ -43,7 +43,12 @@ export default async function HomePage() {
   const packs = loadPacks().map((pack) => {
     const r = evaluatePack(pack, ctx);
     const open = r.results.filter((x) => x.status !== "pass").length;
-    return { id: pack.id, title: lang === "te" && pack.title_te ? pack.title_te : pack.title, total: r.results.length, done: r.results.length - open, open };
+    const title = lang === "te" && pack.title_te ? pack.title_te : pack.title;
+    const done = r.results.length - open;
+    // The words are made here (the server has every word list); the card in the browser only switches between packs.
+    return { id: pack.id, title, total: r.results.length, done, open,
+      sentence: open === 0 ? t("home.ready.ok", { pack: title }) : open === 1 ? t("home.ready.one", { pack: title }) : t("home.ready.n", { pack: title, n: open }),
+      cta: open === 0 ? t("home.ready.btnOk") : t("home.ready.btn"), sr: t("home.ring.sr", { pack: title, done, total: r.results.length }) };
   });
   const recent = [...ctx.docs].reverse().slice(0, RECENT);
   const status = ctx.docs.length === 0 ? t("home2.status.none") : total === 0 ? t("home2.status.allGood", { n: ctx.docs.length }) : t("home2.status.some", { n: ctx.docs.length, open: total });
