@@ -41,6 +41,8 @@ test("Slow 3G: recipient-style page is light and loads quickly", async ({ page }
   expect(preview.loadMs).toBeLessThan(10_000);
   // Regression guard: Phase 6 took the English vault from 405 KB to about 175 KB (no Telugu font, no fetch loop).
   // TARGET (Phase 7 brief): 169 KB and 7.2 s. NOT MET since the Phase 8 role shell (about 200 KB, 8.7 s in the last run; a re-run of
-  // Phase 7 on the same method gave 201 KB, 7.3 s). This ceiling only guards against further growth; see HANDOFF.md.
-  expect(vault.bytes).toBeLessThan(230_000);
+  // Phase 7 on the same method gave 201 KB, 7.3 s). Phase 10 (owner's brief): Inter on EVERY page, self-hosted (one
+  // variable latin file, 49 KB) plus the step-trail words (about 6 KB gzipped) -> 260 to 290 KB between runs, about 10 s. Inter is
+  // one variable file, so dropping a weight saves nothing. This ceiling only guards against further growth; see HANDOFF.md.
+  expect(vault.bytes).toBeLessThan(300_000);
 });

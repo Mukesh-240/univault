@@ -35,3 +35,23 @@ The best version of each page is the one in the repository.
 Calm and official, like DigiLocker: white cards on a light grey-blue page, one blue action colour taken from the logo, thin 1px borders, a soft shadow, 16px text with weights no heavier than 600, and spacing only from 4 / 8 / 12 / 16 / 24 / 32 px. Every screen has one obvious next action, and every automated result says what the system did, step by step, in plain words.
 
 Changes from Phase 8 that this direction overrides: 20px base text becomes 16px (A+ 18, A++ 20); 48px buttons become 44px; the 12-link side menu becomes at most six entries; the floating "Need help?" moves into the top bar (so it can never cover a field); the hero banner on Home becomes one line.
+
+## Phase 10 critique rounds (self-assessed, honest note)
+Same rubric as Phase 8 (1 to 5: beauty, clarity for an older user, contrast, trust). Scored by ONE agent (the author) from the screenshots in `docs/screenshots/phase10/` (before = the live Phase 9 site, after = this build) plus objective checks: axe 0 on every page at 16/18/20 px and high contrast, `tests/contrast.test.ts`, 360 px no sideways scroll, CLS readings. Telugu wording is not scored (no native review). Two rounds per page; round 1 fixes are in commit 81b7d97.
+
+| Page | Round | Beauty | Older-user clarity | Contrast | Trust | What changed / what is still weak |
+|---|---|---|---|---|---|---|
+| Header + side menu | 1 | 4 | 4 | 5 | 4 | 56px white bar, six menu entries; "EN" label failed axe 2.5.3 |
+| | 2 | 4 | 4 | 5 | 4 | Shows "English" in full; phones fold language/size/profile into Menu |
+| Home | 1 | 4 | 4 | 5 | 4 | One-line greeting, list instead of cards; footer caused a 0.22 layout shift |
+| | 2 | 4 | 4 | 5 | 4 | Footer below the fold (CLS 0.003 in English). Weak: "Needs your attention" repeats "Degree certificate" three times |
+| Share wizard | 1 | 4 | 5 | 5 | 5 | Stepper with here/next; raw purpose ids replaced by pack titles |
+| | 2 | 4 | 5 | 5 | 5 | Stepper lines flow as sentences on phones; receipt shows the trail and Under the hood |
+| Issue wizard | 1 | 3 | 4 | 5 | 5 | Person card content was centred |
+| | 2 | 4 | 5 | 5 | 5 | Left-aligned; the signed paper sits beside a seven-step trail |
+| Recipient pages `/s/*` | 1 | 3 | 4 | 5 | 4 | Old 20px/700 style; trail heading too large on phones |
+| | 2 | 4 | 4 | 5 | 5 | Same calm system, stepper + trail in plain HTML (no scripts) |
+| Receiver inbox | 1 | 3 | 3 | 5 | 4 | Cards in a grid |
+| | 2 | 3 | 3 | 5 | 4 | Weak: many identical "Ended by the owner" cards from test runs; "1 items"; purpose shown as a raw id |
+| Sign-in | 1 | 4 | 4 | 5 | 4 | Heading wrapped at 22ch |
+| | 2 | 4 | 5 | 5 | 5 | 32ch heading; stepper and a trail of what the server accepted |

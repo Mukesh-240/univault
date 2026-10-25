@@ -845,3 +845,5 @@ html[data-contrast="high"] .trail, html[data-contrast="high"] .stepper { border:
 .stepper-what div { display: block; }
 .stepper-what dt, .stepper-what dd { display: inline; }
 .stepper-what dt::after { content: ": "; }
+/* No layout shift while a page streams in: the footer starts below the fold instead of jumping down later. */
+main { min-height: calc(100vh - 84px); }
