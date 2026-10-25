@@ -1,119 +1,317 @@
-<p><img src="public/brand/logo-192.png" width="96" height="96" alt="UNIVAULT logo"></p>
+<p align="center"><img src="public/brand/logo-192.png" width="112" height="112" alt="UNIVAULT logo"></p>
 
-# UNIVAULT
+<h1 align="center">UNIVAULT</h1>
 
-### Don't ask for the document. Ask for the answer.
+<p align="center"><b>Your documents, one place.</b><br>
+Purpose-aware readiness, honest provenance, and minimal, traceable, revocable sharing.<br>
+<i>Don't ask for the document. Ask for the answer.</i></p>
 
-![unit tests](https://img.shields.io/badge/unit%20tests-362%20passing-2ea44f)
-![browser tests](https://img.shields.io/badge/browser%20tests-334%20(in--memory%20store)-2ea44f)
-![axe](https://img.shields.io/badge/axe-0%20violations-2ea44f)
-[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs)
-![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase&logoColor=white)
-![synthetic data](https://img.shields.io/badge/data-synthetic-F4A53B)
+<p align="center">
+<img alt="unit tests" src="https://img.shields.io/badge/unit%20tests-362%20passing-2ea44f">
+<img alt="browser tests" src="https://img.shields.io/badge/browser%20tests-334%20(in--memory%20store)-2ea44f">
+<img alt="axe" src="https://img.shields.io/badge/axe-0%20violations-2ea44f">
+<a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue"></a>
+<img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs">
+<img alt="Supabase" src="https://img.shields.io/badge/Supabase-Postgres-3ECF8E?logo=supabase&logoColor=white">
+<img alt="synthetic data" src="https://img.shields.io/badge/data-synthetic-F4A53B">
+</p>
 
-**Live demo: [https://univault-zeta.vercel.app](https://univault-zeta.vercel.app)** (region Mumbai `bom1`).
-Open [`/demo`](https://univault-zeta.vercel.app/demo) for the six-step guided demo, or
-[`/features`](https://univault-zeta.vercel.app/features) for every feature and its honest status.
+<p align="center">
+<b><a href="https://univault-zeta.vercel.app">Live demo</a></b> ·
+<a href="https://univault-zeta.vercel.app/demo">Six-step demo guide</a> ·
+<a href="https://univault-zeta.vercel.app/features">Every feature and its status</a> ·
+<a href="https://github.com/Mukesh-240/univault">Code (MIT)</a>
+</p>
 
-> Every organisation in the demo is **simulated**: no university, government office or employer is connected.
-> The hashes and signatures are real cryptography. Sign-in and the one-time codes are simulated too.
+> **Everything here is a prototype on synthetic data.** The issuer, the identity check and the one-time codes are
+> **simulated**. No real DigiLocker, Aadhaar, university, government office or employer is connected. The hashes and
+> signatures are real cryptography.
+
+**Team SPACEX · VIT-AP University · IMPACTX 2026 · Challenge 02 "Your Documents, One Place"**
+
+## Contents
+
+1. [The problem](#1-the-problem)
+2. [Our idea](#2-our-idea)
+3. [The demo cast and the six steps](#3-the-demo-cast-and-the-six-steps)
+4. [A walk through the product](#4-a-walk-through-the-product)
+5. [How it works: the flows](#5-how-it-works-the-flows)
+6. [Trustworthy under failure](#6-trustworthy-under-failure)
+7. [What it does, mapped to the brief](#7-what-it-does-mapped-to-the-brief)
+8. [Architecture](#8-architecture)
+9. [Results](#9-results)
+10. [Security](#10-security)
+11. [Honest status and limits](#11-honest-status-and-limits)
+12. [Built on top, not a clone](#12-built-on-top-not-a-clone)
+13. [What's next](#13-whats-next)
+14. [Run it locally, or deploy](#14-run-it-locally-or-deploy)
+15. [Open-source credits](#15-open-source-credits)
+16. [Team](#16-team)
 
 ---
 
 ## 1. The problem
 
-Mahesh Mekhala has just graduated from VIT. Google wants to know whether he meets its hiring criteria. His
-certificates come from VIT and from the Government Revenue Department. Today he would email PDFs of everything,
-forever, with no idea who opened them, and Google would see far more than it needs.
+**Meet Mahesh.** He has just graduated from VIT and is applying for a job at Google.
 
-## 2. The promise
+| Moment | What goes wrong today |
+|---|---|
+| **Before:** am I even ready? | His income certificate expired nine days ago and his name is spelled three ways across his documents. He finds out *after* he applies. |
+| **While:** one fact, whole PDF | The employer wants his full ID number to check one fact: is he over 18? He emails the entire PDF. |
+| **After:** no control | The PDF is forwarded. He cannot see who opened it, and he cannot take it back. |
 
-1. **Prove you're ready.** Every document is checked against the issuer's signed record. Every purpose (job,
-   scholarship, credential check) has a readiness checklist that says met, not met or unknown, with reasons.
-2. **Share only what's needed.** A receiver can ask an *eligibility question* instead of asking for documents. The
-   student allows each criterion one by one, and the receiver gets a signed met / not met / unknown answer and no document.
-   When a document must be shared, the student sees exactly what the receiver will see before confirming.
-3. **Take it back.** Each receiver gets its own watermarked link. The student can stop one link, one receiver or
-   everything, then test that the link is really dead. Every attempt, allowed or denied, is in a tamper-evident ledger.
+Underneath are three problems:
+
+1. **Validity depends on who is asking.** A one-year-old income certificate fails a scholarship and is irrelevant
+   to a job. Owners can't tell before they submit.
+2. **Records can't be blindly trusted.** They can be expired, duplicated, inconsistent, misread by OCR, revoked,
+   altered or hostile. Silently "fixing" them would hide the truth.
+3. **Sharing is where control is lost.** All-or-nothing sharing, recipients who ask for too much, forwarded links,
+   and no honest answer about what "revoke" can undo.
+
+All three must be fixed **without ever altering the original record.** UNIVAULT fixes each moment, and says plainly
+what it can't.
+
+## 2. Our idea
+
+**Purpose-aware readiness + honest provenance + minimal, traceable, revocable sharing.** The owner knows where they
+stand before applying, and stays in control after sharing.
+
+| Role | Who it is | What it can do |
+|---|---|---|
+| **Issuer** | A university or government office: the source of truth | Signs and issues records; can revoke or replace a record at any time |
+| **Sender** (the owner) | The student or citizen who holds the documents | Sees readiness per purpose and every share; shares only what is needed; stops sharing |
+| **Receiver** | An employer, scholarship body or credential evaluator | Asks for a specific purpose and gets only what is needed, or a yes/no answer instead of documents |
+
+**Four rules we don't break**
+
+| Rule | What it means in the code |
+|---|---|
+| **Originals stay untouched** | Corrections, links, shares and kills go into an append-only, hash-chained ledger. Database triggers block UPDATE and DELETE. |
+| **Hash checks, honestly** | SHA-256 of the whole file plus salted hashes per field, checked against an Ed25519-signed registry. A match is not legal validity. |
+| **Every value shows its source** | Issuer-verified, user-uploaded or user-corrected. OCR readings stay unconfirmed until the owner confirms them. |
+| **Readiness per purpose** | Rules return pass, fail or unknown with reasons, relative to the receiver's purpose, not a fixed colour by age. |
 
 | Trust tier | Meaning | How it looks |
 |---|---|---|
 | **Issuer-verified** | Signature valid, and the fingerprint or fields match the issuer's registry | solid badge |
 | **User-uploaded** | Stored, but not (yet) verified | outlined badge |
-| **User-corrected** | Your correction, layered over the original with its provenance | dashed badge |
+| **User-corrected** | Your correction, layered beside the original with its provenance | dashed badge |
 
 Tiers are **computed** from what happened (verification events and assertions), never declared by data.
+**No AI model makes any decision**: verification, readiness, eligibility, matching, sharing and revocation are
+deterministic code.
 
 ## 3. The demo cast and the six steps
 
 Who is in the demo is set in one file, [`src/config/demo-cast.json`](src/config/demo-cast.json). Change a name there
 and the sign-in, the greeting and the issuer and receiver areas follow.
 
-| Role | Who | What they do |
+| Role | Who | In the demo |
 |---|---|---|
-| **Issuer** | VIT University, Government Revenue Department | Sign and issue documents; can stop or replace them |
-| **Sender** (the owner) | Mahesh Mekhala, student | Keeps documents, answers requests, shares only what is needed, stops sharing |
-| **Receiver** | Google (`UV-R-2001`, purpose: job) | Asks the student an eligibility question, or asks for documents |
+| **Issuer** | VIT University, Government Revenue Department | Issue Mahesh's certificates |
+| **Sender** | Mahesh Mekhala, student | Keeps his documents, answers requests, shares only what is needed |
+| **Receiver** | Google (`UV-R-2001`, purpose: job) | Asks Mahesh to answer its job criteria from his certificates |
 
-**The database starts empty.** Nothing appears until an issuer issues a document or the student uploads one.
-Requests and alerts start at zero too; the student's bell fills only when Google sends a request or VIT issues
-something. The guided demo at `/demo` ([`src/config/demo-guide.json`](src/config/demo-guide.json)):
+**The live database starts empty.** Nothing appears until an issuer issues a document or the student uploads one.
+Requests and alerts start at zero; the student's bell rings only when Google sends a request or VIT issues
+something. The guided demo at [`/demo`](https://univault-zeta.vercel.app/demo)
+([`src/config/demo-guide.json`](src/config/demo-guide.json)):
 
-1. **VIT issues a document** (sign in as Issuer → `/issuer/issue`).
-2. **Mahesh checks it with the issuer** (Sender → `/verify`).
-3. **Mahesh uploads a document of his own**, a PDF or a photo (Sender → `/add`).
-4. **Google asks an eligibility question** (Receiver → `/receive/eligibility`).
-5. **Mahesh answers it**, criterion by criterion (Sender → `/alerts`).
-6. **Mahesh stops sharing** and tests the link (Sender → `/shares`).
+| # | Step | Sign in as | Screen |
+|---|---|---|---|
+| 1 | VIT issues a document | Issuer | `/issuer/issue` |
+| 2 | Mahesh checks it with the issuer | Sender | `/verify` |
+| 3 | Mahesh uploads a document of his own (PDF or photo) | Sender | `/add` |
+| 4 | Google asks an eligibility question | Receiver | `/receive/eligibility` |
+| 5 | Mahesh answers it, criterion by criterion | Sender | `/alerts` |
+| 6 | Mahesh stops sharing and tests the link | Sender | `/shares` |
 
-## 4. What you see
+## 4. A walk through the product
 
-| Sign-in | Home | Features |
-|---|---|---|
-| ![Sign-in](docs/screenshots/phase11/after/signin-1440-en.jpg) | ![Home](docs/screenshots/phase11/after/home-1440-en.jpg) | ![Features](docs/screenshots/phase11/after/features-1440-en.jpg) |
-| **Demo guide** | **Get ready** | **Receiver** |
-| ![Demo guide](docs/screenshots/phase11/after/demo-1440-en.jpg) | ![Readiness](docs/screenshots/phase11/after/ready-1440-en.jpg) | ![Receiver](docs/screenshots/phase11/after/receiver-1440-en.jpg) |
+Every picture below was taken by [`scripts/readme-shots.ts`](scripts/readme-shots.ts), which signs in and clicks
+through the real app like a person would: it creates a real share, opens it as the receiver, traces the watermark
+and answers a real eligibility request. It ran on the local in-memory test store, which is pre-filled with the
+synthetic showcase vault, so some documents carry the synthetic name "Anil Mekala". The live demo starts empty.
 
-- **Sign-in:** a split screen. One list of three roles, "Signing in as Mahesh Mekhala", one Continue button, then
-  a code and a consent step in the same panel with a step counter. Sign-in is **simulated**: the number is a
-  synthetic Aadhaar-style number (it always starts 0000) and the code is shown on screen. No real Aadhaar or
-  government service is used, and the number is masked after sign-in and never stored in full.
-- **Home:** a greeting with real counts, four "What do you want to do?" tiles, "Needs your attention" (at most 3
-  rows, one per document title, never repeated), one "Ready for…" card with a purpose picker, and the six newest
-  documents. The full list with filters is at `/documents`.
-- **Navigation:** the student's side menu has six entries (Home, My documents, Get ready, Share and requests, Who has
-  access, Proof and activity); the issuer and receiver menus have four each. Settings, help, the tour, the demo guide,
-  switching role and signing out are in the avatar menu.
-- **Every page** starts with its title, one plain sentence saying what it is for, and one main button.
-- **First-run tour:** four short steps (add, check, share, stop). It never blocks the page, Skip is remembered,
-  and it can be reopened from the avatar menu.
-- **Made for everyone:** English and Telugu throughout, Text size (A- / A / A+, 16 to 20 px), High contrast,
-  keyboard-only use, and gentle motion that switches off for people who ask for less. Telugu was written by an AI
-  model and is not yet reviewed by a native speaker: see [`docs/TELUGU_REVIEW.md`](docs/TELUGU_REVIEW.md).
+### Sign in
 
-All screenshots, before and after the latest redesign, at 1440, 768 and 390 px in English and Telugu, are in
+Three roles in one list, "Signing in as Mahesh Mekhala", one Continue button, then a code and a consent step in the
+same panel. The ID number is a synthetic Aadhaar-style number (it always starts 0000), shown masked after sign-in
+and never stored in full. The code is shown on screen, labelled simulated.
+
+| Sign-in (laptop) | Sign-in (phone) |
+|---|---|
+| ![Sign-in](docs/readme/01-signin.jpg) | <img src="docs/readme/29-phone-signin.jpg" width="300" alt="Sign-in on a phone"> |
+
+### The issuer: VIT signs and sends a document
+
+The issuer finds the person (only a masked demo ID is shown), picks a kind of document its office is allowed to
+sign, fills the details, and signs. The record goes into the Ed25519-signed registry and the student is notified.
+
+| Issuer dashboard | Issue a document, step 1 of 4 |
+|---|---|
+| ![Issuer dashboard](docs/readme/02-issuer-home.jpg) | ![Issue a document](docs/readme/03-issuer-issue.jpg) |
+
+### The student: one calm home
+
+A greeting with real counts; four "What do you want to do?" tiles; "Needs your attention" with at most three rows,
+one per document title, never repeated; one "Ready for…" card with a purpose picker; the newest documents.
+
+| Home | All documents, with filters |
+|---|---|
+| ![Home](docs/readme/04-home.jpg) | ![Documents](docs/readme/05-documents.jpg) |
+| **One document: fields, source of each value, history** | **Add a document: PDF or photo** |
+| ![Document](docs/readme/06-document.jpg) | ![Add](docs/readme/11-add.jpg) |
+
+### Check, and get ready
+
+| Check with the issuer | Ready for a purpose: pass, fail or unknown, with reasons |
+|---|---|
+| ![Verify](docs/readme/07-verify.jpg) | ![Readiness](docs/readme/08-readiness.jpg) |
+| **Name detective: ranked matches, never auto-merged** | **OCR: the scan beside the fields, with confidence** |
+| ![Names](docs/readme/09-names.jpg) | ![OCR](docs/readme/10-ocr.jpg) |
+
+### Share only what's needed
+
+The student picks who, what and for how long, then sees **exactly** what the receiver will see (with the watermark)
+before anything is shared. Over-broad requests are flagged with a smaller choice: the last 4 digits instead of the
+full ID number, or a signed yes/no fact such as "over 18".
+
+| Review: exactly what they will see | Receipt: one personal link for one receiver |
+|---|---|
+| ![Share review](docs/readme/12-share-review.jpg) | ![Share receipt](docs/readme/13-share-receipt.jpg) |
+
+### The receiver opens the link
+
+The link opens only for the approved receiver ID, after a single-use one-time code (simulated). The page is plain
+HTML with no scripts, and every view is watermarked with the receiver, the time and a session code.
+
+| Gate: receiver ID + one-time code | The minimal, watermarked view |
+|---|---|
+| ![Recipient gate](docs/readme/14-recipient-gate.jpg) | ![Recipient view](docs/readme/15-recipient-view.jpg) |
+
+### Trace a leak, and stop sharing
+
+Paste the watermark text from a leaked screenshot and UNIVAULT names the receiver and the viewing session. Then stop
+one link, one receiver or everything, and press "Test this link now" to see it refused.
+
+| Leak trace: watermark → receiver + session | Who has access: counts, stop, test |
+|---|---|
+| ![Leak trace](docs/readme/16-leak-trace.jpg) | ![Shares](docs/readme/17-shares.jpg) |
+
+### Ask for the answer, not the document
+
+Google asks whether Mahesh meets its job criteria. Mahesh is notified, chooses which criteria to answer, and Google
+gets met / not met / unknown for each, signed by UNIVAULT, with **no document shared**. Every step is shown and written
+to the ledger.
+
+| Receiver's inbox | Google asks: the criteria for its purpose |
+|---|---|
+| ![Receiver inbox](docs/readme/18-receiver-home.jpg) | ![Eligibility ask](docs/readme/19-eligibility-ask.jpg) |
+| **Mahesh is notified** | **Answered: what the system did, step by step** |
+| ![Alerts](docs/readme/20-alerts-request.jpg) | ![Eligibility answered](docs/readme/21-eligibility-answered.jpg) |
+
+### Proof, and trust
+
+| The ledger: verify the whole hash chain | Fault panel: switch on an issuer timeout and watch the response |
+|---|---|
+| ![Ledger](docs/readme/22-ledger.jpg) | ![Faults](docs/readme/23-faults.jpg) |
+| **What UNIVAULT can do: honest status per feature** | **Demo guide: six steps, each with a Go button** |
+| ![Features](docs/readme/24-features.jpg) | ![Demo guide](docs/readme/25-demo.jpg) |
+| **Threat model: each threat, what stops it, what doesn't** | |
+| ![Threat model](docs/readme/26-threat-model.jpg) | |
+
+### On a phone, in English and Telugu
+
+English and Telugu throughout, Text size (A- / A / A+), High contrast, keyboard-only use, and gentle motion that
+switches off for people who ask for less. Telugu was written by an AI model and is not yet reviewed by a native
+speaker: see [`docs/TELUGU_REVIEW.md`](docs/TELUGU_REVIEW.md).
+
+| Home on a phone | The same screen in Telugu |
+|---|---|
+| <img src="docs/readme/27-phone-home.jpg" width="300" alt="Home on a phone"> | <img src="docs/readme/28-phone-home-te.jpg" width="300" alt="Home in Telugu on a phone"> |
+
+More screenshots, before and after the latest redesign, at 1440, 768 and 390 px in both languages, are in
 [`docs/screenshots/phase11/`](docs/screenshots/phase11/).
 
-### Feature screens
+## 5. How it works: the flows
 
-These were captured before the last two redesigns. The screens work the same way; only the look has changed.
+### How the data flows
 
-| Vault: three tiers, immutable originals | Readiness per purpose |
-|---|---|
-| ![Vault](docs/evidence/screen-vault.png) | ![Readiness](docs/evidence/screen-readiness.png) |
-| **Name detective: ranked, never auto-merges** | **Verification: one altered digit, in neutral words** |
-| ![Name detective](docs/evidence/screen-name-detective.png) | ![Altered digit](docs/evidence/screen-verification-altered-digit.png) |
-| **OCR: scan beside fields, confidence, corrections as layers** | **Share receipt: what was shared, with whom, until when** |
-| ![OCR](docs/evidence/screen-ocr.png) | ![Share receipt](docs/evidence/screen-share-receipt.png) |
-| **Recipient gate: ID + SIMULATED one-time code** | **Recipient view: minimal fields, diagonal watermark** |
-| ![Gate](docs/evidence/screen-recipient-gate.png) | ![Recipient view](docs/evidence/screen-recipient-view.png) |
-| **Leak trace: watermark text → recipient + session** | **Shares: access count, kill one link, test it** |
-| ![Leak trace](docs/evidence/screen-leak-trace.png) | ![Shares](docs/evidence/screen-shares.png) |
-| **Fault panel: issuer timeout on, defined response** | **Ledger: verify the whole hash chain** |
-| ![Faults](docs/evidence/screen-faults.png) | ![Ledger](docs/evidence/screen-ledger-verify.png) |
+```mermaid
+flowchart LR
+  I[Issuer<br/>publishes the record and its hashes<br/><i>simulated</i>] --> R[Signed registry<br/>Ed25519 entries + issuer authority]
+  R --> V[Vault<br/>holds the original file<br/>never altered]
+  V --> P[Share pipeline<br/>scope · preview · one link per receiver]
+  P --> X[Receiver<br/>sees only the granted fields]
+  I -.-> L[(Append-only ledger<br/>hash-chained; triggers block UPDATE and DELETE)]
+  V -.-> L
+  P -.-> L
+  X -.-> L
+```
 
-**How a share moves through its states** (each step is a separate append-only event plus a ledger line):
+Every fetch, correction, share, view and kill is written once to the ledger. Corrections are stored as the owner's
+separate claim, beside the original, never on top of it.
+
+### Verification
+
+```mermaid
+flowchart TD
+  D[Document opened<br/>the stored original, byte for byte] --> H{1. File hash<br/>SHA-256 matches the registered hash?}
+  H --> F{2. Field hashes<br/>each field, such as CGPA, matches its salted hash?}
+  F --> S{3. Issuer status<br/>current, revoked or replaced?}
+  S -- all match, current --> OK[Matches the issuer's record<br/>shown as issuer-verified, with the date checked]
+  S -- a field differs --> NO[Does not match<br/>shown with the field and its source, in neutral words]
+  H -. no reply in 8 s .-> U[Issuer unreachable<br/>marked unverified, still submittable; retries follow]
+```
+
+A hash match is not legal validity, and a mismatch is not proof of wrongdoing: only the issuer can settle either.
+One altered digit is named exactly ("doesn't match the issuer's record… may be a scanning or typing mistake"); the
+owner is never accused.
+
+### Readiness
+
+```mermaid
+flowchart TD
+  A[Document + purpose] --> B{Required for this purpose?}
+  B -- no --> NN[Not on this purpose's checklist]
+  B -- yes --> C{Issuer record current?}
+  C -- no / unknown --> UN[Unknown<br/>issuer unreachable or record unclear]
+  C -- yes --> E{Within the purpose's age rule?}
+  E -- no --> FL[Fail<br/>with the reason, in plain words]
+  E -- yes --> PS[Pass<br/>ready to submit]
+```
+
+Three-valued on purpose: unknown is never rounded up to pass, or down to fail. Rule packs are JSON files in
+[`src/rules/`](src/rules/), so a new purpose needs no code. Examples (synthetic):
+
+| Document | Purpose | Result | Why |
+|---|---|---|---|
+| Income certificate, 12 months old | Scholarship (6-month rule) | Fail | Issued 12 months ago; the rule allows 6 |
+| Income certificate | Job application | Not on the checklist | The purpose does not ask for it |
+| Degree certificate | Job application | Pass | Does not expire; issuer-verified |
+| Driving licence | Overseas verifier | Unknown | Issuer unreachable; shown as unverified |
+
+Name differences are confirmed per pair by the owner (Confirm / Reject); names are never merged automatically.
+
+### Sharing
+
+```mermaid
+flowchart LR
+  subgraph Before["Before the link goes out"]
+    A1[1. Ask or offer<br/>the owner can grant less than asked] --> A2[2. Choose the scope<br/>single fields, or a yes/no fact]
+    A2 --> A3[3. Preview exactly<br/>what the receiver will see, then confirm]
+  end
+  A3 --> K[Link created<br/>bound to one receiver ID · one-time code · tiled watermark]
+  subgraph After["After the link goes out"]
+    K --> B1[4. Receiver gate<br/>only that ID, after the code]
+    B1 --> B2[5. View logged<br/>the owner gets a receipt]
+    B2 --> B3[6. Kill or trace<br/>one link, one receiver, or all; then test]
+  end
+```
+
+**A share's states** (each step is a separate append-only event plus a ledger line):
 
 ```mermaid
 stateDiagram-v2
@@ -142,19 +340,43 @@ flowchart LR
   V -. new device .-> N[owner notified]
 ```
 
-## 5. What it does, mapped to the brief
+### Kill and trace
+
+```mermaid
+flowchart LR
+  C[A copy turns up<br/>somewhere it shouldn't be] --> S[Open the share log<br/>every link, receiver and view]
+  S --> W[Match the watermark<br/>the tiled mark points to one link and session]
+  W --> K[Kill it<br/>this link, this receiver, or everything]
+  K --> T["Test this link now"<br/>see with your own eyes that it is refused]
+  T --> L[(The kill is logged too<br/>same ledger, who and when)]
+```
+
+Killing a link stops future access. It cannot recall a copy already downloaded, so we trace it instead, and say so plainly.
+
+## 6. Trustworthy under failure
+
+| Situation | What UNIVAULT does |
+|---|---|
+| **Hostile files** | Text inside a document is data, never instructions. The assistant only proposes; it cannot share on its own. Hidden "share everything" text is flagged and nothing changes. |
+| **Wording about mismatches** | Neutral language only. The owner is never accused; the mismatch is shown with the field and its source. |
+| **Issuer outage** | Submission still works, clearly labelled unverified ("issuer unreachable at HH:MM, retrying"), retried at 10/30/60/120 s. Nothing pretends to be checked. |
+| **Other injected faults** | Stale data, a malformed upload, a conflicting issuer update and lost connectivity each have a defined response and recovery, switchable live at `/faults`. |
+| **No leaks in logs** | All logging goes through a scrubber; an automated test checks that no sensitive field appears in logs or share URLs. |
+| **Guessing codes** | 5 wrong codes in a row lock the link for 15 minutes (even against the right code) and alert the owner. |
+
+## 7. What it does, mapped to the brief
 
 | Brief requirement | How UNIVAULT meets it | Where |
 |---|---|---|
 | Real documents in, originals kept | Upload a PDF (its text is read on the server) or a photo (read in the browser with OCR, shrunk to 1600 px). The original file is kept (up to 700 KB) and can be opened from the document page | `/add`, `src/lib/read-fields.ts`, `/api/upload/*` |
-| ≥15 planted conflicts + data card | 17 planted conflicts in a generated showcase vault, plus 2 × 1,380 generated test documents (testing only; never loaded into the demo by default) | `synthetic/`, `docs/DATA_CARD.md` |
+| ≥15 planted conflicts + data card | 17 planted conflicts in a generated showcase vault, plus 2 × 1,380 generated test documents (testing only; never loaded into the live demo by default) | `synthetic/`, `docs/DATA_CARD.md` |
 | Explicit state machines | Document, share and token states are separate; each transition is an event row plus a ledger line | `src/lib/shares.ts`, `share-store.ts` |
 | Reason, confidence, source, freshness, override/escalate on every output | One shared `<Explain>` component on every automated result; overrides and disputes are append-only ledger lines | `src/components/Explain.tsx` |
 | Survive injected faults | Issuer timeout, stale data, malformed upload, conflicting issuer update, connectivity loss, each with a defined response and recovery | `/faults`, `e2e/journey.e2e.ts` |
 | Keyboard, screen reader, English + Telugu, low bandwidth | Skip link, visible focus, live region, Telugu for every screen, script-free recipient page | `e2e/` |
 | Scripted tests with pass rate and precision/recall | 362 unit tests, 334 browser tests, evaluation harness on dev and held-out sets | `tests/`, `e2e/`, `eval/` |
 | Tamper-evident audit log | Hash chain computed by a database trigger; `verify_ledger()`; edits and deletes refused (tested live) | `/ledger`, `docs/sql/001` |
-| Declarative readiness, met/not met/unknown | Rule packs are JSON files; a new purpose needs no code | `src/rules/*.json`, `/readiness` |
+| Declarative readiness, pass/fail/unknown | Rule packs are JSON files; a new purpose needs no code | `src/rules/*.json`, `/readiness` |
 | Eligibility answer instead of documents | The receiver asks; the student allows criteria one by one; missing, expired, conflicting or unverified evidence is always "unknown"; the signed answer says it is not proof and gives no document | `/receive/eligibility`, `/alerts` |
 | Entity resolution that never auto-merges | Initials, word order, Telugu↔English spelling; ranked with reasons; Confirm/Reject only | `/names` |
 | OCR with confidence, side-by-side view, corrections as assertions | Tesseract.js (eng+tel); the original reading is never changed | `/ocr` |
@@ -163,17 +385,24 @@ flowchart LR
 | Verifiable revocation, with its limits stated | Stop one link, one receiver or everything, then "Test this link now"; "copies already downloaded can't be recalled" | `/shares` |
 | Elite: per-recipient tokens and watermarks; trace and kill a leak | 256-bit links stored only as SHA-256; watermark shows recipient · code · time · session; leak trace | `/s/[token]`, `/leak-trace` |
 | Elite: issuer re-check, notify, list affected shares | A scheduled server-side run once a day (Vercel Cron, protected by `CRON_SECRET`), plus "Re-check now" and a 60 s poll while `/shares` is open. Revoked, changed or expired → one alert per change; issuer down → "unknown", never failed | `src/lib/recheck.ts`, `/api/cron/recheck` |
-| Brute-force resistance | 5 wrong codes in a row lock the link for 15 min (even against the right code) and alert the owner; 60 requests/min per address, 20 per link → 429 | `src/lib/rate-limit.ts`, `tests/lockout.test.ts` |
+| Brute-force resistance | 5 wrong codes in a row lock the link for 15 min and alert the owner; 60 requests/min per address, 20 per link → 429 | `src/lib/rate-limit.ts`, `tests/lockout.test.ts` |
 | Threat model and policy, backed by code | `/threat-model`: 14 threats, what stops each, what does not, and the code and test files behind it. `/policy`: what is stored, erased, kept and for how long | `/threat-model`, `/policy`, `tests/trust-pages.test.ts` |
 | Curveball: one altered digit | Names the exact field: "doesn't match the issuer's record… may be a scanning or typing mistake" | `/verify` |
 | Curveball: hidden text tells the assistant to share everything | The assistant only proposes and cannot share; the hidden text is flagged; ledger and share counts unchanged | `/assistant` |
 | Curveball: over-broad request | Flagged, with a one-click minimal alternative | `/share` |
-| Curveball: issuer down | "Unverified: issuer unreachable at HH:MM, retrying", retries at 10/30/60/120 s, never shown as a mismatch | `/verify` |
+| Curveball: issuer down | "Unverified: issuer unreachable at HH:MM, retrying", never shown as a mismatch | `/verify` |
 | OCR never authoritative | Unconfirmed OCR values can't pass a rule and are **withheld from shares** | `src/lib/disclosure.ts` |
 | Nothing sensitive in links, URLs or logs | Log scrubber with tests; links carry only a random token; no analytics; telemetry off | `src/lib/scrub.ts` |
 | Erasure and its limits | Limits shown first; content deleted; active shares revoked; fingerprint and times kept | document page → "Erase this document…" |
 
-## 6. Architecture
+## 8. Architecture
+
+| Layer | What runs there |
+|---|---|
+| **Interface:** Next.js on Vercel | Owner, issuer and receiver views. Accessible, and built to work on a slow connection. |
+| **Rules and checks** | Readiness rules, hash verification, eligibility and share scope, all enforced on the server, never in the browser. |
+| **Data:** Supabase Postgres | Immutable originals, append-only ledger, and triggers that block UPDATE and DELETE. |
+| **Issuer side:** simulated | A mock issuer plus an Ed25519-signed registry of records and issuer authority. |
 
 ```mermaid
 flowchart LR
@@ -213,12 +442,11 @@ flowchart LR
 - **Two writes are allowed, by design:** deleting a document's *content* (that is how erasure works) and
   flipping the simulated issuer's on/off switch.
 - **Forgery is caught.** Registry entries are signed, so a forged entry fails verification.
-- **No AI model makes any decision.** Verification, readiness, eligibility, matching, sharing and revocation are
-  deterministic code. OCR is the only machine-learning part, and its output stays *unconfirmed* until a person confirms it.
+- **OCR is the only machine-learning part**, and its output stays *unconfirmed* until a person confirms it.
 - **Roles are enforced on the server.** A signed (HMAC) session cookie carries the role; the middleware refuses
   another role's pages and APIs (for example, a receiver calling an issuer API gets 403).
 
-## 7. Results
+## 9. Results
 
 **Tests** (latest run, 2026-10-25). Browser tests run against an in-memory copy of the store
 (`UNIVAULT_FORCE_OFFLINE=1`), so they never write to the demo database.
@@ -269,7 +497,7 @@ Negative controls: 20 documents per set should raise no alarm, and none did.
   were misread. That is why no OCR value counts until a person confirms it.
 - **Names, 1 miss:** a name pair in Telugu script, scored 0.603 (below the "likely same" threshold).
 
-## 8. Security
+## 10. Security
 
 - **No secrets in git.** Only `.env.example` (names, no values) is tracked. Signing keys live only in local
   `.env.local` and in Vercel's environment settings.
@@ -278,7 +506,6 @@ Negative controls: 20 documents per set should raise no alarm, and none did.
 - **Uploads.** Only PDF, JPEG and PNG are accepted, checked by their first bytes and not only their name, up to 700 KB.
 - **Size limits.** A POST over 256 KB (1 MB on the upload routes) is refused (413) before any route reads it.
 - **Slow-down.** Recipient pages allow 60 requests a minute per address and 20 per link (429 past that).
-  Five wrong one-time codes in a row lock the link for 15 minutes and alert the owner.
 - **Scheduled job.** `/api/cron/recheck` runs only with `Authorization: Bearer <CRON_SECRET>`, compared in
   constant time; without the variable set it refuses every call.
 - **Headers.** Content-Security-Policy, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` (share links
@@ -287,7 +514,19 @@ Negative controls: 20 documents per set should raise no alarm, and none did.
   to a temporary in-memory store.
 - **Logs.** All logging goes through a scrubber; there are no `console.log` calls with personal data.
 
-## 9. Honest limits
+## 11. Honest status and limits
+
+| Built and live | Not yet |
+|---|---|
+| Vault with immutable originals and the ledger | Share wizard's preview-pages mode |
+| Real uploads: PDF text and photo OCR, original kept | Checking a PDF someone else sent you against the issuer's record ("verify a copy") |
+| Verification, readiness and name matching | Slow 3G target (169 KB, 7.2 s) |
+| One sharing pipeline with three kill levels | Native-speaker review of the Telugu wording |
+| Eligibility answers instead of documents | Issuer-level suspend |
+| Issuer, Sender and Receiver roles, UV-IDs, issuer authority | Database lock-down script, ready but not run by the owner |
+| Public repo (MIT) and a deployed app | |
+
+**Limits, said plainly**
 
 - **Simulated organisations.** No real government, university, employer or DigiLocker connection.
 - **The public database key can still read every table** until the owner adds a server-only key
@@ -304,25 +543,35 @@ Negative controls: 20 documents per set should raise no alarm, and none did.
 - **OCR is unconfirmed** until you confirm it, and it can be confidently wrong (see the misses above).
 - **The one-time code is shown on screen** (labelled SIMULATED) instead of being sent by SMS or email.
 - **The scheduled issuer re-check runs once a day** (the most the Vercel Hobby plan allows). Nothing is revoked automatically.
-- **Slow 3G target not met:** 247 KB and 9.8 s in English, 383 KB and 12.5 s in Telugu, against 169 KB and 7.2 s.
-- **Not built, as `/features` also says:** checking a PDF that someone else sent you against the issuer's record,
-  and the share wizard's preview-pages mode. Overrides and disputes are recorded but do not change decisions.
-- **Telugu wording** has not been reviewed by a native speaker, and Telugu name matching was tuned on generated names.
+- **Overrides and disputes** are recorded but do not change decisions.
+- **Telugu name matching** was tuned on generated names. It is not a general transliteration engine.
 
-## 10. Business
+## 12. Built on top, not a clone
 
-*All points below are hypotheses to test, not results.*
+| | Answers |
+|---|---|
+| **DigiLocker** | *Is this document genuine?* It stores and issues documents from verified issuers. |
+| **UNIVAULT** | *Am I ready for this purpose? What exactly goes out? Where did it go, and can I stop it?* |
 
-- **Who it's for:** (1) students and graduates applying to several places at once; (2) universities and
-  government offices that issue documents; (3) employers and scholarship bodies that receive and check thousands
-  of them each season; (4) overseas credential evaluators.
-- **Go-to-market:** start with university placement cells. One institution onboards a whole graduating batch, and
-  employers reached through student requests then adopt the receiver side.
-- **Pricing:** free for individuals; per-check or per-seat for receiving organisations; an issuer-integration fee
-  for institutions publishing signed registries.
-- **Why now:** document requests are moving online faster than document *control* is.
+DigiLocker proves a document is genuine. UNIVAULT proves you're ready, shares only what's needed, and lets you see
+and stop where it went. In this prototype the issuer, identity check and one-time codes are simulated: there is no
+real DigiLocker, Aadhaar or government integration.
 
-## 11. Run it locally, or deploy
+## 13. What's next
+
+*Plans, not claims: none of the pilot or real-issuer work exists yet.*
+
+- **Close the gaps:** finish preview-pages mode, hit the Slow 3G target, run the database lock-down, and get the
+  Telugu reviewed by native speakers.
+- **Pilot:** try it with one college and one scholarship body, using synthetic and then consented data.
+- **Real issuers:** replace the simulated issuer with real issuer APIs behind the same signed-registry interface.
+
+**Business hypotheses** (to test, not results): free for individuals; per-check or per-seat pricing for receiving
+organisations; an issuer-integration fee for institutions publishing signed registries. Start with university
+placement cells: one institution onboards a whole graduating batch, and employers reached through student requests
+then adopt the receiver side.
+
+## 14. Run it locally, or deploy
 
 ```bash
 npm install
@@ -340,6 +589,14 @@ npm run synth:all       # regenerate the synthetic test datasets (dev 7, held-ou
 npm run build && npx playwright test   # browser tests in Edge, on the in-memory store
 ```
 
+**Retaking the README pictures** (the script writes data, so it only ever runs against a local in-memory copy):
+
+```bash
+npm run build
+UNIVAULT_OFFLINE_DEMO=1 UNIVAULT_FORCE_OFFLINE=1 npx next start -p 3400   # in one terminal
+npx tsx scripts/readme-shots.ts                                         # in another; writes docs/readme/
+```
+
 Without a database key, or with `UNIVAULT_FORCE_OFFLINE=1`, the app uses an in-memory **offline store** with the
 same append-only rules and hash chain. A production build refuses to do that. `GET /api/health` returns
 `{ ok, db, time }` and nothing else.
@@ -347,7 +604,7 @@ same append-only rules and hash chain. A production build refuses to do that. `G
 **Emptying the demo database** is an owner-only step (the app's key cannot delete history): see
 [DEPLOY.md](DEPLOY.md) section 4. **Deploying to Vercel:** also in [DEPLOY.md](DEPLOY.md).
 
-## 12. Open-source credits
+## 15. Open-source credits
 
 | Library | Version | Licence | Used for |
 |---|---|---|---|
@@ -371,6 +628,13 @@ Node's built-in `crypto` provides SHA-256, HMAC and Ed25519. There are no paid A
 **AI tools used: Claude** (Anthropic) was used as a coding assistant under the team's direction. The team
 reviews, tests and can explain every part. **No AI model runs inside the product.**
 
-## 13. Team
+## 16. Team
 
 **Team SPACEX** · VIT-AP University · **IMPACTX 2026** · Challenge 02 "Your Documents, One Place"
+
+| Member |
+|---|
+| Supreth S |
+| Sushanth K |
+| Mukesh R |
+| Sree Ganesh SP |

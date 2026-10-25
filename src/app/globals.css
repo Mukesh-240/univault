@@ -956,6 +956,9 @@ main { max-width: 1100px; }
 .side-group { margin: 24px 0 4px; padding: 0 12px; font-size: 0.8125rem; font-weight: 600; color: var(--muted); text-transform: none; }
 .sidenav .side-trust a { min-height: 36px; font-size: 0.875rem; font-weight: 400; color: var(--muted); }
 .sidenav .side-trust { gap: 0 !important; }
+/* The whole side menu sticks as ONE block; two separately sticky lists slid over each other on scroll. */
+.sidenav { position: sticky; top: 76px; align-self: start; }
+.sidenav ul { position: static; }
 
 .avatar-menu h2 { margin: 0 0 4px; }
 .avatar-menu .menu-links { list-style: none; margin: 8px 0; padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 0; }
