@@ -1,0 +1,11 @@
+{
+  "_about": "Who the demo is about. The ONLY place the demo people and organisations are named: change a name here and the sign-in chooser, the greeting and the issuer/receiver areas follow. Every organisation here is SIMULATED in this demo (the strip on every page says so); nothing is sent to any real organisation. Documents are NOT listed here: the vault starts empty and fills only with what an issuer issues or the student adds.",
+  "issuers": [
+    { "name": "VIT University", "type": "institution", "category": "college_university" },
+    { "name": "Government Revenue Department", "type": "government" }
+  ],
+  "sender": { "name": "Mahesh Mekhala" },
+  "receivers": [
+    { "code": "UV-R-2001", "name": "Google", "purpose": "job" }
+  ]
+}

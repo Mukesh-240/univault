@@ -6,8 +6,9 @@
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 export const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-/** True when there is no usable database key, so the offline demo store would be needed. */
-export const OFFLINE = !SUPABASE_URL || !SUPABASE_KEY || SUPABASE_KEY.startsWith("<") || SUPABASE_KEY.length < 40;
+/** True when there is no usable database key, so the offline demo store would be needed. The browser tests set
+ *  UNIVAULT_FORCE_OFFLINE=1 so they run on the in-memory store and NEVER write into the real demo database. */
+export const OFFLINE = process.env.UNIVAULT_FORCE_OFFLINE === "1" || !SUPABASE_URL || !SUPABASE_KEY || SUPABASE_KEY.startsWith("<") || SUPABASE_KEY.length < 40;
 
 /** Offline store allowed? Always in development; in production only with the explicit test opt-in. */
 export const ALLOW_OFFLINE = process.env.NODE_ENV !== "production" || process.env.UNIVAULT_OFFLINE_DEMO === "1";

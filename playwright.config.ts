@@ -25,5 +25,5 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${PORT}`, channel: "msedge", headless: true, reducedMotion: "reduce", storageState: "e2e-results/auth.json" },
   // UNIVAULT_OFFLINE_DEMO=1: the explicit opt-in that lets a production build use the offline demo store
   // for these local tests (without it, a production build with no database key shows "Database not configured").
-  webServer: { command: `npm run start -- -p ${PORT}`, url: `http://localhost:${PORT}/api/health`, timeout: 120_000, reuseExistingServer: false, env: { UNIVAULT_OFFLINE_DEMO: "1" } },
+  webServer: { command: `npm run start -- -p ${PORT}`, url: `http://localhost:${PORT}/api/health`, timeout: 120_000, reuseExistingServer: false, env: { UNIVAULT_OFFLINE_DEMO: "1", UNIVAULT_FORCE_OFFLINE: "1" } },
 });

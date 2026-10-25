@@ -1321,5 +1321,12 @@
  "stepper.names.2": "Your answer",
  "stepper.names.1.here": "UNIVAULT shows two names and how close they are. It never decides for you.",
  "stepper.names.1.next": "Your answer is recorded; nothing is merged.",
- "stepper.names.2.here": "Your answer is recorded below. You can change it later."
+ "stepper.names.2.here": "Your answer is recorded below. You can change it later.",
+ "notify.document_request": "{name} asked you for documents. Open Alerts to share or decline.",
+ "notify.eligibility_request": "{name} asked you to answer an eligibility check. Open Alerts to answer or decline.",
+ "notify.document_issued": "{name} issued you a new document: {type}.",
+ "alert.document_request": "{name} asked you for documents at {time}.",
+ "alert.eligibility_request": "{name} asked you to answer an eligibility check at {time}. Agreeing does not share any document.",
+ "alert.document_issued": "{name} issued you a new document ({type}) at {time}. Check it with the issuer before you share it.",
+ "alert.openDoc": "Open and check it"
 }

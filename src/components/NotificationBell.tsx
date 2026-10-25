@@ -67,7 +67,9 @@ export function NotificationBell() {
     return () => { cancel(); clearInterval(poll); cleanup?.(); };
   }, [refresh]);
 
-  const text = (n: Item) => n.kind === "issuer_change"
+  const text = (n: Item) => ["document_request", "eligibility_request", "document_issued"].includes(n.kind)
+    ? t(`notify.${n.kind}`, { name: String(n.detail.name ?? ""), type: n.detail.doc_type ? t(`doctype.${n.detail.doc_type}`) : "" })
+    : n.kind === "issuer_change"
     ? t("notify.issuer_change", { title: String(n.detail.title ?? ""), n: Array.isArray(n.detail.share_ids) ? n.detail.share_ids.length : 0 })
     : t(`notify.${n.kind}`, { code: n.recipientCode ?? "", purpose: n.purpose ?? "" });
   const unseen = items.filter((n) => n.at > seen).length;

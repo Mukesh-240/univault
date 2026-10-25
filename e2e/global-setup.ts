@@ -32,6 +32,6 @@ export default async function globalSetup(config: FullConfig) {
   const baseURL = config.projects[0].use.baseURL;
   await signIn(baseURL, "sender", AUTH_FILE);
   // The university issues degree certificates (the kind the purpose packs ask about), so the journeys can share what it issues.
-  await signIn(baseURL, "issuer", ISSUER_AUTH, "Synthetic State University");
+  await signIn(baseURL, "issuer", ISSUER_AUTH, "VIT University");
   await signIn(baseURL, "receiver", RECEIVER_AUTH);
 }

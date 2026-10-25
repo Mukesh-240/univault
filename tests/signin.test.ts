@@ -10,6 +10,7 @@
  *   - the greeting's name and the consent record come from the vault's identity card;
  *   - a browser whose first language is Telugu gets Telugu on a first visit.
  */
+import cast from "../src/config/demo-cast.json";
 import { describe, expect, it } from "vitest";
 import { areaOf, gateFor, homeFor, isPublicPath } from "../src/lib/gate";
 import { preferredLang } from "../src/lib/i18n";
@@ -134,18 +135,18 @@ describe("5 wrong codes lock a sign-in for 15 minutes", () => {
   });
 });
 
-describe("the person shown at sign-in comes from the vault", () => {
-  it("reads name, date of birth and a masked id from the identity card", () => {
+describe("the person shown at sign-in: the account's name, plus details from the identity card", () => {
+  const name = cast.sender.name;
+  it("the name is the account holder's (demo cast); date of birth and the masked id come from the identity card", () => {
     const docs: { doc_type: string; fields: Record<string, string> }[] = [
       { doc_type: "degree_certificate", fields: { name: "A. Other" } },
       { doc_type: "id_card", fields: { name: "Asha Rao", dob: "01-02-2003", id_number: "0000 4268 3900", address: "x" } },
     ];
-    expect(personRecord(docs)).toEqual({ name: "Asha Rao", dob: "01-02-2003", idMasked: "XXXX XXXX 3900" });
+    expect(personRecord(docs)).toEqual({ name, dob: "01-02-2003", idMasked: "XXXX XXXX 3900" });
   });
 
-  it("falls back to the first document with a name, and to nothing for an empty vault", () => {
-    expect(personRecord([{ doc_type: "marksheet", fields: { name: "Ravi K" } }])).toEqual({ name: "Ravi K", dob: null, idMasked: null });
-    expect(personRecord([])).toEqual({ name: null, dob: null, idMasked: null });
+  it("an empty vault still knows the name, and shows no date of birth or id", () => {
+    expect(personRecord([])).toEqual({ name, dob: null, idMasked: null });
   });
 });
 

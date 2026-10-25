@@ -174,7 +174,29 @@ export async function reverifyAndView(db: Db, fields: string[], now: Date, issue
 }
 
 /** Owner notifications: attempts flagged in access_log, plus issuer changes found by the re-check. */
-export interface Notification { id: string; kind: NotifyKind | "issuer_change"; at: string; shareId: string | null; recipientCode: string | null; purpose: string | null; detail: Record<string, unknown> }
+/** "Something for you" kinds that are not about a shared link: a receiver asked for documents or for an eligibility
+ *  check, or an issuer delivered a new document to this vault. Their words come from detail.name / detail.title. */
+export type InboxKind = "document_request" | "eligibility_request" | "document_issued";
+export interface Notification { id: string; kind: NotifyKind | "issuer_change" | InboxKind; at: string; shareId: string | null; recipientCode: string | null; purpose: string | null; detail: Record<string, unknown> }
+
+/** Requests addressed to this owner, and documents an issuer delivered to this vault (read from the ledger). */
+async function inboxNotifications(db: Db, owner: string, limit: number): Promise<Notification[]> {
+  const read = async (kind: string) => must(await db.from("ledger").select("seq, payload, created_at").eq("kind", kind).order("seq", { ascending: false }).limit(limit), "ledger") as { seq: number; payload: Record<string, unknown>; created_at: string }[];
+  const [docReq, eligReq, issued] = await Promise.all([read("request.sent"), read("eligibility.requested"), read("issuer.issued")]);
+  const names = new Map(((must(await db.from("recipients").select("recipient_code, name"), "recipients") ?? []) as { recipient_code: string; name: string }[]).map((r) => [r.recipient_code, r.name]));
+  const out: Notification[] = [];
+  const asked = (kind: InboxKind, l: { seq: number; payload: Record<string, unknown>; created_at: string }) => out.push({ id: `ledger:${l.seq}`, kind, at: l.created_at, shareId: null,
+    recipientCode: String(l.payload.from ?? ""), purpose: null, detail: { name: names.get(String(l.payload.from)) ?? String(l.payload.from ?? ""), request_id: l.payload.request_id } });
+  for (const l of docReq) if (l.payload.to === owner) asked("document_request", l);
+  for (const l of eligReq) if (l.payload.to === owner) asked("eligibility_request", l);
+  // An issued document belongs to this vault when its document row is owned by this owner.
+  const ids = issued.map((l) => String(l.payload.document_id ?? "")).filter(Boolean);
+  const mine = ids.length ? new Set(((must(await db.from("documents").select("id").eq("owner", owner).in("id", ids), "documents") ?? []) as { id: string }[]).map((d) => d.id)) : new Set<string>();
+  for (const l of issued) if (mine.has(String(l.payload.document_id)))
+    out.push({ id: `ledger:${l.seq}`, kind: "document_issued", at: l.created_at, shareId: null, recipientCode: null, purpose: null,
+      detail: { name: String(l.payload.issuer_name ?? ""), doc_type: l.payload.doc_type, document_id: l.payload.document_id } });
+  return out;
+}
 
 export async function listNotifications(db: Db, owner: string, limit = 30): Promise<Notification[]> {
   const shares = await loadShares(db, owner);
@@ -183,5 +205,6 @@ export async function listNotifications(db: Db, owner: string, limit = 30): Prom
     s.accesses.forEach((a, i) => { if (a.notify) out.push({ id: `${s.id}:${i}`, kind: a.notify as NotifyKind, at: a.at, shareId: s.id, recipientCode: s.recipientCode, purpose: s.purpose, detail: { outcome: a.outcome, session: a.session, device: a.device } }); });
   const changes = must(await db.from("ledger").select("seq, payload, created_at").eq("kind", "recheck.affected").order("seq", { ascending: false }).limit(limit), "ledger") as { seq: number; payload: Record<string, unknown>; created_at: string }[];
   for (const c of changes) out.push({ id: `ledger:${c.seq}`, kind: "issuer_change", at: c.created_at, shareId: null, recipientCode: null, purpose: null, detail: c.payload });
+  out.push(...await inboxNotifications(db, owner, limit));
   return out.sort((x, y) => (x.at < y.at ? 1 : -1)).slice(0, limit);
 }

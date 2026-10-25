@@ -14,7 +14,7 @@ import { generate } from "../src/lib/synthetic-aadhaar";
 const BASE = process.env.BASE ?? "http://localhost:3400";
 const OUT = "docs/screenshots";
 const VIEWS = [{ tag: "1440", w: 1440, h: 900 }, { tag: "390", w: 390, h: 844 }];
-const ISSUER = process.env.ISSUER ?? "Synthetic State University";
+const ISSUER = process.env.ISSUER ?? "VIT University";
 
 /** Sign in as one role through the real API (default profile unless `ref` is given) and return the browser cookies. */
 async function cookiesFor(role: "issuer" | "receiver", ref?: string) {

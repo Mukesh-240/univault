@@ -49,7 +49,7 @@ async function issueFields(p: Page) {
 async function main() {
   mkdirSync(OUT, { recursive: true }); rmSync(TMP, { recursive: true, force: true });
   const browser = await chromium.launch({ channel: "msedge" });
-  const issuer = await cookiesFor("issuer", process.env.ISSUER ?? "Synthetic State University");
+  const issuer = await cookiesFor("issuer", process.env.ISSUER ?? "VIT University");
   const sender = await cookiesFor("sender"), receiver = await cookiesFor("receiver");
 
   await clip(browser, "signin-hero", null, async (p) => {

@@ -2,21 +2,22 @@
  * DEMO PROFILES — the people and organisations you can sign in as, read from the database.
  *
  * Plain-English picture:
- *   The sign-in screen offers "demo profiles". They are not typed in here: the ISSUERS are the distinct issuer
- *   names in the registry, the SENDER is the owner of the vault (named from the identity card), and the RECEIVERS
- *   are the rows of the recipients table. Each profile gets a demo number (starts 0000, Verhoeff check digit)
+ *   The sign-in screen offers "demo profiles". They are not typed in here: they come from the demo cast
+ *   (src/config/demo-cast.json): the ISSUERS (VIT, Government), the SENDER (the student who owns the vault) and the
+ *   RECEIVERS (Google). A cast receiver that is not in the recipients table yet is added once (so an emptied
+ *   database still works), and any other recipients in the table are offered too. Each profile gets a demo number (starts 0000, Verhoeff check digit)
  *   worked out from a fixed key, so the same profile always shows the same masked number. Nothing here looks
  *   at the synthetic flag, a person, or a serial number.
  *   A role + ref pair is what goes in the session: ref is the issuer's name, the vault owner id, or the
  *   recipient code. The server re-checks a ref against this list before it signs anyone in.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import cast from "../config/demo-cast.json";
 import { accountInfo, type AccountType } from "./accounts";
 import { sha256 } from "./crypto";
-import { personRecord } from "./person";
 import type { Role } from "./session";
 import { generate } from "./synthetic-aadhaar";
-import { DEMO_OWNER, loadDemoVault } from "./server";
+import { DEMO_OWNER } from "./server";
 
 export interface Profile { role: Role; ref: string; name: string; number: string; uvId: string; type: AccountType; category?: string }
 
@@ -44,11 +45,9 @@ export async function loadProfiles(db: Db): Promise<Profile[]> {
 async function readProfiles(db: Db): Promise<Profile[]> {
   const out: Profile[] = [];
   try {
-    const reg = await db.from("issuer_registry").select("issuer_name");
-    const names = [...new Set(((reg.data ?? []) as { issuer_name: string }[]).map((r) => r.issuer_name).filter(Boolean))].sort();
-    for (const n of names) { const a = accountInfo("issuer", n); out.push({ role: "issuer", ref: n, name: n, number: demoNumberFor(`issuer|${n}`), uvId: a.uvId, type: a.type, category: a.category }); }
-    const person = personRecord((await loadDemoVault()).docs);
-    { const a = accountInfo("sender", DEMO_OWNER); out.push({ role: "sender", ref: DEMO_OWNER, name: person.name ?? "Demo holder", number: demoNumberFor(`holder|${DEMO_OWNER}`), uvId: a.uvId, type: a.type }); }
+    for (const n of cast.issuers.map((i) => i.name)) { const a = accountInfo("issuer", n); out.push({ role: "issuer", ref: n, name: n, number: demoNumberFor(`issuer|${n}`), uvId: a.uvId, type: a.type, category: a.category }); }
+    { const a = accountInfo("sender", DEMO_OWNER); out.push({ role: "sender", ref: DEMO_OWNER, name: cast.sender.name, number: demoNumberFor(`holder|${DEMO_OWNER}`), uvId: a.uvId, type: a.type }); }
+    await ensureCastReceivers(db);
     const rec = await db.from("recipients").select("recipient_code, name, org").order("recipient_code");
     for (const r of (rec.data ?? []) as { recipient_code: string; name: string; org: string }[]) {
       const a = accountInfo("receiver", r.recipient_code, r.org);
@@ -56,6 +55,14 @@ async function readProfiles(db: Db): Promise<Profile[]> {
     }
   } catch { /* an empty list; the sign-in page explains */ }
   return out;
+}
+
+/** Add the cast's receivers (Google) to the recipients table if they are missing. Insert-only (the table is append-only). */
+async function ensureCastReceivers(db: Db) {
+  const have = await db.from("recipients").select("recipient_code").in("recipient_code", cast.receivers.map((r) => r.code));
+  const known = new Set(((have.data ?? []) as { recipient_code: string }[]).map((r) => r.recipient_code));
+  const missing = cast.receivers.filter((r) => !known.has(r.code));
+  if (missing.length) await db.from("recipients").insert(missing.map((r) => ({ recipient_code: r.code, name: r.name, org: r.purpose })));
 }
 
 /** The profile a role + ref names, or null (the server never trusts a ref it cannot find here). */

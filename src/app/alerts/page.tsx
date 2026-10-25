@@ -75,7 +75,9 @@ export default async function AlertsPage() {
           {alerts.map((a) => {
             const share = a.shareId ? byId.get(a.shareId) : undefined;
             const time = showTime(a.at);
-            const text = a.kind === "issuer_change"
+            const text = ["document_request", "eligibility_request", "document_issued"].includes(a.kind)
+              ? t(`alert.${a.kind}`, { name: String(a.detail.name ?? ""), type: a.detail.doc_type ? t(`doctype.${a.detail.doc_type}`) : "", time })
+              : a.kind === "issuer_change"
               ? t("alert.issuer_change", { title: String(a.detail.title ?? ""), time, n: Array.isArray(a.detail.share_ids) ? a.detail.share_ids.length : 0 })
               : t(`alert.${a.kind}`, { name: share?.recipientName ?? a.recipientCode ?? "", purpose: a.purpose ?? "", time });
             return (
@@ -84,6 +86,7 @@ export default async function AlertsPage() {
                 <div className="card-actions">
                   {share && (share.state === "active" ? <StopShare shareId={share.id} name={share.recipientName} /> : <span className="meta">{t("alert.already")}</span>)}
                   {a.kind === "issuer_change" && <Link href="/shares" className="btn secondary">{t("alert.review")}</Link>}
+                  {a.kind === "document_issued" && <Link href={`/doc/${String(a.detail.document_id)}`} className="btn secondary">{t("alert.openDoc")}</Link>}
                 </div>
               </li>
             );
